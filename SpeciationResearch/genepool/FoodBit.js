@@ -3,7 +3,7 @@
 
 const FOOD_BIT_SIZE                     = 1.5; //default size
 const MIN_FOOD_BIT_MAX_SPAWN_RADIUS     = 10;
-const MAX_FOOD_BIT_MAX_SPAWN_RADIUS     = 4000.0;
+const MAX_FOOD_BIT_MAX_SPAWN_RADIUS     = 8000.0;
 const DEFAULT_FOOD_BIT_MAX_SPAWN_RADIUS = 4000.0; //max distance for spawned child
 const MIN_FOOD_BIT_ENERGY               = 0.0; 
 const MAX_FOOD_BIT_ENERGY               = 100.0; 
@@ -16,6 +16,7 @@ const FOOD_BIT_COLOR_COMPONENTS         = "100, 200, 100";
 const FOOD_BIT_ROLLOVER_COLOR           = "rgba( 100, 200, 100, 0.5 )";	
 const FOOD_BIT_SELECT_COLOR             = "rgba( 200, 200, 200, 1.0 )";	
 const FOOD_OPACITY_INCREMENT            = 0.01;
+const NUTRITION_MUTATION_RATE           = 0.2;
 
 //------------------------
 // Food bit
@@ -53,19 +54,38 @@ function FoodBit()
 //_position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
 //_position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
 
-        this.setNutritionAccordingToPosition();
+
+        this.randomizeNutrition();
     }
 
 
 
-    //-------------------------------------------------
-	this.setNutritionAccordingToPosition = function()
+
+    //--------------------------------------
+	this.randomizeNutrition = function()
 	{
+	    console.log( "randomizeNutrition" ) ;
+	    
 	    _nutrition = Math.floor( Math.random() * 2 );
 	    
+        this.setColorAccordingToNutrition();
+	}
+	
+
+
+    //-------------------------------------------------
+	this.setColorAccordingToNutrition = function()
+	{	    
 	    if ( _nutrition === 0 ) { _red = 0.5; _green = 0.5; _blue = 1.0; }
 	    if ( _nutrition === 1 ) { _red = 0.9; _green = 0.9; _blue = 0.3; }
-        
+
+        // only one nutrition: (0, green)
+        /*        
+        _nutrition = 0;	  
+        _red = 0.3; 
+        _green = 0.9; 
+        _blue = 0.2;   
+        */
 	}
     
     
@@ -80,17 +100,28 @@ function FoodBit()
         assert( parentFoodBit.getAlive(), "foodbit.js: spawnFromParent: parentFoodBit.alive" );
         assert( childIndex != NULL_INDEX, "foodbit.js: spawnFromParent: childIndex != NULL_INDEX" );
         
-        /*
         if ( childIndex === parentFoodBit.getIndex() )
         {
             console.log( "warning: foodbit.js: spawnFromParent: childIndex = " + childIndex + " and parentFoodBit.getIndex() = " + parentFoodBit.getIndex() );
         }
         assert( childIndex != parentFoodBit.getIndex(), "foodbit.js: spawnFromParent: childIndex != parentFoodBit.index" );
-        */
         
-        _index  = childIndex;
-        _energy = parentFoodBit.getEnergy();
-        _opacity = ZERO;
+        _index      = childIndex;
+        _opacity    = ZERO;
+        _energy     = parentFoodBit.getEnergy();
+        _nutrition  = parentFoodBit.getNutrition();
+        
+
+//TEST! This is sort of like a mutation in nutrition....to keep one ntrution value from dominating the pool...
+if ( Math.random() < NUTRITION_MUTATION_RATE )
+{
+    this.randomizeNutrition();
+}
+                
+        
+        
+        this.setColorAccordingToNutrition();
+        
     
         //-----------------------------
         // set the position
@@ -122,13 +153,20 @@ function FoodBit()
         else	if ( _position.x < pl ) { _position.x += ( ( pl - _position.x ) * 2 ); }
         
         //console.log( "after:" + _position.y );
+        
+        
+        
+        
+// just spread evenly in the pool...
+//_position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
+//_position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
+       
+        
 
         assert( _position.x < POOL_RIGHT,   "foodbit.js: spawnFromParent: _position.x < POOL_RIGHT"  );
         assert( _position.x > POOL_LEFT,    "foodbit.js: spawnFromParent: _position.x > POOL_LEFT"   );
         assert( _position.y > POOL_TOP,     "foodbit.js: spawnFromParent: _position.y < POOL_TOP"	);
         assert( _position.y < POOL_BOTTOM,  "foodbit.js: spawnFromParent: _position.y > POOL_BOTTOM" );
-        
-        this.setNutritionAccordingToPosition();
     }
 
 

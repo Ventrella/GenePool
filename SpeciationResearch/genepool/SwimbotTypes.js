@@ -114,6 +114,9 @@ const DEFAULT_CHILD_ENERGY_RATIO	        = ONE_HALF;
 const MAX_CHILD_ENERGY_RATIO                = ONE;
 const MIN_SWIMBOT_HUNGER_THRESHOLD          = ZERO;
 
+// ranges from 0 to 1 with 0 being not picky at all and 1 being totally 'nothing else'
+const SWIMBOT_NUTRITION_PICKINESS = 0.7;
+
 //const MAX_SWIMBOT_HUNGER_THRESHOLD          = 100;
 const MAX_SWIMBOT_HUNGER_THRESHOLD          = 200;
 

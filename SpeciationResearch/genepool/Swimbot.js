@@ -1605,14 +1605,17 @@ let partAccelerationY = -strokeForceY;
 	    let c1 = judge.getAverageColor();
 	    let c2 = this.getAverageColor();
 	    
-	    //console.log( "judge color = " + c1.red + ", " + c1.green + ", " + c1.blue );
-	    //console.log( "my color    = " + c2.red + ", " + c2.green + ", " + c2.blue );
+//console.log( "----------------" );
+//console.log( "judge color = " + c1.red + ", " + c1.green + ", " + c1.blue );
+//console.log( "my color    = " + c2.red + ", " + c2.green + ", " + c2.blue );
             
         let rDiff = Math.abs( c2.red    - c1.red    );
         let gDiff = Math.abs( c2.green  - c1.green  );
         let bDiff = Math.abs( c2.blue   - c1.blue   );
 
         amount = ONE - ( ( rDiff + gDiff + bDiff ) * ONE_THIRD );
+
+//console.log( "color similarity = " + amount );
 	    	    
 	    return amount;
     }

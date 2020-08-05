@@ -25,7 +25,8 @@ const CameraNavigationAction =
 }
 
 const MIN_FOOD_REGENERATION_PERIOD      = 1;
-const DEFAULT_FOOD_REGENERATION_PERIOD  = 40;
+//const DEFAULT_FOOD_REGENERATION_PERIOD  = 40;
+const DEFAULT_FOOD_REGENERATION_PERIOD  = 20;
 const MAX_FOOD_REGENERATION_PERIOD      = 200;
 
 var GLOBAL_childEnergyRatio = DEFAULT_CHILD_ENERGY_RATIO;
@@ -38,7 +39,8 @@ function GenePool()
 	//-----------------------------------
 	const MAX_FOODBITS          = 2000;
     const INITIAL_NUM_SWIMBOTS  = 200;
-    const INITIAL_NUM_FOODBITS  = 800;    
+
+    const INITIAL_NUM_FOODBITS  = 1000;    
     const TRAIL_LENGTH          = 100;
     
     const NUM_NEIGHBORHOOD_SWIMBOTS = 14 * 14;
@@ -47,7 +49,8 @@ function GenePool()
 	//---------------------------------------------
 	// rendering-related constants
 	//---------------------------------------------
-    const MILLISECONDS_PER_UPDATE           = 20;
+//const MILLISECONDS_PER_UPDATE           = 20;
+const MILLISECONDS_PER_UPDATE           = 1;
 
 //const LEVEL_OF_DETAIL_THRESHOLD         = 1000.0;
 const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
@@ -504,8 +507,8 @@ let hhh = 0;
 		let end1 = new Vector2D();
 		let end2 = new Vector2D();
 		
-		end1.setXY( POOL_LEFT + POOL_WIDTH * 0.1, POOL_TOP + POOL_HEIGHT * 0.1 );
-		end2.setXY( POOL_LEFT + POOL_WIDTH * 0.4, POOL_TOP + POOL_HEIGHT * 0.1 );
+		end1.setXY( 0.0, 0.0 );
+		end2.setXY( 100.0, 0.0 );
 
         if ( mode === SimulationStartMode.BARRIER )
         {
@@ -1104,50 +1107,24 @@ _camera.stopTracking();
             }
         }
 
-        //console.log( "_numNearbySwimbots = " + _numNearbySwimbots );
-
-
-        /*
-	    //----------------------------------
-	    // find the closest food bit...
-	    //----------------------------------
-        let foundFoodBit = false;
-        let smallestFoodBitDistanceSquared = 100000.0;
-        for (let f=0; f<MAX_FOODBITS; f++)
-        {
-            if ( _foodBits[f].getAlive() )
-            {
-                let distanceSquared = _swimbots[s].getMouthPosition().getDistanceSquaredTo( _foodBits[f].getPosition() );
-                if ( distanceSquared < smallestFoodBitDistanceSquared )
-                {
-                    if ( !_obstacle.getObstruction( _swimbots[s].getMouthPosition(), _foodBits[f].getPosition() ) )
-                    { 
-                        smallestFoodBitDistanceSquared = distanceSquared;
-                        _chosenFoodBit = _foodBits[f];
-                        foundFoodBit = true;
-                    }
-                }
-            }
-        }
-        */
-
-/*
-hhh ++;
-if ( hhh < 100 )
-{
-    console.log( "in genePool: " + _swimbots[s].getPreferredNutrition() );        
-}    
-*/
-
         //------------------------------------------------------
-        // find the closest food bit that is also closest 
-        // to the swimbot's preferred nutrition profile
+        // find the closest food bit
         //------------------------------------------------------
         let foundFoodBit = false;
         let smallestDistance = Number.MAX_SAFE_INTEGER;
         for (let f=0; f<MAX_FOODBITS; f++)
         { 
-            if ( _foodBits[f].getNutrition() === _swimbots[s].getPreferredNutrition() )
+            let nutritionOK = true;
+
+            if ( _foodBits[f].getNutrition() != _swimbots[s].getPreferredNutrition() )
+            {
+//if ( Math.random() < SWIMBOT_NUTRITION_PICKINESS )
+                {
+                    nutritionOK = false;
+                }
+            }
+
+            if ( nutritionOK )
             {
                 if ( _foodBits[f].getAlive() )
                 {
@@ -1157,16 +1134,6 @@ if ( hhh < 100 )
                     {                                
                         let distance = viewDistance / SWIMBOT_VIEW_RADIUS;
                     
-                        /*
-                        //----------------------------------------------------------------------------------
-                        // take into account the desire for a food nutritional profile (shown as color)
-                        //----------------------------------------------------------------------------------
-                        let xx = _foodBits[f].getNutrition1() - 0.0;
-                        let yy = _foodBits[f].getNutrition2() - 0.0;
-                        let nutritionDistance = ( Math.abs( xx ) + Math.abs( yy ) ) * SWIMBOT_NUTRITION_FOOD_CHOICE_BIAS;
-                        distance += nutritionDistance;
-                        */
-                                        
                         if ( distance < smallestDistance )
                         {
                             if ( !_obstacle.getObstruction( _swimbots[s].getMouthPosition(), _foodBits[f].getPosition() ) )
