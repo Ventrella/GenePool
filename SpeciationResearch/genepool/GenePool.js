@@ -38,9 +38,9 @@ function GenePool()
 	// count-related constants
 	//-----------------------------------
 	const MAX_FOODBITS          = 2000;
-    const INITIAL_NUM_SWIMBOTS  = 200;
+    const INITIAL_NUM_SWIMBOTS  = 400;
 
-    const INITIAL_NUM_FOODBITS  = 1000;    
+    const INITIAL_NUM_FOODBITS  = 1600;    
     const TRAIL_LENGTH          = 100;
     
     const NUM_NEIGHBORHOOD_SWIMBOTS = 14 * 14;
