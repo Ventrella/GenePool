@@ -16,7 +16,8 @@ const FOOD_BIT_COLOR_COMPONENTS         = "100, 200, 100";
 const FOOD_BIT_ROLLOVER_COLOR           = "rgba( 100, 200, 100, 0.5 )";	
 const FOOD_BIT_SELECT_COLOR             = "rgba( 200, 200, 200, 1.0 )";	
 const FOOD_OPACITY_INCREMENT            = 0.01;
-const NUTRITION_MUTATION_RATE           = 0.2;
+const NUTRITION_MUTATION_RATE           = 0.99;
+const SPAWN_RANDOMLY_IN_POOL            = true;
 
 //------------------------
 // Food bit
@@ -112,14 +113,12 @@ function FoodBit()
         _nutrition  = parentFoodBit.getNutrition();
         
 
-//TEST! This is sort of like a mutation in nutrition....to keep one ntrution value from dominating the pool...
-if ( Math.random() < NUTRITION_MUTATION_RATE )
-{
-    this.randomizeNutrition();
-}
+        //TEST! This is sort of like a mutation in nutrition....to keep one ntrution value from dominating the pool...
+        if ( Math.random() < NUTRITION_MUTATION_RATE )
+        {
+            this.randomizeNutrition();
+        }
                 
-        
-        
         this.setColorAccordingToNutrition();
         
     
@@ -152,15 +151,13 @@ if ( Math.random() < NUTRITION_MUTATION_RATE )
                 if ( _position.x > pr ) { _position.x += ( ( pr - _position.x ) * 2 ); }
         else	if ( _position.x < pl ) { _position.x += ( ( pl - _position.x ) * 2 ); }
         
-        //console.log( "after:" + _position.y );
+        //console.log( "after:" + _position.y );        
         
-        
-        
-        
-// just spread evenly in the pool...
-//_position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
-//_position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
-       
+        if ( SPAWN_RANDOMLY_IN_POOL )
+        {
+            _position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
+            _position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
+        }   
         
 
         assert( _position.x < POOL_RIGHT,   "foodbit.js: spawnFromParent: _position.x < POOL_RIGHT"  );

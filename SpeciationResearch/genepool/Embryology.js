@@ -49,12 +49,14 @@ const MAX_SEQUENCE_COUNT    =   5;
 const GREATEST_POSSIBLE_SWIMBOT_MASS = MAX_PARTS * MAX_LENGTH * MAX_WIDTH
 const GREATEST_POSSIBLE_SWIMBOT_LENGTH	= MAX_PARTS * MAX_LENGTH;
 
-	
 const DO_COLOR_TEST = false;
 	
 //--------------------
 function Embryology()
 {	    
+
+let testNoEel = true;
+
     //-------------------------
     function CategoryValues()
     {	   	
@@ -266,8 +268,14 @@ function Embryology()
         // make sure this is kosher
         //---------------------------------------
         g++; // important
-        //console.log( "num genes used = " + g + " out of " + NUM_GENES );
+        console.log( "num genes used = " + g + " out of " + NUM_GENES );
 		assert( g < NUM_GENES, "g < NUM_GENES" );
+		
+		
+		for (let junk=0; junk<NUM_GENES; junk++)
+		{
+//		    set gene to 0
+		}
         
         //---------------------------------
         // set the frequency...
@@ -279,7 +287,11 @@ function Embryology()
         //----------------------------------------------
         _partIndex = ROOT_PART;
         let startCategory = 0;
-        this.generateBodySequence( phenotype, _partIndex, ZERO, startCategory, ONE );    
+
+testNoEel = true;
+//console.log( "--------------");
+        this.generateBodySequence( phenotype, _partIndex, ZERO, startCategory, ONE );  
+testNoEel = false;  
 
         //----------------------------------------------
         // generate the rest of the body...
@@ -483,7 +495,7 @@ copyPart( testParts[p], phenotype.parts[p] );
                 assert( _partIndex < MAX_PARTS, "_partIndex < MAX_PARTS" );
                 
                 phenotype.parts[ _partIndex ].child = NULL_INDEX; //default
-            
+
                 //-------------------------------------------------------
                 // the first part is a branchpoint from the parent  
                 //-------------------------------------------------------
@@ -511,6 +523,14 @@ copyPart( testParts[p], phenotype.parts[p] );
                     phenotype.parts[ _partIndex ].turnPhase = _categoryValues[c].turnPhase;   
                 }
 
+                
+if ( testNoEel )
+{
+    //console.log( "testNoEel" );
+    phenotype.parts[ _partIndex ].turnAmp   = ZERO;
+    phenotype.parts[ _partIndex ].turnPhase = ZERO;   
+}
+              
                 //-----------------------------------------------
                 // apply reflection on amp
                 //-----------------------------------------------

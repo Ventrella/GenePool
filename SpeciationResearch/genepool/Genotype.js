@@ -346,6 +346,10 @@ g++; _genes[g] = 255;
 	    //console.log( "mutate gene " + g );
 	    
         let amplitude = Math.floor( Math.random() * Math.random() * BYTE_SIZE );
+        
+        
+//amplitude *= mutationAmplitude;
+        
         //console.log( "amplitude = " + amplitude );
     
         //-------------------------------------
