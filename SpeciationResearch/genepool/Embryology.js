@@ -268,7 +268,7 @@ let testNoEel = true;
         // make sure this is kosher
         //---------------------------------------
         g++; // important
-        console.log( "num genes used = " + g + " out of " + NUM_GENES );
+        //console.log( "num genes used = " + g + " out of " + NUM_GENES );
 		assert( g < NUM_GENES, "g < NUM_GENES" );
 		
 		

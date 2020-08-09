@@ -65,7 +65,7 @@ function FoodBit()
     //--------------------------------------
 	this.randomizeNutrition = function()
 	{
-	    console.log( "randomizeNutrition" ) ;
+	    //console.log( "randomizeNutrition" ) ;
 	    
 	    _nutrition = Math.floor( Math.random() * 2 );
 	    

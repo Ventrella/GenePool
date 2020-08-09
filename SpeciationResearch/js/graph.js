@@ -10,7 +10,7 @@ function Graph()
     const GRAPH_RIGHT_MARGIN    = 20;
     const GRAPH_BOTTOM_MARGIN   = 160;
     const GRAPH_TOP_MARGIN      = 40;
-    const GRAPH_MAX_POPULATION  = 1000;
+    const GRAPH_MAX_POPULATION  = 2000;
     const RECIPROCAL_OF_MAX_POP = 1 / GRAPH_MAX_POPULATION;
     const GRAPH_FOODBIT_COLOR   = "rgb( 20,  150,  20 )";
     const GRAPH_SWIMBOT_COLOR   = "rgb( 150,  20,  20 )";

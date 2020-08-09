@@ -135,6 +135,7 @@ let hhh = 0;
 	for (let s=0; s<MAX_SWIMBOTS; s++)
 	{
 		_swimbots[s] = new Swimbot(); 
+		_swimbots[s].setParent(this);
 	}	
     
 	//-----------------------------------------------------
@@ -215,6 +216,11 @@ let hhh = 0;
 	this.startSimulation = function( mode )
 	{	
 //looks like numOffspring didn't get reset. fix this! (and any other related side effects
+	
+		//---------------------------------
+		// set clock to 0
+		//---------------------------------
+		_clock = 0;
 	
 		//----------------------------
 		// start time
@@ -541,11 +547,6 @@ let hhh = 0;
 		// set _simulationRunning to true
 		//---------------------------------
 		_simulationRunning = true;
-    
-		//---------------------------------
-		// reset clock to 0
-		//---------------------------------
-		_clock = 0;
 	}
 	
 	
@@ -784,6 +785,15 @@ let hhh = 0;
         {
             _swimbots[s].setAttraction( _attractionCriterion );
         }	    
+	}
+
+
+	
+	//--------------------------------------------------------------
+	this.notifySwimbotDeathTime = function( deceasedSwimbotIndex )
+	{
+	    //console.log( deceasedSwimbotIndex + " just died" );
+	    _familyTree.setDeathTime( deceasedSwimbotIndex, _clock );
 	}
 	
 	
@@ -1378,7 +1388,6 @@ _camera.stopTracking();
         // add the new swimbot to the family tree
         //-------------------------------------------------------
         _familyTree.addNode( index, NULL_INDEX, NULL_INDEX, _clock, this.getSwimbotGenes( index ) );
-
 
         setSelectedSwimbot( index );
     }

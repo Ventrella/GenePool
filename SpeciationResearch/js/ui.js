@@ -52,7 +52,7 @@ function chooseAttraction()
             if ( radioButtons[i].checked )
             {
                 let value = radioButtons[i].value;  
-                let attraction = ATTRACTION_SIMILAR_COLOR;
+                let attraction = ATTRACTION_RANDOM;
 
                      if ( value === "colorful"          ) { attraction = ATTRACTION_COLORFUL;           }
                 else if ( value === "big"               ) { attraction = ATTRACTION_BIG;                }

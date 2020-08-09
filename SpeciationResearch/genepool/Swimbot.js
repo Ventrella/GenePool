@@ -62,11 +62,20 @@ var    flopperYV = 0;
 	let _colorUtility       = new Color();
 	let _energyEfficiency   = ZERO;
 	let _selectRadius       = ZERO;
-	
+		
 	let _lastPositionForEfficiencyMeasurement = new Vector2D();
     let _lastEnergyForEfficiencyMeasurement = ZERO;
 	let _readyforSensoryInputToBrain = false;
 
+
+let _parent = null;	
+
+//----------------------------------
+this.setParent = function( parent )
+{
+    _parent = parent;
+}
+    
     //------------------------------------
     this.computeMomentFactors = function()
     {
@@ -217,21 +226,20 @@ let perpDot      = _focusDirection.x * _heading.x + _focusDirection.y * _heading
 			{
 				let ampModulator   = _phenotype.parts[p].turnAmp    * directionDot;
 				let phaseModulator = _phenotype.parts[p].turnPhase  * directionDot;	
-			
-			
+			    
+/*			
 //test
 let perpAmpModulator   = _phenotype.parts[p].amp    * perpDot;
 let perpPhaseModulator = _phenotype.parts[p].phase  * perpDot;	
             
 let radian = _timer * _phenotype.frequency + ( perpPhaseModulator + phaseModulator );	
 _phenotype.parts[p].bendingAngle = ( perpAmpModulator + ampModulator ) * Math.sin( radian );
+*/
 
+//previous
+let radian = _timer * _phenotype.frequency + ( _phenotype.parts[p].phase + phaseModulator );	
+_phenotype.parts[p].bendingAngle = ( _phenotype.parts[p].amp + ampModulator ) * Math.sin( radian );
 
-                /*
-			    //previous
-				let radian = _timer * _phenotype.frequency + ( _phenotype.parts[p].phase + phaseModulator );	
-				_phenotype.parts[p].bendingAngle = ( _phenotype.parts[p].amp + ampModulator ) * Math.sin( radian );
-				*/
 
 				_phenotype.parts[p].currentAngle += _phenotype.parts[p].bendingAngle;
 			}
@@ -1854,6 +1862,8 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
 	//----------------------
 	this.die = function()
 	{
+        _parent.notifySwimbotDeathTime( _index );
+	
         _alive = false;
     }
     
