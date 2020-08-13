@@ -29,7 +29,7 @@ const MIN_FOOD_REGENERATION_PERIOD      = 1;
 const DEFAULT_FOOD_REGENERATION_PERIOD  = 20;
 const MAX_FOOD_REGENERATION_PERIOD      = 200;
 
-const NON_REPRODUCING_JUNK_DNA_LIMIT = 0.2;
+const NON_REPRODUCING_JUNK_DNA_LIMIT = 0.7;
 
 // this needs to be the same as the analogous value in embryology!
 const NUM_GENES_USED = 111;
@@ -1096,6 +1096,8 @@ _camera.stopTracking();
         }          
         
         let similarity = ONE - ( diff / num );  
+        
+        //console.log( similarity );
         
 	    return similarity;
 	}
