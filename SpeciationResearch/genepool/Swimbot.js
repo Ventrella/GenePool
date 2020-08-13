@@ -541,9 +541,7 @@ _phenotype.parts[p].bendingAngle = ( _phenotype.parts[p].amp + ampModulator ) * 
 		// generate phenotype
 		//--------------------------------
 		_phenotype = embryology.generatePhenotypeFromGenotype( _genotype );
-		
-//		_phenotype
-		
+				
  		//--------------------------------
 		// important
 		//--------------------------------
@@ -1498,7 +1496,9 @@ let partAccelerationY = -strokeForceY;
         if ( attractionCriterion === ATTRACTION_SHORT           ) { attractiveness = ONE -  this.getCurrentBodyLongness     (); }
         if ( attractionCriterion === ATTRACTION_CROOKED         ) { attractiveness = ONE -  this.getCurrentBodyStraightness (); }
         
-        if ( attractionCriterion === ATTRACTION_SIMILAR_COLOR   ) { attractiveness =        this.getColorSimilarity         ( judge ); }
+//if ( attractionCriterion === ATTRACTION_SIMILAR_COLOR   ) { attractiveness =        this.getColorSimilarity         ( judge ); }
+if ( attractionCriterion === ATTRACTION_SIMILAR_COLOR   ) { attractiveness =        this.getSimilarity         ( judge ); }
+
         if ( attractionCriterion === ATTRACTION_SIMILAR_SIZE    ) { attractiveness =        this.getBignessSimilarity       ( judge ); }
         if ( attractionCriterion === ATTRACTION_SIMILAR_HYPER   ) { attractiveness =        this.getHypernessSimilarity     ( judge ); }
         if ( attractionCriterion === ATTRACTION_SIMILAR_LENGTH  ) { attractiveness =        this.getLengthSimilarity        ( judge ); }
@@ -1591,13 +1591,10 @@ let partAccelerationY = -strokeForceY;
 	this.getSimilarity = function( judge )
 	{
 	    let amount
-	    = this.getColorSimilarity       ( judge )
-	    + this.getBignessSimilarity     ( judge )
-	    + this.getHypernessSimilarity   ( judge )
-	    + this.getLengthSimilarity      ( judge )
-	    + this.getStraightessSimilarity ( judge );
+	    = this.getColorSimilarity  ( judge )
+	    + this.getBignessSimilarity( judge );
 	    
-	    amount /= 5; 
+	    amount /= 2; 
 	    	    	    
 	    return amount;
     }

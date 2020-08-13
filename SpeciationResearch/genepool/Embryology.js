@@ -105,10 +105,10 @@ let testNoEel = true;
     let _generating         = false;
     let _frequency          = ZERO;
     let _cutOff             = 0;
-     
-	//----------------------------------------------------
+    
+	//---------------------------------------------------------------------------
 	// generate phenotype from genotype
-	//----------------------------------------------------
+	//---------------------------------------------------------------------------
 	this.generatePhenotypeFromGenotype = function( genotype )
 	{
         //--------------------------------
@@ -270,13 +270,7 @@ let testNoEel = true;
         g++; // important
         //console.log( "num genes used = " + g + " out of " + NUM_GENES );
 		assert( g < NUM_GENES, "g < NUM_GENES" );
-		
-		
-		for (let junk=0; junk<NUM_GENES; junk++)
-		{
-//		    set gene to 0
-		}
-        
+		        
         //---------------------------------
         // set the frequency...
         //---------------------------------

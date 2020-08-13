@@ -29,6 +29,14 @@ const MIN_FOOD_REGENERATION_PERIOD      = 1;
 const DEFAULT_FOOD_REGENERATION_PERIOD  = 20;
 const MAX_FOOD_REGENERATION_PERIOD      = 200;
 
+const NON_REPRODUCING_JUNK_DNA_LIMIT = 0.2;
+
+// this needs to be the same as the analogous value in embryology!
+const NUM_GENES_USED = 111;
+
+
+
+
 var GLOBAL_childEnergyRatio = DEFAULT_CHILD_ENERGY_RATIO;
 
 //------------------
@@ -126,6 +134,7 @@ const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
     let _renderingGoals         = false;
     let _windowWidth            = 0;
     let _windowHeight           = 0;
+
     
     
 let hhh = 0;	
@@ -495,6 +504,14 @@ let hhh = 0;
             {
                 _myGenotype.randomize();
             }
+            
+            //--------------------------------------------------
+            // This sets all junk DNA to a value of 0!!!
+            //--------------------------------------------------
+            for (let g=NUM_GENES_USED; g<NUM_GENES; g++)
+            {
+                _myGenotype.setGeneValue( g, 0 );
+            }            
 
             //--------------------------------------------------
             // create the swimbot
@@ -508,7 +525,7 @@ let hhh = 0;
         }	
         
         //--------------------------------------
-        // initilize obstacle       
+        // initialize obstacle       
         //--------------------------------------  
 		let end1 = new Vector2D();
 		let end2 = new Vector2D();
@@ -962,56 +979,61 @@ else
                             assert( _myGenotype    != null, "genepool: updateSwimbots: _myGenotype    != null" );
                             assert( _mateGenotype  != null, "genepool: updateSwimbots: _mateGenotype  != null" );
 
-                            //------------------------------------------------------------------------------
-                            // collect genes from me and my chosen mate and recombine them for the child
-                            //------------------------------------------------------------------------------
+                            //------------------------------------------------
+                            // collect genes from me and my chosen mate 
+                            //------------------------------------------------
                             _myGenotype = _swimbots[s].getGenotype();
                             _mateGenotype = _potentialMate.getGenotype();
                             
-                            assert( _childGenotype != null, "_childGenotype != null" );
+                            if ( this.getJunkDnaSimilarity( _myGenotype, _mateGenotype ) > NON_REPRODUCING_JUNK_DNA_LIMIT )
+                            {
+                                //-----------------------------------
+                                // recombine genes for the child 
+                                //-----------------------------------
+                                assert( _childGenotype != null, "_childGenotype != null" );
 
-                            _childGenotype.setAsOffspring( _myGenotype, _mateGenotype );
+                                _childGenotype.setAsOffspring( _myGenotype, _mateGenotype );
 
-                            //------------------------------------------------
-                            // collect energy from parents for child energy
-                            //------------------------------------------------
-                            let myEnergyContribution    = _swimbots[s].contributeToOffspring();
-                            let mateEnergyContribution  = _potentialMate.contributeToOffspring();
-                            let energyToOffspring       = myEnergyContribution + mateEnergyContribution;     
+                                //------------------------------------------------
+                                // collect energy from parents for child energy
+                                //------------------------------------------------
+                                let myEnergyContribution    = _swimbots[s].contributeToOffspring();
+                                let mateEnergyContribution  = _potentialMate.contributeToOffspring();
+                                let energyToOffspring       = myEnergyContribution + mateEnergyContribution;     
                             
-                            //console.log( "energyToOffspring = " + energyToOffspring );
-                            //assert( energyToOffspring <= DEFAULT_SWIMBOT_HUNGER_THRESHOLD, "energyToOffspring <= DEFAULT_SWIMBOT_HUNGER_THRESHOLD" );                       
+                                //console.log( "energyToOffspring = " + energyToOffspring );
+                                //assert( energyToOffspring <= DEFAULT_SWIMBOT_HUNGER_THRESHOLD, "energyToOffspring <= DEFAULT_SWIMBOT_HUNGER_THRESHOLD" );                       
 
-                            //----------------------------------------------------------------------------------------
-                            // set birth position
-                            //----------------------------------------------------------------------------------------
-                            let diffX = _potentialMate.getGenitalPosition().x - _swimbots[s].getGenitalPosition().x;
-                            let diffY = _potentialMate.getGenitalPosition().y - _swimbots[s].getGenitalPosition().y;
+                                //----------------------------------------------------------------------------------------
+                                // set birth position
+                                //----------------------------------------------------------------------------------------
+                                let diffX = _potentialMate.getGenitalPosition().x - _swimbots[s].getGenitalPosition().x;
+                                let diffY = _potentialMate.getGenitalPosition().y - _swimbots[s].getGenitalPosition().y;
                             
-                            _vectorUtility.x = _swimbots[s].getGenitalPosition().x + diffX * ONE_HALF;
-                            _vectorUtility.y = _swimbots[s].getGenitalPosition().y + diffY * ONE_HALF;
+                                _vectorUtility.x = _swimbots[s].getGenitalPosition().x + diffX * ONE_HALF;
+                                _vectorUtility.y = _swimbots[s].getGenitalPosition().y + diffY * ONE_HALF;
 
-                            //---------------------------------------------
-                            // pool effect
-                            //---------------------------------------------
-                            _pool.endTouch( _vectorUtility, _seconds );
-                                                		
-                            //--------------------------------------------
-                            // create the child swimbot
-                            //--------------------------------------------
-                            let initialAngle = getRandomAngleInDegrees();                                                        
-                            _swimbots[ newBornSwimbotIndex ].create( newBornSwimbotIndex, 0, _vectorUtility, initialAngle, energyToOffspring, _childGenotype, _embryology )
+                                //---------------------------------------------
+                                // pool effect
+                                //---------------------------------------------
+                                _pool.endTouch( _vectorUtility, _seconds );
+                                                        
+                                //--------------------------------------------
+                                // create the child swimbot
+                                //--------------------------------------------
+                                let initialAngle = getRandomAngleInDegrees();                                                        
+                                _swimbots[ newBornSwimbotIndex ].create( newBornSwimbotIndex, 0, _vectorUtility, initialAngle, energyToOffspring, _childGenotype, _embryology )
  
-                            //--------------------------------------------------
-                            // add the new swimbot to the family tree
-                            //--------------------------------------------------
-                            _familyTree.addNode( newBornSwimbotIndex, s, chosenMateIndex, _clock, this.getSwimbotGenes( newBornSwimbotIndex ) );
-
-
-                         } // if ( _potentialMate.getAlive() )                     
-                    }    //  if (( newBornSwimbotIndex != -1 ) &&  ( swimbot[s].getChosenMateIndex() != -1 ))
-                }       //   if ( swimbot[s].isTryingToMate() )
-            }          //    if ( _swimbots[s].getAlive() )
+                                //--------------------------------------------------
+                                // add the new swimbot to the family tree
+                                //--------------------------------------------------
+                                _familyTree.addNode( newBornSwimbotIndex, s, chosenMateIndex, _clock, this.getSwimbotGenes( newBornSwimbotIndex ) );
+                    
+                            } // if ( getJunkDnaDistance( _myGenotype, _mateGenotype ) > NON_REPRODUCING_JUNK_DNA_LIMIT )
+                         }   // if ( _potentialMate.getAlive() )                     
+                    }       //  if (( newBornSwimbotIndex != -1 ) &&  ( swimbot[s].getChosenMateIndex() != -1 ))
+                }          //   if ( swimbot[s].isTryingToMate() )
+            }             //    if ( _swimbots[s].getAlive() )
             else
             {
                 //-------------------------------------------------------------
@@ -1059,6 +1081,24 @@ _camera.stopTracking();
         }
     }
     
+    
+    
+    
+    //--------------------------------------------------------
+	this.getJunkDnaSimilarity = function( genotype1, genotype2 )
+	{		
+	    let diff = ZERO;
+	    let num = 0;
+        for (let g=NUM_GENES_USED; g<NUM_GENES; g++)
+        {
+            diff += Math.abs( genotype1.getGeneValue(g) - genotype2.getGeneValue(g) ) / BYTE_SIZE;
+            num ++;
+        }          
+        
+        let similarity = ONE - ( diff / num );  
+        
+	    return similarity;
+	}
     
     
     
