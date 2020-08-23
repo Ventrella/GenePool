@@ -16,8 +16,8 @@ const FOOD_BIT_COLOR_COMPONENTS         = "100, 200, 100";
 const FOOD_BIT_ROLLOVER_COLOR           = "rgba( 100, 200, 100, 0.5 )";	
 const FOOD_BIT_SELECT_COLOR             = "rgba( 200, 200, 200, 1.0 )";	
 const FOOD_OPACITY_INCREMENT            = 0.01;
-const NUTRITION_MUTATION_RATE           = 0.99;
-const SPAWN_RANDOMLY_IN_POOL            = true;
+//const NUTRITION_MUTATION_RATE           = 0.99;
+//const SPAWN_FOOD_RANDOMLY_IN_POOL       = true;
 
 //------------------------
 // Food bit
@@ -153,7 +153,7 @@ function FoodBit()
         
         //console.log( "after:" + _position.y );        
         
-        if ( SPAWN_RANDOMLY_IN_POOL )
+        if ( SPAWN_FOOD_RANDOMLY_IN_POOL )
         {
             _position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
             _position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;

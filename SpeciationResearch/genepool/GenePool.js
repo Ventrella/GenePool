@@ -29,7 +29,7 @@ const MIN_FOOD_REGENERATION_PERIOD      = 1;
 const DEFAULT_FOOD_REGENERATION_PERIOD  = 20;
 const MAX_FOOD_REGENERATION_PERIOD      = 200;
 
-const NON_REPRODUCING_JUNK_DNA_LIMIT = 0.7;
+//const NON_REPRODUCING_JUNK_DNA_LIMIT = 0.7;
 
 // this needs to be the same as the analogous value in embryology!
 const NUM_GENES_USED = 111;
@@ -46,9 +46,10 @@ function GenePool()
 	// count-related constants
 	//-----------------------------------
 	const MAX_FOODBITS          = 2000;
-    const INITIAL_NUM_SWIMBOTS  = 400;
-
-    const INITIAL_NUM_FOODBITS  = 1600;    
+	
+    //const INITIAL_NUM_SWIMBOTS  = 400;
+    //const INITIAL_NUM_FOODBITS  = 1600;    
+    
     const TRAIL_LENGTH          = 100;
     
     const NUM_NEIGHBORHOOD_SWIMBOTS = 14 * 14;
@@ -124,7 +125,6 @@ const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
 	let _frameRate              = ZERO;
 	let _debugTrail 		    = new Array( TRAIL_LENGTH ); 
 	let _familyTree             = new FamilyTree();
-//let _numFamilyTreeNodes     = 0;
 	let _panningLeft            = false;
 	let _panningRight           = false;
 	let _panningUp              = false;
@@ -984,6 +984,8 @@ else
                             //------------------------------------------------
                             _myGenotype = _swimbots[s].getGenotype();
                             _mateGenotype = _potentialMate.getGenotype();
+                            
+                            //console.log( "NON_REPRODUCING_JUNK_DNA_LIMIT = " + NON_REPRODUCING_JUNK_DNA_LIMIT );                            
                             
                             if ( this.getJunkDnaSimilarity( _myGenotype, _mateGenotype ) > NON_REPRODUCING_JUNK_DNA_LIMIT )
                             {

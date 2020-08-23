@@ -5,13 +5,13 @@
 const NUM_GENES = 256;
 
 //const MUTATION_RATE   = 0.0;
-const MUTATION_RATE	= 0.01; // original
+//const MUTATION_RATE	= 0.01; // original
 //const MUTATION_RATE	= 0.05;
 //const MUTATION_RATE	= 0.2;
 //const MUTATION_RATE   = 1.0;
 
-const CROSSOVER_RATE	= 0.2;
-const MIN_GENE_VALUE	= 0;
+//const CROSSOVER_RATE	= 0.2;
+//const MIN_GENE_VALUE	= 0;
 
 const PRESET_GENOTYPE_DARWIN    =  0;
 const PRESET_GENOTYPE_WALLACE   =  1;

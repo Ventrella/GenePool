@@ -5,7 +5,7 @@
 //-------------------------------------------
 const FULLY_GROWN_AGE    = 1000;
 const OLD_AGE            = 39000;
-const MAXIMUM_LIFESPAN   = 40000;
+//const MAXIMUM_LIFESPAN   = 40000; // this has been moved to ExperimentParameters.js
 const TIMER_DELTA_INCREASE_RATE = 0.02;
 const STARVING_TIMER_DELTA = 0.05;
 

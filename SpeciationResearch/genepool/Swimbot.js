@@ -852,7 +852,8 @@ _phenotype.parts[p].bendingAngle = ( _phenotype.parts[p].amp + ampModulator ) * 
         }
     
         //---------------------------------------------
-        // energy is always slowly draining 
+        // energy is always slowly draining...
+        // basal metabolic rate!
         //---------------------------------------------
         _energy -= CONTINUAL_ENERGY_DRAIN;
         
@@ -922,13 +923,13 @@ _phenotype.parts[p].bendingAngle = ( _phenotype.parts[p].amp + ampModulator ) * 
             let strokeForceY = _phenotype.parts[p].perpendicular.y * strokeAmplitude;
 
             //-------------------------------------------------
-            // calcualte energy lost from stroke
+            // calculate energy lost from stroke
 		    //
 		    // hey: this might be more accurate to nature if 
 		    // it were something like angle bend times mass.
             //--------------------------------------------------
             _energy -= Math.abs( strokeAmplitude ) * ENERGY_USED_UP_SWIMMING;
-            
+                        
             if ( _energy < ZERO )
             {
                 _energy = ZERO;
@@ -1049,7 +1050,7 @@ let partAccelerationY = -strokeForceY;
         let energyLost   = _lastEnergyForEfficiencyMeasurement - _energy;
         
         //----------------------------------------------------------
-        //if swimbot ate food, energy went up, so cancel that....
+        // if swimbot ate food, energy went up, so cancel that....
         //----------------------------------------------------------
         if ( energyLost < ZERO ) 
         {
