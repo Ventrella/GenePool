@@ -733,6 +733,8 @@ function printFamilyTree()
         f += "<br>";
         f += "birth time: " + familyTree.getNodeBirthTime(n).toString();
         f += "<br>";
+        f += "death time: " + familyTree.getNodeDeathTime(n).toString();
+        f += "<br>";
         f += "genes: ";
         f += "<br>";
 
@@ -762,7 +764,6 @@ function printFamilyTree()
     + "<br>"
     + f;
 }
-
 
 
 

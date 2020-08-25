@@ -3,41 +3,19 @@
 
 function Camera()
 {
-	const FRICTION   			=  8.0;
+    const FRICTION   			=  8.0;
 	const BUTTON_FORCE          =  0.3;
-	const DRAG_FORCE            =  0.1;
-	const MAX_TRACKING_FORCE    =  0.02;
-	const TRACKING_FORCE_DELTA  =  0.005;
-	const DECAY_DURATION 		=  40;
+	const DRAG_FORCE            =  0.03;
     const PAN_OVERSHOOT_PUSH 	=  0.7;
     const SCALE_OVERSHOOT_PUSH	=  0.7;
     const MINIMUM_SCALE 		=  500.0;
-
-    function CameraShift()
-    {
-        this.active         = false;
-        this.startTime      = ZERO;
-        this.duration       = ZERO;
-        this.startPosition  = new Vector2D();
-        this.endPosition    = new Vector2D();
-        this.startScale     = ZERO;
-        this.endScale       = ZERO;
-    }
-
-    function CameraTracking()
-    {
-        this.active   = false;
-        this.force    = ZERO;
-        this.position = new Vector2D();
-    }
     
-	//----------------------
+	//------------------------------------------
 	// members
-	//----------------------
+	//------------------------------------------
 	let _position  		    = new Vector2D();
 	let _velocity  		    = new Vector2D();
-	let _shift              = new CameraShift();
-	let _tracking           = new CameraTracking();
+	let _vectorUtility      = new Vector2D();
 	let _scaleDelta 	    = ZERO;
 	let _scale      	    = ONE;
     let _aspectRatio        = ONE;
@@ -45,85 +23,43 @@ function Camera()
 	let _right	    	    = ZERO;
 	let _top	    	    = ZERO;
 	let _bottom	    	    = ZERO;
-	let _force	    	    = ZERO;
 	let _seconds		    = ZERO;
 	let _secondsDelta	    = ZERO;
-	let _decayClock		    = 0;
-	
 	
 	//--------------------------------
 	this.update = function( seconds )
-	{	
-	    if ( _shift.active )
-	    {
-	        //console.log( "_shift.active" );
-	        updateShift();
-	    }
-	    else
-	    {
-	        if ( _tracking.active )
-	        {
-	            //console.log( "_tracking.active" );
-	            updateTracking();
-	        }
-	        else
-	        {        
-                if ( _decayClock < DECAY_DURATION )
-                {
-                    //----------------------
-                    // update decay clock
-                    //----------------------
-                    _decayClock ++;
+	{		
+        //-------------------------------------------
+        // friction
+        //-------------------------------------------
+        let f = ONE - FRICTION  * _secondsDelta;
 
-                    //-----------------------------------
-                    // determine force
-                    //-----------------------------------
-                    _force = _scale * BUTTON_FORCE * _secondsDelta;
+        if ( f < ZERO )
+        {
+            _velocity.clear();
+            _scaleDelta = ZERO;				
+        }
+        else if ( f < ONE )
+        {
+            _velocity.scale(f);
+            _scaleDelta *= (f);
+        }
 
-                    //-------------------------------------------
-                    // friction
-                    //-------------------------------------------
-                    let f = ONE - FRICTION  * _secondsDelta;
+        //-----------------------------
+        // update position and scale
+        //-----------------------------
+        _position.add( _velocity );
+        _scale += _scaleDelta;
 
-                    if ( f < ZERO )
-                    {
-                        _velocity.clear();
-                        _scaleDelta = ZERO;				
-                    }
-                    else if ( f < ONE )
-                    {
-                        _velocity.scale(f);
-                        _scaleDelta *= (f);
-                    }
+        //----------------------
+        // calculate frame
+        //----------------------
+        calculateFrame();
 
-                    //-------------------------------------------
-                    // finish decay
-                    //-------------------------------------------
-                    if ( _decayClock == DECAY_DURATION )
-                    {
-                        _force = ZERO;
-                        _velocity.clear();
-                        _scaleDelta = ZERO;
-                    }
-
-                    //-----------------------------------
-                    // update position and scale
-                    //-----------------------------------
-                    _position.add( _velocity );
-                    _scale += _scaleDelta;
-
-                    //-----------------------------------
-                    // calculate frame
-                    //-----------------------------------
-                    calculateFrame();
-
-                    //-----------------------------------
-                    // apply constraints
-                    //-----------------------------------
-                    applyConstraints();
-                }
-            }
-		}
+        //----------------------
+        // apply constraints
+        //----------------------
+        applyConstraints();
 
 		//-----------------------------------
 		// update seconds
@@ -134,125 +70,15 @@ function Camera()
 
 
 
-	//------------------------------------------------------------
-	this.startTracking = function( position, scale, duration )
-	{	
-	    //console.log( "startTracking" );
-	    
-        _shift.active       = true;
-	    _shift.startTime    = _seconds;
-	    _shift.duration     = duration;
-        _shift.startScale   = _scale;     //current scale
-        _shift.endScale     = scale;      //new scale
-	    
-        _shift.startPosition.copyFrom( _position );
-        _shift.endPosition.copyFrom  (  position );
-	}
-
-
-	//--------------------------------
-	this.stopTracking = function()
-	{	
-	    //console.log( "STOP Tracking" );
-
-		_tracking.active    = false;
-	    _shift.active       = false;
-		_tracking.force     = ZERO;
-	    _scaleDelta         = ZERO;
-	    _velocity.clear()
-	}
-	
-	//-----------------------------------------------
-	this.setTrackingPosition = function( position )
-	{   
-	    console.log( "setTrackingPosition" );
-	    _tracking.position.copyFrom( position );
-	}
-
-	//-------------------------------------------
-	this.setTrackingScale = function( scale )
-	{   
-	    _scale = scale;
-	}
-	
-	//----------------------------
-    function updateTracking()
-    {    
-        //console.log( "updateTracking" );    
-    
-        if ( _tracking.force < MAX_TRACKING_FORCE )
-        {
-            _tracking.force += TRACKING_FORCE_DELTA;
-
-            if ( _tracking.force > MAX_TRACKING_FORCE )
-            {
-                _tracking.force = MAX_TRACKING_FORCE;
-            }
-        }
+	//----------------------------------------------
+	this.addForce = function( force, scaleForce )
+	{
+        _velocity.x = force.x;
+        _velocity.y = force.y;
         
-        //console.log( _tracking.force );    
-        
-        let x = ( _tracking.position.x - _position.x ) * _tracking.force;
-        let y = ( _tracking.position.y - _position.y ) * _tracking.force;
-             
-        _position.addXY( x, y );
-        
-        //-------------------
-        // calculate frame
-        //-------------------
-        calculateFrame();
-
-        //-----------------------------------
-        // apply constraints
-        //-----------------------------------
-        applyConstraints();
-	}
-	
-	//------------------------------------
-	this.getIsTracking = function()
-	{   
-	    return _tracking.active;
-	}
-
-
-	//-----------------------
-    function updateShift()
-    {
-        let timePassed = _seconds - _shift.startTime;
-        
-        if ( timePassed > _shift.duration )
-        {
-            timePassed = _shift.duration;
-            _position.copyFrom( _shift.endPosition );
-            _scale = _shift.endScale;
-            
-            //-------------------------------------
-            // stop shifting and start tracking
-            //-------------------------------------
-            _shift.active = false;
-            _tracking.active = true;
-  		    _tracking.force = ZERO;
-		    _tracking.position.copyFrom( _position );
-        }
-
-        let fraction = timePassed / _shift.duration;
-        
-        fraction = ONE_HALF - ONE_HALF * Math.cos( fraction * Math.PI );
-         
-        _position.x = _shift.startPosition.x + fraction * ( _shift.endPosition.x - _shift.startPosition.x );
-        _position.y = _shift.startPosition.y + fraction * ( _shift.endPosition.y - _shift.startPosition.y );
-        _scale      = _shift.startScale      + fraction * ( _shift.endScale      - _shift.startScale      );
-
-        //---------------------
-        // important
-        //---------------------
-        calculateFrame();
-        
-        //---------------------
-        // apply constraints
-        //---------------------
-        applyConstraints();        
+        _scaleDelta = scaleForce;
     }
+	
 
 	//--------------------------------------
 	this.setAspectRatio = function(a)
@@ -326,22 +152,21 @@ function Camera()
         }
 	}
 
-	//-----------------------------------------------------------------------
+	//----------------------------------------------------------------------------------------
 	// controls
-	//-----------------------------------------------------------------------
-	this.panLeft    = function() { _decayClock = 0; _velocity.x -= _force; }
-	this.panRight   = function() { _decayClock = 0; _velocity.x += _force; }
-	this.panDown    = function() { _decayClock = 0; _velocity.y += _force; }
-	this.panUp      = function() { _decayClock = 0; _velocity.y -= _force; }
-	this.zoomIn     = function() { _decayClock = 0; _scaleDelta -= _force; }
-	this.zoomOut    = function() { _decayClock = 0; _scaleDelta += _force; }
+	//----------------------------------------------------------------------------------------
+	this.panLeft    = function() { _velocity.x -= _scale * BUTTON_FORCE * _secondsDelta; }
+	this.panRight   = function() { _velocity.x += _scale * BUTTON_FORCE * _secondsDelta; }
+	this.panDown    = function() { _velocity.y += _scale * BUTTON_FORCE * _secondsDelta; }
+	this.panUp      = function() { _velocity.y -= _scale * BUTTON_FORCE * _secondsDelta; }
+	this.zoomIn     = function() { _scaleDelta -= _scale * BUTTON_FORCE * _secondsDelta; }
+	this.zoomOut    = function() { _scaleDelta += _scale * BUTTON_FORCE * _secondsDelta; }
 
 	//----------------------------
 	this.drag = function( x, y )
 	{	
-		_decayClock = 0;
-		_velocity.x -= x * _force * DRAG_FORCE;
-		_velocity.y -= y * _force * DRAG_FORCE;
+		_velocity.x -= x * _scale * DRAG_FORCE * _secondsDelta;
+		_velocity.y -= y * _scale * DRAG_FORCE * _secondsDelta;
 		
 		//---------------------------------------------------------------
 		// as the scale approaches the whole pool, the drag gets 
@@ -362,20 +187,14 @@ function Camera()
 		    _velocity.x *= dampening;
 		    _velocity.y *= dampening;
 		}
-		
-		if ( _tracking.active )
-		{
-    		this.stopTracking();
-	    }
     }
+    
     
 	//--------------------------------------
 	this.setPosition = function( position )
 	{	
 		_position.copyFrom( position );
 		_velocity.clear();
-
-	    this.stopTracking();
 
         //---------------------
         // important
@@ -412,7 +231,10 @@ function Camera()
 	//---------------------------
 	this.getPosition = function()
 	{	
-		return _position;
+	    _vectorUtility.x = _position.x;
+	    _vectorUtility.y = _position.y;
+	
+		return _vectorUtility;
 	}	
 
 	//---------------------------

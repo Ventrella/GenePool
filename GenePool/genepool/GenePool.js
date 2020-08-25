@@ -60,7 +60,7 @@ const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
     const NEIGHBORHOOD_FREQ                 = 5.0;
     const DEBUG_SHOW_SWIMBOT_TRAIL          = false;
     const SWIMBOT_DATA_UPDATE_PERIOD        = 30;
-    const CAMERA_TRACKING_UPDATE_PERIOD   = 10;
+    const CAMERA_TRACKING_UPDATE_PERIOD     = 10;
     const CLONE_SEPARATION                  = 10.0;
     const FOOD_RACE_SIZE                    = 1000;
     const FOOD_BANG_SIZE                    = 1700;
@@ -113,7 +113,6 @@ const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
 	let _frameRate              = ZERO;
 	let _debugTrail 		    = new Array( TRAIL_LENGTH ); 
 	let _familyTree             = new FamilyTree();
-//let _numFamilyTreeNodes     = 0;
 	let _panningLeft            = false;
 	let _panningRight           = false;
 	let _panningUp              = false;
@@ -132,6 +131,7 @@ let hhh = 0;
 	for (let s=0; s<MAX_SWIMBOTS; s++)
 	{
 		_swimbots[s] = new Swimbot(); 
+		_swimbots[s].setParent(this);
 	}	
     
 	//-----------------------------------------------------
@@ -195,10 +195,9 @@ let hhh = 0;
 		//------------------------------------------
 		// configure view control
 		//------------------------------------------
-        _viewControl.setPoolCenter( _poolCenter );	        
-        _viewControl.setCamera( _camera );	        
+//_viewControl.setPoolCenter( _poolCenter );	        
         _viewControl.setSwimbots( _swimbots );	   
-        _viewControl.setMode( ViewMode.AUTOTRACK, 0 );   
+        _viewControl.setMode( ViewMode.AUTOTRACK, _camera.getPosition(), _camera.getScale(), 0 );   
         
 		//------------------------------------------------------------
 		// start up the timer
@@ -783,6 +782,15 @@ let hhh = 0;
 	}
 	
 	
+	
+	//--------------------------------------------------------------
+	this.notifySwimbotDeathTime = function( deceasedSwimbotIndex )
+	{
+	    assert( deceasedSwimbotIndex != NULL_INDEX, "GenePool.js: this.notifySwimbotDeathTime: deceasedSwimbotIndex != NULL_INDEX" )
+	    //console.log( deceasedSwimbotIndex + " just died" );
+	    _familyTree.setDeathTime( deceasedSwimbotIndex, _clock );
+	}
+		
 	//------------------------
 	this.update = function()
 	{	
@@ -832,32 +840,14 @@ let hhh = 0;
 		//---------------------------
 		// update camera tracking...
 		//---------------------------
-		if ( _camera.getIsTracking() )
+        if ( _viewControl.getIsTracking() )
         {
-            if ( _clock % CAMERA_TRACKING_UPDATE_PERIOD === 0 )
+            //if ( _clock % CAMERA_TRACKING_UPDATE_PERIOD === 0 )
             {
-            
-/*            
-//testing this...make sure it works!            
-if ( _selectedSwimbot != NULL_INDEX )
-{
-    _camera.setTrackingPosition( _viewControl.getTrackingPosition( _selectedSwimbot ) );
-}            
-else
-{
-    _camera.stopTracking();
-}
-*/                 
-                 //this is a test...don't delete yet...
-                 //_camera.setTrackingScale( _viewControl.getTrackingScale() );                                     
+                _viewControl.updateTracking( _camera.getPosition(), _camera.getScale(), _selectedSwimbot );
+                
+                _camera.addForce( _viewControl.getCameraForce(), _viewControl.getCameraScaleForce() );
             }
-            
-            
-            
-            
-            //console.log( "t" );
-            
-            // I think here I should check to see if the selected swimbot is no longer valid, and then stop tracking...
         }
         
 		//----------------------------------
@@ -1034,13 +1024,13 @@ else
                 ||  ( _swimbots[ lover2 ].getChosenMateIndex() != lover1 ))
                 {
                     //_viewControl.setMode( ViewMode.NULL, 0 );
-//this.clearViewMode();
-_camera.stopTracking();
+                    //this.clearViewMode();
+                    _viewControl.stopTracking();
                 }
             }	
             else
             {
-                _camera.stopTracking();
+                _viewControl.stopTracking();
             }
         }
     }
@@ -1467,12 +1457,14 @@ _camera.stopTracking();
             let loadedGenotype = new Genotype();
             loadedGenotype.setGenes( data.swimbotArray[s].genes );
             
-            assert( id === s, "assert: id === s" );
+            //this seems to be glitched - I must explore why
+            //console.log( "s = " + s + "; id = " + id );            
+            //assert( id === s, "GenePool.js: this.setPoolData: assert: id === s" );
 
             _swimbots[ id ].create
             ( 
-                //s,
-                id, 
+                s,
+                //id, //this seems to be glitched - I must explore why
                 data.swimbotArray[s].age, 
                 swimbotPosition, 
                 data.swimbotArray[s].angle, 
@@ -2230,7 +2222,7 @@ _camera.stopTracking();
 	//--------------------------------
     this.startCameraNavigation = function( action )
     {
-        _camera.stopTracking();
+        _viewControl.stopTracking();
         
              if ( action === CameraNavigationAction.LEFT  ) { _panningLeft  = true; }
         else if ( action === CameraNavigationAction.RIGHT ) { _panningRight = true; }
@@ -2264,7 +2256,7 @@ _camera.stopTracking();
 	{
         //console.log( "setViewMode to " + viewMode );
 	
-	    let selectedSwimbot = _viewControl.setMode( viewMode, _selectedSwimbot );
+	    let selectedSwimbot = _viewControl.setMode( viewMode, _camera.getPosition(), _camera.getScale(), _selectedSwimbot );
 	    setSelectedSwimbot( selectedSwimbot );
 	}
 	
@@ -2274,10 +2266,10 @@ _camera.stopTracking();
         if (( x < _canvasWidth  )
         &&  ( y < _canvasHeight ))
         {
-            //----------------------------------------
-            // in case camera tracking is on, stop it...
-            //----------------------------------------
-            _camera.stopTracking();
+            //-----------------------------------------------
+            // in case view control is tracking, stop it...
+            //-----------------------------------------------
+            _viewControl.stopTracking();
                             
             //------------------------------------------
             // has a swimmer been clicked?

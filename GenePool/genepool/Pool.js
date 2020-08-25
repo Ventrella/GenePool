@@ -13,13 +13,16 @@ const GARDEN_OF_EDEN_RADIUS = 2000;
 const POOL_WIDTH  = ( POOL_RIGHT  - POOL_LEFT );
 const POOL_HEIGHT = ( POOL_BOTTOM - POOL_TOP  );
 
+const POOL_X_CENTER = POOL_LEFT + POOL_WIDTH    * ONE_HALF;
+const POOL_Y_CENTER = POOL_TOP  + POOL_HEIGHT   * ONE_HALF;
+
 //--------------------------------------------------
 // pool
 //--------------------------------------------------
 function Pool()
 {    
 //const POOL_COLOR                = "rgba( 60, 73, 80, 0.8 )";
-const POOL_COLOR                = "rgba( 50, 63, 80, 0.8 )";
+const POOL_COLOR                = "rgba( 50, 63, 80, 1.0 )";
 
     const BOUNDARY_MARGIN_COLOR     = "rgb(  0,  0,  0 )";
     const EFFECT_COLOR 	            = "220, 240, 255";

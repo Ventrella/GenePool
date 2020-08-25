@@ -14,49 +14,69 @@ const ViewMode =
 };
 
 
+let hh = 0;
+
 //----------------------
 function ViewControl()
 {	
-    const LOVER_TRACKING_SCALE_BASE = 400;
-    const LOVER_TRACKING_SCALE_INC  = 5.0;
-    
-    let _poolCenter     = new Vector2D();
-    let _camera         = new Camera();
-    let _swimbots       = new Array();
-    let _mode           = ViewMode.AUTOTRACK;
-    let _lover1Index    = NULL_INDEX;
-    let _lover2Index    = NULL_INDEX;
-    let _trackingScale  = POOL_WIDTH;
+    const LOVER_TRACKING_SCALE_BASE = 200;
+    const LOVER_TRACKING_SCALE_INC  = 2.0;
+    const DEFAULT_INERTIA           = 0.4;
 
-    //---------------------------------------------------------------------------------------
-    // some quickie set functions...
-    //---------------------------------------------------------------------------------------
-    this.setPoolCenter  = function( center      ) { _poolCenter.copyFrom( center ); }
-    this.setCamera      = function( camera      ) { _camera = camera;               } // should this use a "copyFrom" function?
-    this.setSwimbots    = function( swimbots    ) { _swimbots = swimbots;           } // should this use a "copyFrom" function?
+//const EASE_IN_FRACTION          = 10.0;
+const EASE_IN_FRACTION          = 15.0;
+
+    const INNER_WINDOW_RATIO        = 0.1;
     
+    let _vectorUtility      = new Vector2D();
+    let _isTracking         = false;
+    let _trackingEaseIn     = ZERO;
+    let _trackingPosition   = new Vector2D();
+    let _trackingScale      = POOL_WIDTH;
+    let _inertia            = DEFAULT_INERTIA;
+    let _cameraForce        = new Vector2D();
+    let _cameraScaleForce   = ZERO;
+    let _swimbots           = new Array();
+    let _mode               = ViewMode.AUTOTRACK;
+    let _lover1Index        = NULL_INDEX;
+    let _lover2Index        = NULL_INDEX;
+    
+    //-------------------------------------------------
+    // set this to the default
+    //-------------------------------------------------
+    _vectorUtility.x = POOL_X_CENTER;
+    _vectorUtility.y = POOL_Y_CENTER;
+    _trackingPosition.copyFrom( _vectorUtility );        
+
+    //--------------------------------------------
+    // should this use a "copyFrom" function?
+    //--------------------------------------------
+    this.setSwimbots = function( swimbots ) 
+    { 
+        _swimbots = swimbots; 
+    }
             
-    //-----------------------------------------------
-    this.setMode = function( mode, selectedSwimbot )
+    //-----------------------------------------------------------------------------------------
+    this.setMode = function( mode, currentCameraPosition, currentCameraScale, selectedSwimbot )
     {
         //console.log( "ViewControl.setMode: " + mode );    
     
         _mode = mode;
     
-        let tracking = false;
+        _isTracking = false;
+        _trackingPosition.copyFrom( currentCameraPosition );
         _trackingScale = POOL_WIDTH;
-        let duration = 1.0; //seconds
-        let trackingPosition = new Vector2D();
- 
+        _trackingEaseIn = ZERO;
+        _inertia  = DEFAULT_INERTIA;        
+        
         //-----------------------------------------------
         // whole pool
         //-----------------------------------------------
         if ( _mode === ViewMode.WHOLE_POOL )
         {
-            tracking = true;
+            _isTracking = true;
             _trackingScale = POOL_WIDTH;
-            duration = 2.0;
-            trackingPosition.copyFrom( _poolCenter );
+            _inertia = 0.1;      
         }
         //-----------------------------------------------
         // autotrack
@@ -65,10 +85,10 @@ function ViewControl()
         {     
             //console.log( "_mode is ViewMode.AUTOTRACK" );    
   
-            tracking = true;
+            _isTracking = true;
             _trackingScale = 600;
-            duration = 2.0; 
-            trackingPosition.copyFrom( getCentroidOfVisibleSwimbots() );
+            //_inertia = 0.05;      
+            _inertia = 0.1;      
         } 
         //-----------------------------------------------
         // selected swimbot
@@ -77,10 +97,8 @@ function ViewControl()
         {
             if ( selectedSwimbot != NULL_INDEX )
             {
-                tracking = true;
+                _isTracking = true;
                 _trackingScale = 400;
-                duration = 1.0; 
-                trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
                 document.getElementById( 'swimbotDataPanel' ).innerHTML = "";
             }
         }
@@ -89,15 +107,13 @@ function ViewControl()
         //-----------------------------------------------
         else if ( _mode === ViewMode.MUTUAL ) 
         {
-            trackingPosition.copyFrom( getCentroidOfLovers() );
+            _trackingPosition.copyFrom( getCentroidOfLovers() );
 
             if (( _lover1Index != NULL_INDEX )
             &&  ( _lover2Index != NULL_INDEX ))
             {
-                tracking = true;
+                _isTracking = true;
                 _trackingScale = LOVER_TRACKING_SCALE_BASE;
-                duration = 1.0; 
-                //trackingPosition.copyFrom( getCentroidOfLovers() );
             }
         }
         //-----------------------------------------------
@@ -111,10 +127,8 @@ function ViewControl()
             {
                 selectedSwimbot = mostProlific;
             
-                tracking = true;
+                _isTracking = true;
                 _trackingScale = 500;
-                duration = 1.0; 
-                trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
                 document.getElementById( 'swimbotDataPanel' ).innerHTML = "";
             }
         } 
@@ -129,10 +143,8 @@ function ViewControl()
             {
                 selectedSwimbot = mostEfficient;
             
-                tracking = true;
+                _isTracking = true;
                 _trackingScale = 500;
-                duration = 1.0; 
-                trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
                 document.getElementById( 'swimbotDataPanel' ).innerHTML = "";
             }
         }
@@ -147,10 +159,8 @@ function ViewControl()
             {
                 selectedSwimbot = oldestVirgin;
             
-                tracking = true;
+                _isTracking = true;
                 _trackingScale = 500;
-                duration = 1.0; 
-                trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
                 document.getElementById( 'swimbotDataPanel' ).innerHTML = "";
             }
         }
@@ -165,17 +175,10 @@ function ViewControl()
             {
                 selectedSwimbot = biggestEater;
             
-                tracking = true;
+                _isTracking = true;
                 _trackingScale = 500;
-                duration = 1.0; 
-                trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
                 document.getElementById( 'swimbotDataPanel' ).innerHTML = "";
             }
-        }
-    
-        if ( tracking )
-        {
-            _camera.startTracking( trackingPosition, _trackingScale, duration );
         }
         
         return selectedSwimbot;
@@ -189,27 +192,138 @@ function ViewControl()
         _lover2Index = NULL_INDEX;
     }
     
+
+            
+    //--------------------------------
+    this.startTracking = function()
+    {
+        _isTracking = true;
+    }
+    
+    //--------------------------------
+    this.stopTracking = function()
+    {
+        _isTracking = false;
+    }
+    
+    
+    //-------------------------------------------------------------------------------------------------
+    this.updateTracking = function( currentCameraPosition, currentCameraScale, selectedSwimbot )
+    {
+        if ( _mode === ViewMode.AUTOTRACK )
+        {                    
+            _trackingPosition.copyFrom( getCentroidOfVisibleSwimbots() );  
+        }
+        else if ( _mode === ViewMode.MUTUAL )
+        {
+            if (( _lover1Index != NULL_INDEX )
+            &&  ( _lover2Index != NULL_INDEX ))
+            {
+                let loverDistance = _swimbots[ _lover1Index ].getPosition().getDistanceTo( _swimbots[ _lover2Index ].getPosition() );  
+                
+                // tone it down dudes! FIX...  
+                _trackingScale = LOVER_TRACKING_SCALE_BASE + loverDistance * LOVER_TRACKING_SCALE_INC;
+            }
+
+            _trackingPosition.copyFrom( getCentroidOfLovers() );     
+        } 
+        else
+        {
+            if ( selectedSwimbot != NULL_INDEX )
+            {                    
+                _trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
+            }
+        }     
+        
+        //----------------------------------------------------------------
+        // This is where the tracking forces are created......
+        //----------------------------------------------------------------    
+// goals: 
+// DONE - NEEDS TESTING    improve ease-in
+// DONE - NEEDS TESTING    make camera stop when forces go below a minimum
+// make whole pool go slower        
+// for autotracking, make drop off with distance 
+// for transition, make scale go up and then down
+        
+        let xx = _trackingPosition.x - currentCameraPosition.x;
+        let yy = _trackingPosition.y - currentCameraPosition.y;
+        
+        //---------------------------------------------------------------------------
+        // this is where we handle the inner-window having no tracking force...
+        //---------------------------------------------------------------------------
+        let min = currentCameraScale * INNER_WINDOW_RATIO;
+        
+        let d = Math.sqrt( xx * xx + yy * yy );
+        
+        if ( d < min ) 
+        { 
+            _cameraForce.x = ZERO;
+            _cameraForce.y = ZERO;               
+        }
+        else
+        { 
+            let ramp = ( d - min ) / currentCameraScale;
+            
+            if ( ramp > ONE )
+            {
+                ramp = ONE;
+            }
+            
+            _cameraForce.x = xx * _inertia * ramp;
+            _cameraForce.y = yy * _inertia * ramp;               
+        }
+        
+        //-----------------------------------------------------------------------------------
+        // set scale force
+        //-----------------------------------------------------------------------------------
+        _cameraScaleForce = ( _trackingScale - currentCameraScale ) * _inertia;
+        
+        //-------------------------------------
+        // handle ease-in effect
+        //-------------------------------------
+        _trackingEaseIn += EASE_IN_FRACTION;
+
+        let distance = _cameraForce.getMagnitude();
+
+        if ( distance > _trackingEaseIn )
+        {
+            if ( distance > ZERO )
+            {
+                _cameraForce.x = ( _cameraForce.x / distance ) * _trackingEaseIn;
+                _cameraForce.y = ( _cameraForce.y / distance ) * _trackingEaseIn;
+            }
+        }
+
+        if ( _cameraScaleForce < -_trackingEaseIn ) { _cameraScaleForce   = -_trackingEaseIn; }
+        if ( _cameraScaleForce >  _trackingEaseIn ) { _cameraScaleForce   =  _trackingEaseIn; }
+    }
+    
+    
+    
     
 
     //----------------------------------------------------------------
     // some quickie get functions....
-    //----------------------------------------------------------------
-    this.getTrackingScale   = function() { return _trackingScale;   }
-    this.getMode            = function() { return _mode;            }
-    this.getLover1Index     = function() { return _lover1Index;     }
-    this.getLover2Index     = function() { return _lover2Index;     }
+    //----------------------------------------------------------------    
+    this.getIsTracking          = function() { return _isTracking;      }
+    this.getMode                = function() { return _mode;            }
+    this.getLover1Index         = function() { return _lover1Index;     }
+    this.getLover2Index         = function() { return _lover2Index;     }
+    this.getCameraForce         = function() { return _cameraForce      }
+    this.getCameraScaleForce    = function() { return _cameraScaleForce }
+
     
+    //-------------------------------------------------------
+//function getTrackingScale() { return _trackingScale; }
 
-    //------------------------------------------------------
-    this.getTrackingPosition = function( selectedSwimbot )
-    {
-        let trackingPosition = new Vector2D();
 
-        trackingPosition.copyFrom( _camera.getPosition() );                      
-        
+    /*
+    //-----------------------------------------------
+    function getTrackingPosition( selectedSwimbot )
+    {        
         if ( _mode === ViewMode.AUTOTRACK )
         {                    
-            trackingPosition.copyFrom( getCentroidOfVisibleSwimbots() );  
+            _trackingPosition.copyFrom( getCentroidOfVisibleSwimbots() );  
             
             //console.log( "getTrackingPosition" );        
         }
@@ -222,55 +336,106 @@ function ViewControl()
                 _trackingScale = LOVER_TRACKING_SCALE_BASE + loverDistance * LOVER_TRACKING_SCALE_INC;
             }
 
-            trackingPosition.copyFrom( getCentroidOfLovers() );     
+            _trackingPosition.copyFrom( getCentroidOfLovers() );     
         }
         else
         {
             if ( selectedSwimbot != NULL_INDEX )
             {                    
-                trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
+                _trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
             }
         }     
 
-        _camera.setTrackingPosition( trackingPosition );   
-//_camera.setScale( _trackingScale );
+        _vectorUtility.x = _trackingPosition.x;
+        _vectorUtility.y = _trackingPosition.y;
 
-        return trackingPosition;
+        return _vectorUtility;
     }
+    */
+
+
 
 
 
     //--------------------------------------
     function getCentroidOfVisibleSwimbots()
     {
-        let num = 0;
+        //let num = 0;
+        let totalWeight = ZERO;
         let centroid = new Vector2D();	    
         centroid.clear();
-        
+         
         for (let s=0; s<MAX_SWIMBOTS; s++)
         {
-            if ( _camera.getWithinView( _swimbots[s].getPosition(), ZERO ) )
+            let xx = _swimbots[s].getPosition().x - _trackingPosition.x;
+            let yy = _swimbots[s].getPosition().y - _trackingPosition.y;
+            
+            let distance = Math.sqrt( xx*xx + yy*yy );
+            
+            if ( distance < _trackingScale )
             {
                 if ( _swimbots[s].getAlive() )
                 {
-                    centroid.add( _swimbots[s].getPosition() );
-                    num ++;
+                    let weight = ONE - ( distance / _trackingScale );
+                    
+                    //assert( weight <= ONE,  "weight <= ONE"  );
+                    //assert( weight >= ZERO, "weight >= ZERO" );
+                    
+                    centroid.addScaled( _swimbots[s].getPosition(), weight );
+                    //num ++;
+                    totalWeight += weight;
                 }
             }
         }
 
-        if ( num > 0 )
+        if ( totalWeight > ZERO )
+        //if ( num > 0 )
         {
-            centroid.scale( ONE / num );
+            //centroid.scale( ONE / num );
+            centroid.scale( ONE / totalWeight );
         }
         else
         {
-            centroid.copyFrom( _camera.getPosition() );   
+            let closestSwimbot = getClosestSwimbotToTrackingPosition();
+
+            if ( closestSwimbot != NULL_INDEX )
+            {
+                centroid.copyFrom( _swimbots[ closestSwimbot ].getPosition() );   
+            }
+            else
+            {
+                centroid.copyFrom( _trackingPosition );   
+            }
         }
             
         return centroid;
     }
-    
+
+
+
+
+    //---------------------------------------------
+    function getClosestSwimbotToTrackingPosition()
+    {
+        let closest = NULL_INDEX;
+        let smallestDistance = POOL_WIDTH;
+        
+        for (let s=0; s<MAX_SWIMBOTS; s++)
+        {
+            if ( _swimbots[s].getAlive() )
+            {
+                let distance = _swimbots[s].getPosition().getDistanceTo( _trackingPosition );
+
+                if ( distance < smallestDistance )
+                {
+                    smallestDistance = distance;
+                    closest = s;
+                }
+            }
+        }
+                
+        return closest
+    }    
     
     
     //---------------------------------
@@ -378,11 +543,11 @@ function ViewControl()
     {
         let centroid = new Vector2D();	 
 
-        //-----------------------------------------------
-        // set the centroid to the camera as the default
-        //-----------------------------------------------
-        centroid.copyFrom( _camera.getPosition() );   
-        
+        //-----------------------------------------------------------
+        // set the centroid to the tracking position as the default
+        //-----------------------------------------------------------
+        centroid.copyFrom( _trackingPosition );   
+
         //-----------------------------------------------------------
         // start by assuming they are still in love
         //-----------------------------------------------------------
@@ -470,7 +635,6 @@ function ViewControl()
                         let chosenMate = _swimbots[s].getChosenMateIndex();
                         
 //console.log( "lover " + s + " is going after " + chosenMate );    
-                        
                         
                         for (let o=0; o<MAX_SWIMBOTS; o++)
                         {

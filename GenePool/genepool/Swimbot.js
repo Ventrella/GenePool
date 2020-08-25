@@ -67,6 +67,15 @@ var    flopperYV = 0;
     let _lastEnergyForEfficiencyMeasurement = ZERO;
 	let _readyforSensoryInputToBrain = false;
 
+
+let _parent = null;	
+
+//----------------------------------
+this.setParent = function( parent )
+{
+    _parent = parent;
+}
+    
     //------------------------------------
     this.computeMomentFactors = function()
     {
@@ -1880,6 +1889,13 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
 	this.die = function()
 	{
         _alive = false;
+	    
+	    //assert( _index != NULL_INDEX, "Swimbot.js: this.die: _index != NULL_INDEX" )
+	    if ( _index != NULL_INDEX )
+	    {
+	        // this is used for updating the FamilyTree
+            _parent.notifySwimbotDeathTime( _index );
+        }
     }
     
     
