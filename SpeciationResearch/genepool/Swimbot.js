@@ -1243,7 +1243,7 @@ let partAccelerationY = -strokeForceY;
     this.getBrainState                  = function() { return _brain.getState();                            }
     this.getGenotype                    = function() { return _genotype;                                    }
 	this.getSelectRadius                = function() { return _selectRadius;                                }
-	this.getPreferredNutrition          = function() { return _phenotype.preferredNutrition;                }
+	this.getPreferredFoodColor          = function() { return _phenotype.preferredFoodColor;                }
 	
 
 
@@ -1303,7 +1303,6 @@ let partAccelerationY = -strokeForceY;
 	}
 
 
-
 	//---------------------------
 	// eatChosenFoodBit
 	//---------------------------
@@ -1319,8 +1318,28 @@ let partAccelerationY = -strokeForceY;
         if (( _chosenFoodBit != null )
         &&  ( _chosenFoodBit.getAlive() ))
         {	
-            _energy += _chosenFoodBit.getEnergy();
-    
+            let energyFromFoodBit = _chosenFoodBit.getEnergy();
+/*
+console.log( "-------------------------------" );
+console.log( " eating....." );
+console.log( "_chosenFoodBit.getNutrition() = " + _chosenFoodBit.getNutrition() );
+console.log( "_phenotype.foodNutritionType  = " + _phenotype.foodNutritionType  );
+console.log( " " );
+console.log( "-------------------------------" );
+*/
+
+            //----------------------------------------------------------------------
+            // If the nutrition type of the chosen food bit is not compatible
+            // with the nutrition type of the swimbot, then it gets less energy...
+            //----------------------------------------------------------------------
+            if ( _chosenFoodBit.getNutrition() != _phenotype.foodNutritionType )
+            {
+                //console.log( "decrease energy from food bit..." );
+                energyFromFoodBit *= NUTRITION_OFFSET;
+            }
+
+            _energy += energyFromFoodBit;
+            
             _numFoodBitsEaten ++;
             
             assert( _chosenFoodBit.getEnergy() >= ZERO, "Swimbot:eatChosenFoodBit: _chosenFoodBit.getEnergy() >= ZERO" );	

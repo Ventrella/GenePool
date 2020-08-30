@@ -4,7 +4,7 @@
 //  time-related constants
 //-------------------------------------------
 const FULLY_GROWN_AGE    = 1000;
-const OLD_AGE            = 39000;
+//const OLD_AGE            = 39000; // this has been moved to ExperimentParameters.js
 //const MAXIMUM_LIFESPAN   = 40000; // this has been moved to ExperimentParameters.js
 const TIMER_DELTA_INCREASE_RATE = 0.02;
 const STARVING_TIMER_DELTA = 0.05;
@@ -176,7 +176,8 @@ function Phenotype()
 	this.parts          = new Array( MAX_PARTS ); 
 	this.sumPartLengths = ZERO;
 	this.mass           = ZERO;
-	this.preferredNutrition = 0;
+	this.preferredFoodColor = 0;
+	this.foodNutritionType  = 0;
 
 	for (let p=0; p<MAX_PARTS; p++)
 	{

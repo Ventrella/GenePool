@@ -31,10 +31,8 @@ const MAX_FOOD_REGENERATION_PERIOD      = 200;
 
 //const NON_REPRODUCING_JUNK_DNA_LIMIT = 0.7;
 
-// this needs to be the same as the analogous value in embryology!
-const NUM_GENES_USED = 111;
-
-
+// this needs to be the same as the corresponding value in Embryology.js !!!!
+const NUM_GENES_USED = 112;
 
 
 var GLOBAL_childEnergyRatio = DEFAULT_CHILD_ENERGY_RATIO;
@@ -1168,17 +1166,7 @@ _camera.stopTracking();
         let smallestDistance = Number.MAX_SAFE_INTEGER;
         for (let f=0; f<MAX_FOODBITS; f++)
         { 
-            let nutritionOK = true;
-
-            if ( _foodBits[f].getNutrition() != _swimbots[s].getPreferredNutrition() )
-            {
-//if ( Math.random() < SWIMBOT_NUTRITION_PICKINESS )
-                {
-                    nutritionOK = false;
-                }
-            }
-
-            if ( nutritionOK )
+            if ( _foodBits[f].getNutrition() === _swimbots[s].getPreferredFoodColor() )
             {
                 if ( _foodBits[f].getAlive() )
                 {

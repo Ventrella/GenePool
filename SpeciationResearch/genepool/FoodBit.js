@@ -7,7 +7,7 @@ const MAX_FOOD_BIT_MAX_SPAWN_RADIUS     = 8000.0;
 const DEFAULT_FOOD_BIT_MAX_SPAWN_RADIUS = 4000.0; //max distance for spawned child
 const MIN_FOOD_BIT_ENERGY               = 0.0; 
 const MAX_FOOD_BIT_ENERGY               = 100.0; 
-const FOOD_BIT_NUTRITION_ENERGY         = 50.0;
+//const FOOD_BIT_NUTRITION_ENERGY         = 50.0;
 const DEFAULT_FOOD_BIT_ENERGY           = 50.0;  //when eaten, swimbot gets this much energy
 const FOOD_BIT_SIZE_VIEW_SCALE          = 0.03; //increase with view scale (a kind of LOD)
 const FOOD_BIT_GRAB_RADIUS              = 20.0;  // radius for grabbing food bit
@@ -16,8 +16,6 @@ const FOOD_BIT_COLOR_COMPONENTS         = "100, 200, 100";
 const FOOD_BIT_ROLLOVER_COLOR           = "rgba( 100, 200, 100, 0.5 )";	
 const FOOD_BIT_SELECT_COLOR             = "rgba( 200, 200, 200, 1.0 )";	
 const FOOD_OPACITY_INCREMENT            = 0.01;
-//const NUTRITION_MUTATION_RATE           = 0.99;
-//const SPAWN_FOOD_RANDOMLY_IN_POOL       = true;
 
 //------------------------
 // Food bit
@@ -114,7 +112,7 @@ function FoodBit()
         
 
         //TEST! This is sort of like a mutation in nutrition....to keep one ntrution value from dominating the pool...
-        if ( Math.random() < NUTRITION_MUTATION_RATE )
+        if ( Math.random() < FOOD_NUTRITION_MUTATION_RATE )
         {
             this.randomizeNutrition();
         }
@@ -226,7 +224,6 @@ function FoodBit()
         _index = NULL_INDEX;
     }
     
-   
 	//----------------------------
 	// getters
 	//---------------------------

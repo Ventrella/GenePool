@@ -49,8 +49,7 @@ const MAX_SEQUENCE_COUNT    =   5;
 const GREATEST_POSSIBLE_SWIMBOT_MASS = MAX_PARTS * MAX_LENGTH * MAX_WIDTH
 const GREATEST_POSSIBLE_SWIMBOT_LENGTH	= MAX_PARTS * MAX_LENGTH;
 
-const DO_COLOR_TEST = false;
-	
+
 //--------------------
 function Embryology()
 {	    
@@ -170,47 +169,14 @@ let testNoEel = true;
         g++; _frequency = MIN_FREQUENCY + frequencyRange    * _normalizedGenes[g];
         g++; _cutOff    = MIN_CUT_OFF   + cutOffRange       * _normalizedGenes[g];
 
-        let colorTestNutrition = 0;
-        if ( DO_COLOR_TEST )
-        {
-            if ( Math.random() < ONE_HALF )
-            {
-                colorTestNutrition = 1;
-            }
-        }
-        
 		for (let c=0; c<NUM_CATEGORIES; c++)
 		{
-		    if ( DO_COLOR_TEST )
-		    {
-		        if ( colorTestNutrition === 0 ) 
-		        {
-                    g++; _categoryValues[c].startRed    =   0;
-                    g++; _categoryValues[c].startGreen  =   1;
-                    g++; _categoryValues[c].startBlue	=   0;
-                    g++; _categoryValues[c].endRed	    =   0;
-                    g++; _categoryValues[c].endGreen    =   1;
-                    g++; _categoryValues[c].endBlue     =   0;
-    		    }
-		        else
-		        {
-                    g++; _categoryValues[c].startRed    =   1;
-                    g++; _categoryValues[c].startGreen  =   0;
-                    g++; _categoryValues[c].startBlue	=   0;
-                    g++; _categoryValues[c].endRed	    =   1;
-                    g++; _categoryValues[c].endGreen    =   0;
-                    g++; _categoryValues[c].endBlue     =   0;
-    		    }
-    		}
-		    else
-		    {
-                g++; _categoryValues[c].startRed        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-                g++; _categoryValues[c].startGreen      = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-                g++; _categoryValues[c].startBlue	    = MIN_COLOR             + colorRange            * _normalizedGenes[g];	
-                g++; _categoryValues[c].endRed	        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-                g++; _categoryValues[c].endGreen        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-                g++; _categoryValues[c].endBlue         = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-            }
+            g++; _categoryValues[c].startRed        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
+            g++; _categoryValues[c].startGreen      = MIN_COLOR             + colorRange            * _normalizedGenes[g];
+            g++; _categoryValues[c].startBlue	    = MIN_COLOR             + colorRange            * _normalizedGenes[g];	
+            g++; _categoryValues[c].endRed	        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
+            g++; _categoryValues[c].endGreen        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
+            g++; _categoryValues[c].endBlue         = MIN_COLOR             + colorRange            * _normalizedGenes[g];
             
             g++; _categoryValues[c].startWidth      = MIN_WIDTH             + widthRange            * _normalizedGenes[g];
             g++; _categoryValues[c].endWidth        = MIN_WIDTH             + widthRange            * _normalizedGenes[g];
@@ -249,20 +215,21 @@ let testNoEel = true;
             _categoryValues[c].splined          = Math.round( ZERO  + _categoryValues[c].splined        );
         }
 
-        //---------------------------------------
-        // add gene for nutritionl preference
-        //---------------------------------------        
-        if ( DO_COLOR_TEST )
-        {    
-            g++;  phenotype.preferredNutrition = colorTestNutrition;
-        }
-        else
-        {
-            g++;  phenotype.preferredNutrition = Math.floor( _normalizedGenes[g] * 2 );
-        }
+        //-------------------------------------------------------------------
+        // add genes for food color preference and food nutrition type
+        //-------------------------------------------------------------------
+        g++;  phenotype.preferredFoodColor  = Math.floor( _normalizedGenes[g] * 2 );
+        g++;  phenotype.foodNutritionType   = Math.floor( _normalizedGenes[g] * 2 );
         
-//console.log( "in embryology: " + phenotype.preferredNutrition );
-//console.log( _normalizedGenes[g] );
+        
+// quick test....        
+//if ( phenotype.preferredFoodColor === 0 ) { phenotype.foodNutritionType = 1; }
+//if ( phenotype.preferredFoodColor === 1 ) { phenotype.foodNutritionType = 0; }
+        
+//console.log( "in embryology: " + phenotype.preferredFoodColor );
+//console.log( "phenotype.preferredFoodColor = " + phenotype.preferredFoodColor );
+//console.log( "phenotype.foodNutritionType  = " + phenotype.foodNutritionType  );
+//console.log( "-------------------------------" );
         
         //---------------------------------------
         // make sure this is kosher
