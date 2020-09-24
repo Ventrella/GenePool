@@ -521,6 +521,7 @@ right: 20;
 }
 
 
+
 #leftNav
 {
     left:   20; 
@@ -1008,6 +1009,82 @@ background-color: #dddcda;
 }
 
 
+#tweakGenesButton
+{
+    background-color: #dddd88;
+    position: absolute; 
+    left: 0;
+    top: 320;
+}
+
+
+#tweakGenesPanel
+{
+    font-family: "Arial";
+    font-size: 12;
+    visibility: hidden;       
+    position: absolute; 
+    right: 10; 
+    top: 10;
+    width: 360; 
+    height: 750;    
+    background-color: #bbb8b4; 
+    box-shadow: 8px 8px 40px #000000;
+	border-radius: 4px;
+}
+
+#closeTweakGenesPanel
+{
+    visibility: hidden;       
+    position: absolute; 
+    right: 15; 
+    top: 15;
+    width: 30; 
+    height: 30;    
+    background-color: #bbb8b4; 
+}
+
+#tweakGenesTitle
+{
+    position: absolute; 
+    left:  20; 
+    top:  30; 
+    font-family: "Arial";
+    font-size: 14;
+}
+
+#tweakGenesCategoryNote
+{
+    position: absolute; 
+    left:  20; 
+    top:  120; 
+}
+
+#category1 { position: absolute; left:  20; top: 140; }
+#category2 { position: absolute; left:  70; top: 140; }
+#category3 { position: absolute; left: 120; top: 140; }
+#category4 { position: absolute; left: 170; top: 140; }
+
+
+.geneTweakerValue
+{
+    position: absolute; 
+    left: 20;     
+}
+
+.geneTweakerSlider
+{
+    position: absolute; 
+    left: 50;     
+}
+
+.geneTweakerName
+{
+    position: absolute; 
+    left: 200;     
+    width: 150;     
+}
+
 #foodGrowthDelayLabel,
 #foodGrowthDelay,
 #foodGrowthDelayValue
@@ -1105,8 +1182,6 @@ background-color: #dddcda;
     position: absolute; 
     top: 150; 
 }
-
-
 
 
 /* ------------------------------------------------------------------------------------------------ */

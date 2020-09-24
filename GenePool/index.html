@@ -40,7 +40,7 @@
 		<!-- ------------------------------------------------------------------ -->
         <!--
 		<script type = "text/javascript" src = "simulation.js"  ></script>
-		-->
+		-->  
 
 		<script type = "text/javascript" src = "genepool/MathConstants.js"  ></script>
 		<script type = "text/javascript" src = "genepool/Utility.js"        ></script>
@@ -58,7 +58,8 @@
 		<script type = "text/javascript" src = "genepool/ViewControl.js"    ></script>		
 		<script type = "text/javascript" src = "genepool/FamilyTree.js"     ></script>		
 		<script type = "text/javascript" src = "genepool/Obstacle.js"       ></script>		
-		<script type = "text/javascript" src = "genepool/GenePool.js"       ></script>   
+		<script type = "text/javascript" src = "genepool/GenePool.js"       ></script> 
+
 		
 		
 		<!-- ------------------------------------------------------------------------- -->
@@ -183,7 +184,7 @@
                             name            = "foodGrowthDelay"      
                             step            = 1
                             autocomplete    = "off" 
-                            onchange        = "setEcosystemValue( id )"
+                            oninput         = "setEcosystemValue( id )"
                         >
                         <div   id = "foodGrowthDelayValue" class = "EcoSliderValueDisplay"   >(unknown value)</div>
                         <label id = "foodGrowthDelayLabel" class = "EcoSliderLabelDisplay" for = "foodGrowthDelay" >food growth delay</label>
@@ -194,7 +195,7 @@
                             name            = "foodSpread"           
                             step            = 1
                             autocomplete    = "off" 
-                            onchange        = "setEcosystemValue( id )"
+                            oninput        = "setEcosystemValue( id )"
                         >
                         <div   id = "foodSpreadValue" class = "EcoSliderValueDisplay"   >(unknown value)</div>
                         <label id = "foodSpreadLabel" class = "EcoSliderLabelDisplay" for = "foodSpread" >food spread</label>
@@ -205,7 +206,7 @@
                             name            = "foodBitEnergy"        
                             step            = 10
                             autocomplete    = "off" 
-                            onchange        = "setEcosystemValue( id )"
+                            oninput        = "setEcosystemValue( id )"
                         >
                         <div   id = "foodBitEnergyValue" class = "EcoSliderValueDisplay"   >(unknown value)</div>
                         <label id = "foodBitEnergyLabel" class = "EcoSliderLabelDisplay" for = "foodBitEnergy" >food bit energy</label>
@@ -216,7 +217,7 @@
                             name            = "hungerThreshold"      
                             step            = 1
                             autocomplete    = "off" 
-                            onchange        = "setEcosystemValue( id )"
+                            oninput        = "setEcosystemValue( id )"
                         >
                         <div   id = "hungerThresholdValue" class = "EcoSliderValueDisplay"   >(unknown value)</div>
                         <label id = "hungerThresholdLabel" class = "EcoSliderLabelDisplay" for = "hungerThreshold" >hunger threshold</label>
@@ -227,7 +228,7 @@
                             name            = "energyToOffspring"    
                             step            = 0.1
                             autocomplete    = "off" 
-                            onchange        = "setEcosystemValue( id )"
+                            oninput        = "setEcosystemValue( id )"
                         >
                         <div   id = "energyToOffspringValue" class = "EcoSliderValueDisplay"  >(unknown value)</div>
                         <label id = "energyToOffspringLabel" class = "EcoSliderLabelDisplay" for = "energyToOffspring" > offspring energy ratio</label>
@@ -645,6 +646,10 @@
                             id      = "showGenesButton" 
                             class   = "basicButton" 
                             onClick = "showSwimbotGenes( genePool.getSelectedSwimbotID() );" >show gene data</button>   
+                        <button 
+                            id      = "tweakGenesButton" 
+                            class   = "basicButton" 
+                            onClick = "openTweakGenesPanel( genePool.getSelectedSwimbotID() ); genePool.setViewMode( ViewMode.SELECTED );" >tweak genes!</button>  
                     </div> 
                                         
                 </div> <!-- swimbot Panel -->
@@ -759,11 +764,22 @@
         <!-- ------------------------------------------------------------------ -->
         <div id = "dataDisplay">
         </div>
-                    
+                
         <!-- ------------------------------------------------------------------ -->
         <!-- close data display                                                 -->
         <!-- ------------------------------------------------------------------ -->
         <button id = "closeDataDisplay" onClick = "closeDataDisplay();" >X</button>  
+
+        <!-- ------------------------------------------------------------------ -->
+        <!-- tweak genes!                                                       -->
+        <!-- ------------------------------------------------------------------ -->
+        <div id = "tweakGenesPanel">
+        </div>
+
+        <!-- ------------------------------------------------------------------ -->
+        <!-- close tweak genes panel                                            -->
+        <!-- ------------------------------------------------------------------ -->
+        <button id = "closeTweakGenesPanel" onClick = "closeTweakGenesPanel();" >X</button>  
                 
 		<!-- ------------------------------------------------------------ -->
 		<!-- turn on the info panel and set it to the first page...       -->

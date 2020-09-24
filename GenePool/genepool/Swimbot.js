@@ -197,7 +197,7 @@ this.setParent = function( parent )
         let directionDot = _focusDirection.x * perpX + _focusDirection.y * perpY;
 
 //test
-let perpDot      = _focusDirection.x * _heading.x + _focusDirection.y * _heading.y;
+//let perpDot      = _focusDirection.x * _heading.x + _focusDirection.y * _heading.y;
 
 		//-----------------------------------------------------------------
 		// set root position and angle
@@ -227,20 +227,17 @@ let perpDot      = _focusDirection.x * _heading.x + _focusDirection.y * _heading
 				let ampModulator   = _phenotype.parts[p].turnAmp    * directionDot;
 				let phaseModulator = _phenotype.parts[p].turnPhase  * directionDot;	
 			
-			
-//test
+/*			
+//reversable stroke version
 let perpAmpModulator   = _phenotype.parts[p].amp    * perpDot;
 let perpPhaseModulator = _phenotype.parts[p].phase  * perpDot;	
             
 let radian = _timer * _phenotype.frequency + ( perpPhaseModulator + phaseModulator );	
 _phenotype.parts[p].bendingAngle = ( perpAmpModulator + ampModulator ) * Math.sin( radian );
+*/
 
-
-                /*
-			    //previous
 				let radian = _timer * _phenotype.frequency + ( _phenotype.parts[p].phase + phaseModulator );	
 				_phenotype.parts[p].bendingAngle = ( _phenotype.parts[p].amp + ampModulator ) * Math.sin( radian );
-				*/
 
 				_phenotype.parts[p].currentAngle += _phenotype.parts[p].bendingAngle;
 			}
@@ -673,6 +670,27 @@ _phenotype.parts[p].bendingAngle = ( perpAmpModulator + ampModulator ) * Math.si
         this.processPhenotype();
      }
 
+
+	//---------------------------------------------------------------
+	this.setGeneValue = function( geneIndex, geneValue, embryology )
+	{
+	    console.log( geneIndex  + ", " + geneValue );
+
+ 		//--------------------------------
+		// set gene value
+		//--------------------------------
+    	_genotype.setGeneValue( geneIndex, geneValue );
+
+ 		//--------------------------------
+		// generate phenotype
+		//--------------------------------
+		_phenotype = embryology.generatePhenotypeFromGenotype( _genotype );
+		
+ 		//--------------------------------
+		// important
+		//--------------------------------
+		this.processPhenotype();
+	}
 
 
 	//--------------------------------

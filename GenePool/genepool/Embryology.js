@@ -91,17 +91,26 @@ function Embryology()
         this.branchReflect      = ZERO;
  	}
 	    
-	//---------------------------------------------
+	//-------------------------------------------------------------
 	// variables
-	//---------------------------------------------
-    let _normalizedGenes    = new Array( NUM_GENES ); 
-    let _branchStatus       = new Array( MAX_PARTS ); 
-    let _categoryValues     = new Array( NUM_CATEGORIES ); 
-    let _partIndex          = ZERO;
-    let _generating         = false;
-    let _frequency          = ZERO;
-    let _cutOff             = 0;
-     
+	//-------------------------------------------------------------
+    let _normalizedGenes        = new Array( NUM_GENES ); 
+    let _geneNames              = new Array( NUM_GENES ); 
+    let _branchStatus           = new Array( MAX_PARTS ); 
+    let _categoryValues         = new Array( NUM_CATEGORIES ); 
+    let _partIndex              = ZERO;
+    let _generating             = false;
+    let _frequency              = ZERO;
+    let _numGenesUsed           = 0;
+    let _numGenesPerCategory    = 0;
+    let _cutOff                 = 0;
+    
+    for (let g=0; g<NUM_GENES; g++)
+    {
+        _geneNames[g] = "junk";
+    }
+    
+         
 	//----------------------------------------------------
 	// generate phenotype from genotype
 	//----------------------------------------------------
@@ -163,41 +172,42 @@ function Embryology()
         //---------------------------------
 		let g = -1;
         
-        g++; _frequency = MIN_FREQUENCY + frequencyRange    * _normalizedGenes[g];
-        g++; _cutOff    = MIN_CUT_OFF   + cutOffRange       * _normalizedGenes[g];
+        g++; _frequency = MIN_FREQUENCY + frequencyRange    * _normalizedGenes[g];  _geneNames[g] = "frequency";
+        g++; _cutOff    = MIN_CUT_OFF   + cutOffRange       * _normalizedGenes[g];  _geneNames[g] = "cutoff";
         
 		for (let c=0; c<NUM_CATEGORIES; c++)
 		{
-            g++; _categoryValues[c].startRed        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].startGreen      = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].startBlue	    = MIN_COLOR             + colorRange            * _normalizedGenes[g];	
-            g++; _categoryValues[c].endRed	        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].endGreen        = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].endBlue         = MIN_COLOR             + colorRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].startWidth      = MIN_WIDTH             + widthRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].endWidth        = MIN_WIDTH             + widthRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].startLength     = MIN_LENGTH            + lengthRange           * _normalizedGenes[g];
-            g++; _categoryValues[c].endLength       = MIN_LENGTH            + lengthRange           * _normalizedGenes[g];            
+		    _numGenesPerCategory = 0;
+            g++; _categoryValues[c].startRed        = MIN_COLOR             + colorRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "start red";
+            g++; _categoryValues[c].startGreen      = MIN_COLOR             + colorRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "start green";
+            g++; _categoryValues[c].startBlue	    = MIN_COLOR             + colorRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "start blue";
+            g++; _categoryValues[c].endRed	        = MIN_COLOR             + colorRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "end red";
+            g++; _categoryValues[c].endGreen        = MIN_COLOR             + colorRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "end green";
+            g++; _categoryValues[c].endBlue         = MIN_COLOR             + colorRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "end blue";
+            g++; _categoryValues[c].startWidth      = MIN_WIDTH             + widthRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "start width";
+            g++; _categoryValues[c].endWidth        = MIN_WIDTH             + widthRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "end width";
+            g++; _categoryValues[c].startLength     = MIN_LENGTH            + lengthRange           * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "start length";
+            g++; _categoryValues[c].endLength       = MIN_LENGTH            + lengthRange           * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "end length";
 
-            g++; _categoryValues[c].amp             = MIN_AMP               + ampRange              * _normalizedGenes[g];
-            g++; _categoryValues[c].phase           = MIN_PHASE             + phaseRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].turnAmp         = MIN_AMP               + ampRange              * _normalizedGenes[g];
-            g++; _categoryValues[c].turnPhase       = MIN_PHASE             + phaseRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].branchAmp       = MIN_AMP               + ampRange              * _normalizedGenes[g];
-            g++; _categoryValues[c].branchPhase     = MIN_PHASE             + phaseRange            * _normalizedGenes[g];
-            g++; _categoryValues[c].branchTurnAmp   = MIN_AMP               + ampRange              * _normalizedGenes[g];
-            g++; _categoryValues[c].branchTurnPhase = MIN_PHASE             + phaseRange            * _normalizedGenes[g];
+            g++; _categoryValues[c].amp             = MIN_AMP               + ampRange              * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "amplitude";
+            g++; _categoryValues[c].phase           = MIN_PHASE             + phaseRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "phase";
+            g++; _categoryValues[c].turnAmp         = MIN_AMP               + ampRange              * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "turn amplitude";
+            g++; _categoryValues[c].turnPhase       = MIN_PHASE             + phaseRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "turn phase";
+            g++; _categoryValues[c].branchAmp       = MIN_AMP               + ampRange              * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch amplitude";
+            g++; _categoryValues[c].branchPhase     = MIN_PHASE             + phaseRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch phase";
+            g++; _categoryValues[c].branchTurnAmp   = MIN_AMP               + ampRange              * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch turn amplitude";
+            g++; _categoryValues[c].branchTurnPhase = MIN_PHASE             + phaseRange            * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch turn phase";
 
-            g++; _categoryValues[c].sequenceCount   = MIN_SEQUENCE_COUNT    + sequenceCountRange    * _normalizedGenes[g];
-            g++; _categoryValues[c].branchPeriod    = MIN_BRANCH_PERIOD     + periodRange           * _normalizedGenes[g];
-            g++; _categoryValues[c].branchAngle     = MIN_BRANCH_ANGLE      + branchAngleRange      * _normalizedGenes[g];
-            g++; _categoryValues[c].branchNumber    = MIN_BRANCH_NUMBER     + branchNumberRange     * _normalizedGenes[g];
-            g++; _categoryValues[c].branchShift     = MIN_BRANCH_SHIFT      + branchShiftRange      * _normalizedGenes[g];
-            g++; _categoryValues[c].branchCategory  = MIN_BRANCH_CATEGORY   + branchCategoryRange   * _normalizedGenes[g];
-            g++; _categoryValues[c].branchReflect   = MIN_BRANCH_REFLECT    + branchReflectRange    * _normalizedGenes[g];
+            g++; _categoryValues[c].sequenceCount   = MIN_SEQUENCE_COUNT    + sequenceCountRange    * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "sequence count";
+            g++; _categoryValues[c].branchPeriod    = MIN_BRANCH_PERIOD     + periodRange           * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch period";
+            g++; _categoryValues[c].branchAngle     = MIN_BRANCH_ANGLE      + branchAngleRange      * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch angle";
+            g++; _categoryValues[c].branchNumber    = MIN_BRANCH_NUMBER     + branchNumberRange     * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch number";
+            g++; _categoryValues[c].branchShift     = MIN_BRANCH_SHIFT      + branchShiftRange      * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch shift";
+            g++; _categoryValues[c].branchCategory  = MIN_BRANCH_CATEGORY   + branchCategoryRange   * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch category";
+            g++; _categoryValues[c].branchReflect   = MIN_BRANCH_REFLECT    + branchReflectRange    * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "branch reflect";
             
-            g++; _categoryValues[c].splined         = MIN_SPLINED           + splinedRange          * _normalizedGenes[g];
-            g++; _categoryValues[c].endCapSpline    = MIN_END_CAP_SPLINE    + endCapSplineRange     * _normalizedGenes[g];
+            g++; _categoryValues[c].splined         = MIN_SPLINED           + splinedRange          * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "splined";
+            g++; _categoryValues[c].endCapSpline    = MIN_END_CAP_SPLINE    + endCapSplineRange     * _normalizedGenes[g]; _numGenesPerCategory ++;  _geneNames[g] = "end cap spline";
          
             //---------------------------------------------------------------------------------------------
             // make these integers
@@ -215,8 +225,10 @@ function Embryology()
         // make sure this is kosher
         //---------------------------------------
         g++; // important
-        //console.log( "num genes used = " + g + " out of " + NUM_GENES );
-		assert( g < NUM_GENES, "g < NUM_GENES" );
+        
+        _numGenesUsed = g;
+        //console.log( "num genes used = " + _numGenesUsed + " out of " + NUM_GENES );
+		assert( _numGenesUsed < NUM_GENES, "embryology: _numGenesUsed < NUM_GENES" );
         
         //---------------------------------
         // set the frequency...
@@ -505,6 +517,42 @@ copyPart( testParts[p], phenotype.parts[p] );
             }   
         }
     }
+
+   
+	//--------------------------------
+	// get num categories
+	//--------------------------------
+	this.getNumGeneCategories = function()
+	{
+	    return NUM_CATEGORIES;
+	}
+    
+	//--------------------------------
+	// get num genes used
+	//--------------------------------
+	this.getNumGenesUsed = function()
+	{
+	    return _numGenesUsed;
+	}
+    
+	//--------------------------------
+	// get num genes per category
+	//--------------------------------
+	this.getNumGenesPerCategory = function()
+	{
+	    return _numGenesPerCategory;
+	}
+    
+   
+	//--------------------------------
+	// get gene name
+	//--------------------------------
+	this.getGeneName = function(g)
+	{
+	    return _geneNames[g];
+	}
+    
+    
     
 } // function Embryology()
 

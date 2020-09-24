@@ -98,6 +98,12 @@ function Genotype()
     }  
  
     //-------------------------------
+	this.getGeneName = function(g)
+	{ 
+        return "not implemented yet!";
+    }  
+ 
+    //-------------------------------
 	this.getGenes = function()
 	{ 
         return _genes;

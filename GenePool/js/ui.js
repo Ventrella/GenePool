@@ -8,6 +8,7 @@ const LAST_INFO_PAGE  = 28;
 
 let _currentInfoPage = FIRST_INFO_PAGE;
 let _graph = new Graph(); 
+let _tweakGenesCategory = 0;
 
 //----------------------------
 function initializeUI()
@@ -15,7 +16,7 @@ function initializeUI()
     initializeEcosystemUI();    
     
     _graph.initialize();      
- 
+  
     //--------------------------------------------------
     // This starts an update loop that is called 
     // periodically to adjust UI states and stuff. 
@@ -277,6 +278,144 @@ function openSwimbotPanel()
 }    
 
 
+
+
+//------------------------------------------------
+function openTweakGenesPanel( selectedSwimbotID )
+{
+    if ( selectedSwimbotID != NULL_INDEX )
+    {
+        document.getElementById( 'tweakGenesPanel'      ).style.visibility = 'visible';		        	        
+        document.getElementById( 'closeTweakGenesPanel' ).style.visibility = "visible"; 
+
+        document.getElementById( 'tweakGenesPanel' ).innerHTML = "<div id = 'tweakGenesTitle' >Tweak the genes of swimbot " + selectedSwimbotID + "</div>"; 
+        document.getElementById( 'tweakGenesPanel' ).innerHTML += "<div id = 'tweakGenesCategoryNote' >(choose which body part category to tweak)</div>"; 
+
+        let numCategories = genePool.getNumGeneCategories();        
+        for (let c=0; c<numCategories; c++)
+        {
+            document.getElementById( 'tweakGenesPanel' ).innerHTML            
+            += "<div id = 'category" + (c+1) + "' >" + (c+1)
+            +  "<input "
+            +  "type         = 'radio' " 
+            +  "id           = 'geneTweakerCategory" + c + "'"
+            +  "name         = 'geneTweakerCategory'" 
+            +  "oninput      = 'setGeneTweakCategory( " + selectedSwimbotID + ", " + c + ")' "
+            +  "onchange     = 'setGeneTweakCategory( " + selectedSwimbotID + ", " + c + ")' "
+            +  "></div>";
+        }
+        
+        let num = genePool.getNumGenesPerCategory();
+        num += 2; //add the two first (global: non-category) genes
+        
+        for (let g=0; g<num; g++)
+        {
+            let geneTweakerName  = genePool.getGeneName(g);
+            let geneTweakerValue = genePool.getGeneValue( selectedSwimbotID, g );
+            
+            let top = 60 + g * 20;
+            if ( g > 1 ) //skip the two first (global: non-category) genes
+            {
+                top += 80.0;
+            }
+            
+            //----------------------------------------------------
+            // construct the gene value display
+            //----------------------------------------------------
+            document.getElementById( 'tweakGenesPanel' ).innerHTML            
+            += "<div class = 'geneTweakerValue' id = 'gene" + g + "Value' style = 'top:" + top + "px;'>" + geneTweakerValue + "</div>";
+
+            //----------------------------------------------------
+            // construct the slider
+            //----------------------------------------------------
+            document.getElementById( 'tweakGenesPanel' ).innerHTML            
+            += "<input "
+            +  "style        = 'top:" + ( top - 3 ) + "px;' "
+            +  "type         = 'range' " 
+            +  "class        = 'geneTweakerSlider' "
+            +  "min          = '0'"
+            +  "max          = '255'"   
+            +  "value        = '" + geneTweakerValue + "'"   
+            +  "id           = 'geneTweaker" + g + "'"
+            +  "name         = 'geneTweaker" 
+            +  "step         = 1 "
+            +  "autocomplete = 'off' "
+            +  "oninput      = 'tweakGene( " + selectedSwimbotID + ", " + g + ")' "
+            +  ">";
+            
+            //----------------------------------------------------
+            // construct the gene name
+            //----------------------------------------------------
+            document.getElementById( 'tweakGenesPanel' ).innerHTML            
+            += "<div class = 'geneTweakerName' style = 'top:" + top + "px;'>" + geneTweakerName + "</div>";
+        }
+        
+
+        //----------------------------------------------------
+        // initialize tweak category
+        //----------------------------------------------------
+        _tweakGenesCategory = 0;
+
+        //----------------------------------------------------
+        // set radio button check status
+        //----------------------------------------------------
+        let radioButtons = document.getElementsByName( 'geneTweakerCategory' );
+
+        for (let i = 0; i < radioButtons.length; i++) 
+        {
+            if ( i === _tweakGenesCategory ) 
+            {
+                radioButtons[i].checked = true;
+            }
+            else
+            {
+                radioButtons[i].checked = false;
+            }
+        }    
+    }
+    else
+    {
+        document.getElementById( 'tweakGenesPanel'      ).style.visibility = 'hidden';		        	        
+        document.getElementById( 'closeTweakGenesPanel' ).style.visibility = "hidden"; 
+    }    
+}
+
+
+//----------------------------
+function closeTweakGenesPanel()
+{
+    document.getElementById( 'tweakGenesPanel'      ).style.visibility = "hidden"; 
+    document.getElementById( 'closeTweakGenesPanel' ).style.visibility = "hidden"; 
+}
+
+
+//---------------------------------------------
+function updateGeneSliders( selectedSwimbotID )
+{
+    let num = genePool.getNumGenesPerCategory();
+    num += 2; //add the two first (global: non-category) genes
+    
+    for (let g=0; g<num; g++)
+    {
+        let geneIndex = g;
+    
+        if ( g > 1 )
+        {
+            geneIndex += genePool.getNumGenesPerCategory() * _tweakGenesCategory;   
+        }
+    
+        let geneTweakerValue = genePool.getGeneValue( selectedSwimbotID, geneIndex );
+        
+        let id = "geneTweaker" + g;
+        let slider = document.getElementById( id );
+        slider.value = geneTweakerValue;
+
+        id = "gene" + g + "Value";
+        document.getElementById( id ).innerHTML = geneTweakerValue;
+    }
+}
+
+
 //-------------------------
 function closePopupPanel()
 {
@@ -291,7 +430,7 @@ function closePopupPanel()
     document.getElementById( 'submitFilenameButton'     ).style.visibility = 'hidden';
     document.getElementById( 'dataDisplayButton'        ).style.visibility = "hidden";
     
-// I don't now why these are popping an error that they don't exist.... ??     
+// I don't know why these are popping an error that they don't exist.... ??     
 //document.getElementById( "PopupText"                ).style.visibility = "hidden";   
 //document.getElementById( "loadedList"               ).style.visibility = "hidden";   
     
@@ -516,6 +655,52 @@ function loadSwimbotFromPreset(p)
 }
 
 
+
+//------------------------------------------------------
+function setGeneTweakCategory( selectedSwimbotID, c )
+{    
+    _tweakGenesCategory = c;    
+    updateGeneSliders( selectedSwimbotID );//
+    //console.log( "_tweakGenesCategory = " + _tweakGenesCategory );
+}
+
+
+//---------------------------------------------
+function tweakGene( swimbotIndex, sliderIndex )
+{    
+    let geneIndex = sliderIndex;
+    
+    if ( sliderIndex > 1 )
+    {
+        geneIndex += genePool.getNumGenesPerCategory() * _tweakGenesCategory;   
+    }
+    
+    //-----------------------------------------
+    // get the gene value...
+    //-----------------------------------------
+    //console.log( "geneIndex = " + geneIndex );
+
+    let id = "geneTweaker" + sliderIndex;
+ 
+    //console.log( id );
+    
+    let input = document.getElementById( id );
+
+    let geneValue = input.value;
+
+    //----------------------------------------------------------
+    // update the gene value in the simulation...
+    //----------------------------------------------------------
+    genePool.tweakGene( swimbotIndex, geneIndex, geneValue );
+        
+    //----------------------------------------------------------
+    // update the html that displays the value...
+    //----------------------------------------------------------
+    id = "gene" + sliderIndex + "Value";
+    document.getElementById( id ).innerHTML = geneValue;
+}
+
+
 //----------------------------
 function openInfoPanel()
 {		    
@@ -642,7 +827,6 @@ function updateUI()
             }              
         }
 
-    
         //-----------------------------------------------------------------------------------
         // always update the graph....
         //-----------------------------------------------------------------------------------
@@ -662,7 +846,7 @@ function updateUI()
             + "swimbots: " + genePool.getNumSwimbots()
             + "<br>"
             + "food bits: " + genePool.getNumFoodBits();
-        
+            
             _graph.render();
         }
     }
@@ -674,6 +858,26 @@ function updateUI()
     setTimeout( "updateUI()", 500 );
 }	
 
+
+//----------------------------------------
+function notifyGeneTweakPanelMouseDown()
+{ 
+    let selectedSwimbotID = genePool.getSelectedSwimbotID();
+    
+    if ( selectedSwimbotID === -1 )
+    {
+        console.log( "NULL" );
+        closeTweakGenesPanel();
+    }
+    else
+    {
+        if ( document.getElementById( 'tweakGenesPanel' ).style.visibility === 'visible' )
+        {		        	        
+            console.log( selectedSwimbotID );
+            openTweakGenesPanel( selectedSwimbotID );
+        }
+    }
+}
 
 
 
@@ -728,7 +932,9 @@ document.getElementById( 'Canvas' ).onmousedown = function(e)
 {
     clearViewMode();
 
-    genePool.touchDown( e.pageX - document.getElementById( 'Canvas' ).offsetLeft, e.pageY - document.getElementById( 'Canvas' ).offsetTop );    
+    genePool.touchDown( e.pageX - document.getElementById( 'Canvas' ).offsetLeft, e.pageY - document.getElementById( 'Canvas' ).offsetTop );  
+    
+    notifyGeneTweakPanelMouseDown();
 }
 
 //------------------------------------------------------------

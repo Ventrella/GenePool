@@ -19,8 +19,11 @@ let hh = 0;
 //----------------------
 function ViewControl()
 {	
-    const LOVER_TRACKING_SCALE_BASE = 200;
-    const LOVER_TRACKING_SCALE_INC  = 2.0;
+    const LOVER_TRACKING_SCALE_BASE = 0//200;
+
+//const LOVER_TRACKING_SCALE_INC  = 2.0;
+const LOVER_TRACKING_SCALE_INC  = 2.0;
+
     const DEFAULT_INERTIA           = 0.4;
 
 //const EASE_IN_FRACTION          = 10.0;
@@ -65,7 +68,7 @@ const EASE_IN_FRACTION          = 15.0;
     
         _isTracking = false;
         _trackingPosition.copyFrom( currentCameraPosition );
-        _trackingScale = POOL_WIDTH;
+//_trackingScale = POOL_WIDTH;
         _trackingEaseIn = ZERO;
         _inertia  = DEFAULT_INERTIA;        
         
@@ -113,7 +116,7 @@ const EASE_IN_FRACTION          = 15.0;
             &&  ( _lover2Index != NULL_INDEX ))
             {
                 _isTracking = true;
-                _trackingScale = LOVER_TRACKING_SCALE_BASE;
+//_trackingScale = LOVER_TRACKING_SCALE_BASE;
             }
         }
         //-----------------------------------------------
@@ -222,7 +225,13 @@ const EASE_IN_FRACTION          = 15.0;
                 let loverDistance = _swimbots[ _lover1Index ].getPosition().getDistanceTo( _swimbots[ _lover2Index ].getPosition() );  
                 
                 // tone it down dudes! FIX...  
-                _trackingScale = LOVER_TRACKING_SCALE_BASE + loverDistance * LOVER_TRACKING_SCALE_INC;
+//let trackingScaleTarget = LOVER_TRACKING_SCALE_BASE + loverDistance * LOVER_TRACKING_SCALE_INC;
+//_trackingScale += ( trackingScaleTarget - _trackingScale ) * 0.01;
+                
+//_trackingScale = trackingScaleTarget;
+
+_trackingScale += ( ( loverDistance * 2 ) - _trackingScale ) * 0.1;
+                
             }
 
             _trackingPosition.copyFrom( getCentroidOfLovers() );     
@@ -313,49 +322,6 @@ const EASE_IN_FRACTION          = 15.0;
     this.getCameraScaleForce    = function() { return _cameraScaleForce }
 
     
-    //-------------------------------------------------------
-//function getTrackingScale() { return _trackingScale; }
-
-
-    /*
-    //-----------------------------------------------
-    function getTrackingPosition( selectedSwimbot )
-    {        
-        if ( _mode === ViewMode.AUTOTRACK )
-        {                    
-            _trackingPosition.copyFrom( getCentroidOfVisibleSwimbots() );  
-            
-            //console.log( "getTrackingPosition" );        
-        }
-        else if ( _mode === ViewMode.MUTUAL )
-        {
-            if (( _lover1Index != NULL_INDEX )
-            &&  ( _lover2Index != NULL_INDEX ))
-            {
-                let loverDistance = _swimbots[ _lover1Index ].getPosition().getDistanceTo( _swimbots[ _lover2Index ].getPosition() );    
-                _trackingScale = LOVER_TRACKING_SCALE_BASE + loverDistance * LOVER_TRACKING_SCALE_INC;
-            }
-
-            _trackingPosition.copyFrom( getCentroidOfLovers() );     
-        }
-        else
-        {
-            if ( selectedSwimbot != NULL_INDEX )
-            {                    
-                _trackingPosition.copyFrom( _swimbots[ selectedSwimbot ].getPosition() );
-            }
-        }     
-
-        _vectorUtility.x = _trackingPosition.x;
-        _vectorUtility.y = _trackingPosition.y;
-
-        return _vectorUtility;
-    }
-    */
-
-
-
-
 
     //--------------------------------------
     function getCentroidOfVisibleSwimbots()

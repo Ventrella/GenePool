@@ -2069,8 +2069,34 @@ let hhh = 0;
             _canvas.stroke();
         }	
 	}
-
 	
+	
+	//----------------------------------------------------
+	this.setGeneTweakCategory = function( swimbotIndex )
+	{
+	    console.log( "setGeneTweakCategory: swimbotIndex = " + swimbotIndex );
+    }
+    
+    
+	//--------------------------------------------------------------
+	this.tweakGene = function( swimbotIndex, geneIndex, geneValue )
+	{
+	    assert( swimbotIndex != NULL_INDEX, "genepool.js: tweakGene: swimbotIndex != NULL_INDEX"    );
+	    assert( geneIndex    >= 0,          "genepool.js: tweakGene: geneIndex >= 0"                );
+	    assert( geneIndex    < NUM_GENES,   "genepool.js: tweakGene: geneIndex    < NUM_GENES"      );
+	    assert( geneValue    >= 0,          "genepool.js: tweakGene: geneValue    >= 0"             );
+	    assert( geneValue    < BYTE_SIZE,   "genepool.js: tweakGene: geneValue    < BYTE_SIZE"      );
+	    
+	    //console.log( "uh, tweakGene: swimbotIndex = " + swimbotIndex + "; geneIndex = " + geneIndex  + "; geneValue = " + geneValue );
+	    
+	    _swimbots[ swimbotIndex ].setGeneValue( geneIndex, geneValue, _embryology );
+	    
+	    _vectorUtility.x = ZERO;
+	    _vectorUtility.y = ZERO;
+	    _swimbots[ swimbotIndex ].setVelocity( _vectorUtility );
+    }
+
+
 	//--------------------------------
 	this.touchDown = function( x, y )
 	{
@@ -2627,6 +2653,42 @@ for (let g=0; g<NUM_GENES; g++)
 	{		
         return _attractionCriterion;
     }	
+    
+    
+    
+	//------------------------------
+	this.getGeneName = function(g)
+	{		
+        //let genotype = _swimbots[0].getGenotype();
+        //return genotype.getGeneName(g);
+        
+        return _embryology.getGeneName(g);
+    }	
+    
+    
+	//--------------------------------------------------
+	this.getGeneValue = function( swimbotID, geneIndex )
+	{
+	    let genotype = _swimbots[ swimbotID ].getGenotype();
+
+        return genotype.getGeneValue( geneIndex );
+    }	
+    
+	//----------------------------------
+	this.getNumGenesPerCategory = function()
+	{
+        return _embryology.getNumGenesPerCategory();
+    }	
+    
+	//----------------------------------
+	this.getNumGeneCategories = function()
+	{
+        return _embryology.getNumGeneCategories();
+    }	
+    
+    
+    
+    
 	
 	//----------------------------------------------------------------------------------------------------------------
 	// swimbot getters...
