@@ -701,6 +701,15 @@ function requestToSavePool( savedBeforeLoad )
 //--------------------------------------
 function requestToLoadSwimbotFromFile()
 {
+
+/*
+// this is how to read a file that was uploaded using the fileInput element:
+document.getElementById( 'fileInput' ).style.visibility = "visible";   
+
+let selectedFile = document.getElementById('fileInput').files[0];
+console.log( "selectedFile = ", selectedFile );
+*/
+
     if ( _username === "anonymous" )
     {   
         showAccountRequiredPopup( "Cannot load swimbot" );
@@ -713,6 +722,32 @@ function requestToLoadSwimbotFromFile()
 
 
 
+function readLocalFile( event )
+{
+    //console.log( event );
+    
+    let fileList = event.target.files;
+    
+    let file = fileList[0];    
+    
+    let reader = new FileReader();
+    
+    
+    console.log( file );
+}
+
+
+/*
+const inputElement = document.getElementById("fileInput");
+inputElement.addEventListener("change", handleFiles, false);
+function handleFiles() 
+{
+    console.log( "hello!" );
+
+  const fileList = this.files; 
+}
+*/
+
 
 //--------------------------
 function printFamilyTree()
@@ -723,7 +758,10 @@ function printFamilyTree()
     
     let f = "";
 
-    for (let n=0; n<familyTree.getNumNodes(); n++)
+//for (let n=0; n<familyTree.getNumNodes(); n++)
+
+//YO - this is Luka's change to cull the data so it is not too big...
+for (let n=0; n<familyTree.getNumNodes(); n +=5 )
     {
         f += "swimbot index: " + n.toString();
         f += "<br>";
@@ -757,7 +795,10 @@ function printFamilyTree()
     document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
     document.getElementById( 'dataDisplay'      ).innerHTML 
     = "<br>" 
-    + "<big>Family Tree Data</big>"
+    + "<big>Swimbot Data</big>"
+    + "<br>" 
+    + "(This is a work in progress...these data are intended to be loaded into in the Gene Pool Lab)" 
+    + "<br>" 
     + "<br>" 
     + "(" + familyTree.getNumNodes().toString() + " swimbots)"
     + "<br>"
@@ -1064,6 +1105,18 @@ function showSwimbotGenes(s)
         = "<br>" 
         + "<big>Gene values for swimbot " + s.toString() + "</big>"
         + "<br>" 
+        + "<br>" 
+        + "This is formatted as JSON, which is required "
+        + "<br>"
+        + "for it to be loaded back into the pool."
+        + "<br>"
+        + "<br>"
+        + "Please copy everything below and put it in an "
+        + "<br>"
+        + "empty .txt file. Give it a cool name and save it."
+        + "<br>"
+        + "<br>"
+        + "-------------------------------------------------------------------"
         + "<br>"
         + "<br>"
         + json;

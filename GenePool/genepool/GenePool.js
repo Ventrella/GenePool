@@ -28,6 +28,10 @@ const MIN_FOOD_REGENERATION_PERIOD      = 1;
 const DEFAULT_FOOD_REGENERATION_PERIOD  = 40;
 const MAX_FOOD_REGENERATION_PERIOD      = 200;
 
+// this needs to be the same as the corresponding value in Embryology.js !!!!
+const NUM_GENES_USED = 112;
+
+
 var GLOBAL_childEnergyRatio = DEFAULT_CHILD_ENERGY_RATIO;
 
 //------------------
@@ -87,6 +91,7 @@ const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
     let _neighborhoodY          = new Array();
     let _neighborhoodAxis       = new Array();
 	let _simulationRunning      = false;
+	let _rendering              = false;
 	let _swimbotBeingDragged    = false;
 	let _foodBitBeingDragged    = false;
 	let _poolCenter             = new Vector2D();   
@@ -486,6 +491,14 @@ let hhh = 0;
             }
 
             //--------------------------------------------------
+            // This sets all junk DNA to a value of 0!!!
+            //--------------------------------------------------
+            for (let g=NUM_GENES_USED; g<NUM_GENES; g++)
+            {
+                _myGenotype.setGeneValue( g, 0 );
+            }            
+
+            //--------------------------------------------------
             // create the swimbot
             //--------------------------------------------------
             _swimbots[i].create( i, initialAge, initialPosition, initialAngle, initialEnergy, _myGenotype, _embryology );	
@@ -536,6 +549,11 @@ let hhh = 0;
 		// set _simulationRunning to true
 		//---------------------------------
 		_simulationRunning = true;
+		
+		//---------------------------------
+		// set rendering to true
+		//---------------------------------
+		_rendering = true;
     
 		//---------------------------------
 		// reset clock to 0
@@ -823,49 +841,52 @@ let hhh = 0;
             this.updateFood();
         }
                 
-		//---------------------------
-		// update camera...
-		//---------------------------
-		_camera.update( _seconds );
+        if ( _rendering )
+        {		
+            //---------------------------
+            // update camera...
+            //---------------------------
+            _camera.update( _seconds );
 
-		if ( _camera.getScale() > LEVEL_OF_DETAIL_THRESHOLD ) 
-		{
-			_levelOfDetail = SWIMBOT_LEVEL_OF_DETAIL_LOW;
-		}
-		else 
-		{
-			_levelOfDetail = SWIMBOT_LEVEL_OF_DETAIL_HIGH;
-		}
-		
-		//---------------------------
-		// update camera tracking...
-		//---------------------------
-        if ( _viewControl.getIsTracking() )
-        {
-            //if ( _clock % CAMERA_TRACKING_UPDATE_PERIOD === 0 )
+            if ( _camera.getScale() > LEVEL_OF_DETAIL_THRESHOLD ) 
             {
-                _viewControl.updateTracking( _camera.getPosition(), _camera.getScale(), _selectedSwimbot );
-                
-                _camera.addForce( _viewControl.getCameraForce(), _viewControl.getCameraScaleForce() );
+                _levelOfDetail = SWIMBOT_LEVEL_OF_DETAIL_LOW;
             }
-        }
+            else 
+            {
+                _levelOfDetail = SWIMBOT_LEVEL_OF_DETAIL_HIGH;
+            }
         
-		//----------------------------------
-		// apply touch to camera navigation
-		//----------------------------------
-		this.updateCameraNavigation();
-    
+            //---------------------------
+            // update camera tracking...
+            //---------------------------
+            if ( _viewControl.getIsTracking() )
+            {
+                //if ( _clock % CAMERA_TRACKING_UPDATE_PERIOD === 0 )
+                {
+                    _viewControl.updateTracking( _camera.getPosition(), _camera.getScale(), _selectedSwimbot );
+                
+                    _camera.addForce( _viewControl.getCameraForce(), _viewControl.getCameraScaleForce() );
+                }
+            }
+        
+            //------------------------------
+            // update camera navigation
+            //------------------------------
+            this.updateCameraNavigation();
+
+            //---------------------------
+            // render everything...
+            //---------------------------		
+            this.render();
+        }
+
         //-------------------------------------------------------------
         // update touch state 
         // (important for generating state for touch velocity, etc.)
         // also, important to call this after updateCameraNavigation
         //-------------------------------------------------------------
         _touch.update();
-
-		//---------------------------
-		// render everything...
-		//---------------------------
-		this.render();
         
 		//---------------------------
 		// trigger next update...
@@ -943,51 +964,63 @@ let hhh = 0;
                             //------------------------------------------------------------------------------
                             _myGenotype = _swimbots[s].getGenotype();
                             _mateGenotype = _potentialMate.getGenotype();
+                             
+                            //------------------------------------------------------------------------------
+                            // if the junk dna of each swimbot are similar enough...
+                            //------------------------------------------------------------------------------
+                            if ( this.getJunkDnaSimilarity( _myGenotype, _mateGenotype ) > NON_REPRODUCING_JUNK_DNA_LIMIT )
+                            {
+                                //-----------------------------------
+                                // recombine genes for the child 
+                                //-----------------------------------
+                                assert( _childGenotype != null, "_childGenotype != null" );
+
+                                _childGenotype.setAsOffspring( _myGenotype, _mateGenotype );
+
+                                //------------------------------------------------
+                                // collect energy from parents for child energy
+                                //------------------------------------------------
+                                let myEnergyContribution    = _swimbots[s].contributeToOffspring();
+                                let mateEnergyContribution  = _potentialMate.contributeToOffspring();
+                                let energyToOffspring       = myEnergyContribution + mateEnergyContribution;     
                             
-                            assert( _childGenotype != null, "_childGenotype != null" );
+                                //console.log( "energyToOffspring = " + energyToOffspring );
+                                //assert( energyToOffspring <= DEFAULT_SWIMBOT_HUNGER_THRESHOLD, "energyToOffspring <= DEFAULT_SWIMBOT_HUNGER_THRESHOLD" );                       
 
-                            _childGenotype.setAsOffspring( _myGenotype, _mateGenotype );
-
-                            //------------------------------------------------
-                            // collect energy from parents for child energy
-                            //------------------------------------------------
-                            let myEnergyContribution    = _swimbots[s].contributeToOffspring();
-                            let mateEnergyContribution  = _potentialMate.contributeToOffspring();
-                            let energyToOffspring       = myEnergyContribution + mateEnergyContribution;     
+                                //----------------------------------------------------------------------------------------
+                                // set birth position
+                                //----------------------------------------------------------------------------------------
+                                let diffX = _potentialMate.getGenitalPosition().x - _swimbots[s].getGenitalPosition().x;
+                                let diffY = _potentialMate.getGenitalPosition().y - _swimbots[s].getGenitalPosition().y;
                             
-                            //console.log( "energyToOffspring = " + energyToOffspring );
-                            //assert( energyToOffspring <= DEFAULT_SWIMBOT_HUNGER_THRESHOLD, "energyToOffspring <= DEFAULT_SWIMBOT_HUNGER_THRESHOLD" );                       
+                                _vectorUtility.x = _swimbots[s].getGenitalPosition().x + diffX * ONE_HALF;
+                                _vectorUtility.y = _swimbots[s].getGenitalPosition().y + diffY * ONE_HALF;
 
-                            //----------------------------------------------------------------------------------------
-                            // set birth position
-                            //----------------------------------------------------------------------------------------
-                            let diffX = _potentialMate.getGenitalPosition().x - _swimbots[s].getGenitalPosition().x;
-                            let diffY = _potentialMate.getGenitalPosition().y - _swimbots[s].getGenitalPosition().y;
-                            
-                            _vectorUtility.x = _swimbots[s].getGenitalPosition().x + diffX * ONE_HALF;
-                            _vectorUtility.y = _swimbots[s].getGenitalPosition().y + diffY * ONE_HALF;
-
-                            //---------------------------------------------
-                            // pool effect
-                            //---------------------------------------------
-                            _pool.endTouch( _vectorUtility, _seconds );
-                                                		
-                            //--------------------------------------------
-                            // create the child swimbot
-                            //--------------------------------------------
-                            let initialAngle = getRandomAngleInDegrees();                                                        
-                            _swimbots[ newBornSwimbotIndex ].create( newBornSwimbotIndex, 0, _vectorUtility, initialAngle, energyToOffspring, _childGenotype, _embryology )
+                                //---------------------------------------------
+                                // pool effect
+                                //---------------------------------------------
+                                _pool.endTouch( _vectorUtility, _seconds );
+                                                        
+                                //--------------------------------------------
+                                // create the child swimbot
+                                //--------------------------------------------
+                                let initialAngle = getRandomAngleInDegrees();                                                        
+                                _swimbots[ newBornSwimbotIndex ].create( newBornSwimbotIndex, 0, _vectorUtility, initialAngle, energyToOffspring, _childGenotype, _embryology )
  
-                            //--------------------------------------------------
-                            // add the new swimbot to the family tree
-                            //--------------------------------------------------
-                            _familyTree.addNode( newBornSwimbotIndex, s, chosenMateIndex, _clock, this.getSwimbotGenes( newBornSwimbotIndex ) );
+                                //--------------------------------------------------
+                                // add the new swimbot to the family tree
+                                //--------------------------------------------------
+                                _familyTree.addNode( newBornSwimbotIndex, s, chosenMateIndex, _clock, this.getSwimbotGenes( newBornSwimbotIndex ) );
 
-
-                         } // if ( _potentialMate.getAlive() )                     
-                    }    //  if (( newBornSwimbotIndex != -1 ) &&  ( swimbot[s].getChosenMateIndex() != -1 ))
-                }       //   if ( swimbot[s].isTryingToMate() )
-            }          //    if ( _swimbots[s].getAlive() )
+                            }// if ( getJunkDnaDistance( _myGenotype, _mateGenotype ) > NON_REPRODUCING_JUNK_DNA_LIMIT )
+                            else 
+                            {
+                                //console.log( "reproduction not possible because junk dna is too dissimilar!" );
+                            }
+                        }   //  if ( _potentialMate.getAlive() )                     
+                    }      //   if (( newBornSwimbotIndex != -1 ) &&  ( swimbot[s].getChosenMateIndex() != -1 ))
+                }         //    if ( swimbot[s].isTryingToMate() )
+            }            //     if ( _swimbots[s].getAlive() )
             else
             {
                 //-------------------------------------------------------------
@@ -1037,7 +1070,27 @@ let hhh = 0;
     
     
     
+
+    //--------------------------------------------------------
+	this.getJunkDnaSimilarity = function( genotype1, genotype2 )
+	{		
+	    let diff = ZERO;
+	    let num = 0;
+        for (let g=NUM_GENES_USED; g<NUM_GENES; g++)
+        {
+            diff += Math.abs( genotype1.getGeneValue(g) - genotype2.getGeneValue(g) ) / BYTE_SIZE;
+            num ++;
+        }          
+        
+        let similarity = ONE - ( diff / num );  
+        
+        //console.log( similarity );
+        
+	    return similarity;
+	}
     
+    
+        
     
     //---------------------------------------------
 	this.findLowestDeadSwimbotInArray = function()
@@ -1714,6 +1767,13 @@ let hhh = 0;
 	this.setSimulationRunning = function(s)
 	{	
         _simulationRunning = s;
+    }
+    
+
+	//-------------------------------
+	this.setRendering = function(r)
+	{	
+        _rendering = r;
     }
     
 
@@ -2432,6 +2492,7 @@ let hhh = 0;
     this.getTimeStep            = function() { return _clock;                   }    
 	this.getRenderingGoals      = function() { return _renderingGoals;          }
 	this.getSimulationRunning   = function() { return _simulationRunning;       }
+	this.getRendering           = function() { return _rendering;               }
 	this.getSelectedSwimbotID   = function() { return _selectedSwimbot;         }
 	this.getViewMode            = function() { return _viewControl.getMode();   }
     

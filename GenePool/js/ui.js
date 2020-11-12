@@ -289,7 +289,7 @@ function openTweakGenesPanel( selectedSwimbotID )
         document.getElementById( 'closeTweakGenesPanel' ).style.visibility = "visible"; 
 
         document.getElementById( 'tweakGenesPanel' ).innerHTML = "<div id = 'tweakGenesTitle' >Tweak the genes of swimbot " + selectedSwimbotID + "</div>"; 
-        document.getElementById( 'tweakGenesPanel' ).innerHTML += "<div id = 'tweakGenesCategoryNote' >(choose which body part category to tweak)</div>"; 
+        document.getElementById( 'tweakGenesPanel' ).innerHTML += "<div id = 'tweakGenesCategoryNote' >(choose which limb type to tweak)</div>"; 
 
         let numCategories = genePool.getNumGeneCategories();        
         for (let c=0; c<numCategories; c++)
@@ -484,6 +484,41 @@ function toggleSimulationRunning()
     }
 }
 
+
+//-------------------------
+function toggleRendering()
+{
+    if ( genePool.getRendering() )
+    {
+        setRendering( false );
+    }
+    else
+    {
+        setRendering( true ); 
+    }
+}
+
+//-------------------------
+function setRendering(r)
+{
+    if ( r )
+    {
+        genePool.setRendering( true ); 
+        document.getElementById( "noRenderButton" ).innerHTML = "turn rendering OFF";
+        document.getElementById( "noRenderButton" ).style = "background-color: #dddddd; border-style: solid; border-width: 1; border-color: #000000;";
+        canvasID.style.visibility = 'visible';
+        document.getElementById( "noRenderPanel" ).style.visibility = 'hidden';
+        
+    }
+    else
+    {
+        genePool.setRendering( false ); 
+        document.getElementById( "noRenderButton" ).innerHTML = "turn rendering ON";
+        document.getElementById( "noRenderButton" ).style = "background-color: #dddddd; border-style: solid; border-width: 5; border-color: #4488ff;"        
+        canvasID.style.visibility = 'hidden';
+        document.getElementById( "noRenderPanel" ).style.visibility = 'visible';
+    }
+}
 
 
 //---------------------------

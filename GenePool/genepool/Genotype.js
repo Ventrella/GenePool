@@ -13,6 +13,9 @@ const MUTATION_RATE	= 0.01; // original
 const CROSSOVER_RATE	= 0.2;
 const MIN_GENE_VALUE	= 0;
 
+const NON_REPRODUCING_JUNK_DNA_LIMIT = 0.9; 
+
+
 const PRESET_GENOTYPE_DARWIN    =  0;
 const PRESET_GENOTYPE_WALLACE   =  1;
 const PRESET_GENOTYPE_MENDEL    =  2;
