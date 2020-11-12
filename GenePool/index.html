@@ -4,7 +4,7 @@
 			Gene Pool
 		</title>
 		
-        <link rel="stylesheet" type="text/css" href="css/genepool.css">        
+        <link rel="stylesheet" type="text/css" href="genepool.css">        
 
         <meta charset  = "utf-8"/>
         <meta property = "og:title"         content = "Gene Pool Swimbots">
@@ -477,11 +477,11 @@
  
                     <div id ="freezePanel">
                         freeze simulation...
-                        <button id = "freezeButton" onClick = "toggleSimulationRunning();" >freeze</button>         
+                        <button id = "freezeButton"   onClick = "toggleSimulationRunning();" >freeze</button>         
+                        <button id = "noRenderButton" onClick = "toggleRendering();" >turn rendering OFF</button>         
                     </div>
                     
                 </div> <!-- tweak Panel -->
-        
 
                 <!-- ------------------------------------------------------------ -->
                 <!-- graph panel                                                  -->
@@ -543,11 +543,14 @@
                     <div id = "saveLoadPanel" >
                         <div id = "saveLoadTitle" >
                             save the current pool or load one from file...                
-                        </div>                
+                        </div>      
+                        <!-- file load input  -->
+                        <input type = "file" id = "fileInput" multiple onchange = "readLocalFile( event )" >    
+
                         <button id = "saveButton" class = "basicButton" onClick = "requestToSavePool( false );" >save pool</button> 
                         <button id = "loadButton" class = "basicButton" onClick = "choosePoolToLoad( SimulationStartMode.FILE ); requestToLoadPoolFromFile();" >load pool</button>    
                     </div>                    
-                    <button id = "familyTreeButton" class = "basicButton" onClick = "printFamilyTree( false );" >print family tree</button> 
+                    <button id = "familyTreeButton" class = "basicButton" onClick = "printFamilyTree( false );" >print swimbot data</button> 
                     
                 </div> <!-- poolPanel -->
 
@@ -751,7 +754,7 @@
             (error)            
         </div>
         <button id = "cancelErrorButton" onClick = "closeErrorPanel(); ">X</button>
-        
+                
         <!-- ------------------------------------------------------------------ -->
         <!-- the data from saving swimbots and pools is displayed here          -->
         <!-- ------------------------------------------------------------------ -->
@@ -764,7 +767,7 @@
         <!-- ------------------------------------------------------------------ -->
         <div id = "dataDisplay">
         </div>
-                
+        
         <!-- ------------------------------------------------------------------ -->
         <!-- close data display                                                 -->
         <!-- ------------------------------------------------------------------ -->
@@ -780,10 +783,24 @@
         <!-- close tweak genes panel                                            -->
         <!-- ------------------------------------------------------------------ -->
         <button id = "closeTweakGenesPanel" onClick = "closeTweakGenesPanel();" >X</button>  
+        
+        <!-- ------------------------------------------------------------------ -->
+        <!-- no Render notice                                                   -->
+        <!-- ------------------------------------------------------------------ -->
+        <div id = "noRenderPanel" onClick = "setRendering( true );" >
+            <big>Click HERE to turn rendering back on.</big>
+            <br>
+            <br>
+            While rendering is turned off, the simulation will keep running in the background. 
+            On some computers it might run faster, especially for slower graphics systems. 
+            <br>
+            <br>
+            To monitor population and progress, select the population graph, from the menu. 
+        </div>  
                 
 		<!-- ------------------------------------------------------------ -->
 		<!-- turn on the info panel and set it to the first page...       -->
-		<!-- also, show that autracking is on...                          -->
+		<!-- also, show that autotracking is on...                        -->
 		<!-- ------------------------------------------------------------ -->
 		<script type = "text/javascript"> 	
             resize();
