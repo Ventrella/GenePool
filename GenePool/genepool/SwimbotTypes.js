@@ -4,8 +4,8 @@
 //  time-related constants
 //-------------------------------------------
 const FULLY_GROWN_AGE    = 1000;
-const OLD_AGE            = 39000;
-const MAXIMUM_LIFESPAN   = 40000;
+//const OLD_AGE            = 39000; // this has been moved to ExperimentParameters.js
+//const MAXIMUM_LIFESPAN   = 40000; // this has been moved to ExperimentParameters.js
 const TIMER_DELTA_INCREASE_RATE = 0.02;
 const STARVING_TIMER_DELTA = 0.05;
 
@@ -114,6 +114,9 @@ const DEFAULT_CHILD_ENERGY_RATIO	        = ONE_HALF;
 const MAX_CHILD_ENERGY_RATIO                = ONE;
 const MIN_SWIMBOT_HUNGER_THRESHOLD          = ZERO;
 
+// ranges from 0 to 1 with 0 being not picky at all and 1 being totally 'nothing else'
+const SWIMBOT_NUTRITION_PICKINESS = 0.7;
+
 //const MAX_SWIMBOT_HUNGER_THRESHOLD          = 100;
 const MAX_SWIMBOT_HUNGER_THRESHOLD          = 200;
 
@@ -173,6 +176,8 @@ function Phenotype()
 	this.parts          = new Array( MAX_PARTS ); 
 	this.sumPartLengths = ZERO;
 	this.mass           = ZERO;
+	this.preferredFoodColor = 0;
+	this.foodNutritionType  = 0;
 
 	for (let p=0; p<MAX_PARTS; p++)
 	{

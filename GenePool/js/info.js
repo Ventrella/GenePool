@@ -467,7 +467,7 @@ function getInfoText( page )
         + "In alphabetical order:       "
         + "<br>"
         + "<br>"
-        + "Brian Dodd, Bryan Galdrikian, Will Harvey, Jeremy Hussell, Mike Kaplan, Art Medlar, Ken Pearce, Scott Schafer, Julia Smith, Qarl Stiefvater, Barry Stump, TechnoZeus, Philip Ventrella, Frey Waid, Gary Walker"
+        + "Brian Dodd, Bryan Galdrikian, Will Harvey, Jeremy Hussell, Mike Kaplan, Art Medlar, Luka Negoita, Ken Pearce, Scott Schafer, Julia Smith, Qarl Stiefvater, Barry Stump, TechnoZeus, Philip Ventrella, Frey Waid, Gary Walker"
 
 
         /*

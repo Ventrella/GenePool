@@ -49,10 +49,13 @@ const MAX_SEQUENCE_COUNT    =   5;
 const GREATEST_POSSIBLE_SWIMBOT_MASS = MAX_PARTS * MAX_LENGTH * MAX_WIDTH
 const GREATEST_POSSIBLE_SWIMBOT_LENGTH	= MAX_PARTS * MAX_LENGTH;
 
-	
+
 //--------------------
 function Embryology()
 {	    
+
+let testNoEel = true;
+
     //-------------------------
     function CategoryValues()
     {	   	
@@ -105,6 +108,12 @@ function Embryology()
     let _numGenesPerCategory    = 0;
     let _cutOff                 = 0;
     
+    
+    let foodColorGene           = 0;
+    let foodNutritionGene       = 0;
+	this.getFoodColorGene       = function() { return foodColorGene;        }
+	this.getFoodNutritionGene   = function() { return foodNutritionGene;    }
+
     for (let g=0; g<NUM_GENES; g++)
     {
         _geneNames[g] = "junk";
@@ -221,6 +230,23 @@ function Embryology()
             _categoryValues[c].splined          = Math.round( ZERO  + _categoryValues[c].splined        );
         }
 
+        //-------------------------------------------------------------------
+        // add genes for food color preference and food nutrition type
+        //-------------------------------------------------------------------
+        g++;  phenotype.preferredFoodColor  = Math.floor( _normalizedGenes[g] * 2 ); foodColorGene = g;
+        g++;  phenotype.foodNutritionType   = Math.floor( _normalizedGenes[g] * 2 ); foodNutritionGene = g;
+
+        
+        
+// quick test....        
+//if ( phenotype.preferredFoodColor === 0 ) { phenotype.foodNutritionType = 1; }
+//if ( phenotype.preferredFoodColor === 1 ) { phenotype.foodNutritionType = 0; }
+        
+//console.log( "in embryology: " + phenotype.preferredFoodColor );
+//console.log( "phenotype.preferredFoodColor = " + phenotype.preferredFoodColor );
+//console.log( "phenotype.foodNutritionType  = " + phenotype.foodNutritionType  );
+//console.log( "-------------------------------" );
+        
         //---------------------------------------
         // make sure this is kosher
         //---------------------------------------
@@ -240,7 +266,12 @@ function Embryology()
         //----------------------------------------------
         _partIndex = ROOT_PART;
         let startCategory = 0;
-        this.generateBodySequence( phenotype, _partIndex, ZERO, startCategory, ONE );    
+        
+testNoEel = true;
+//console.log( "--------------");
+        this.generateBodySequence( phenotype, _partIndex, ZERO, startCategory, ONE );  
+testNoEel = false;  
+
 
         //----------------------------------------------
         // generate the rest of the body...
@@ -472,6 +503,15 @@ copyPart( testParts[p], phenotype.parts[p] );
                     phenotype.parts[ _partIndex ].turnPhase = _categoryValues[c].turnPhase;   
                 }
 
+
+                
+if ( testNoEel )
+{
+    //console.log( "testNoEel" );
+    phenotype.parts[ _partIndex ].turnAmp   = ZERO;
+    phenotype.parts[ _partIndex ].turnPhase = ZERO;   
+}
+        
                 //-----------------------------------------------
                 // apply reflection on amp
                 //-----------------------------------------------

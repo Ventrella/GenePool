@@ -7,7 +7,7 @@ const MAX_FOOD_BIT_MAX_SPAWN_RADIUS     = 4000.0;
 const DEFAULT_FOOD_BIT_MAX_SPAWN_RADIUS = 4000.0; //max distance for spawned child
 const MIN_FOOD_BIT_ENERGY               = 0.0; 
 const MAX_FOOD_BIT_ENERGY               = 100.0; 
-const FOOD_BIT_NUTRITION_ENERGY         = 50.0;
+//const FOOD_BIT_NUTRITION_ENERGY         = 50.0;
 const DEFAULT_FOOD_BIT_ENERGY           = 50.0;  //when eaten, swimbot gets this much energy
 const FOOD_BIT_SIZE_VIEW_SCALE          = 0.03; //increase with view scale (a kind of LOD)
 const FOOD_BIT_GRAB_RADIUS              = 20.0;  // radius for grabbing food bit
@@ -24,8 +24,7 @@ function FoodBit()
 {
     let _position       = new Vector2D();
     let _energy         = ZERO;
-    let _nutrition1     = ZERO;
-    let _nutrition2     = ZERO;
+    let _nutrition      = ZERO;
     let _red            = ZERO;
     let _green          = ZERO;
     let _blue           = ZERO;
@@ -54,11 +53,34 @@ function FoodBit()
 //_position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
 //_position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
 
-        this.setNutritionAccordingToPosition();
+        this.randomizeNutrition();
     }
 
 
 
+
+    //--------------------------------------
+	this.randomizeNutrition = function()
+	{
+	    //console.log( "randomizeNutrition" ) ;
+	    
+	    _nutrition = Math.floor( Math.random() * 2 );
+	    
+        this.setColorAccordingToNutrition();
+	}
+	
+
+    //--------------------------------------
+	this.setNutrition = function(n)
+	{
+	    assert ( ( n === 0 ) || ( n === 1 ), "Foodbit.js: setNutrition: ( n === 0 ) || ( n === 1 )" );
+	    
+	    _nutrition = n;
+	    
+        this.setColorAccordingToNutrition();
+	}
+
+    /*
     //-------------------------------------------------
 	this.setNutritionAccordingToPosition = function()
 	{
@@ -72,12 +94,16 @@ function FoodBit()
 
         this.setColorAccordingToNutrition();
 	}
-    
+    */
     
 
     //------------------------------------------------
 	this.setColorAccordingToNutrition = function()
 	{
+	    if ( _nutrition === 0 ) { _red = 0.5; _green = 0.5; _blue = 1.0; }
+	    if ( _nutrition === 1 ) { _red = 0.9; _green = 0.9; _blue = 0.3; }
+
+        /*	
         let redX    = 0.0; 
         let greenX  = 0.0; 
         let blueX   = 0.0; 
@@ -140,6 +166,7 @@ function FoodBit()
         if ( _red   > ONE ) { _red      = ONE; }  
         if ( _green > ONE ) { _green    = ONE; }  
         if ( _blue  > ONE ) { _blue     = ONE; }  
+        */
     }
     
         
@@ -153,17 +180,27 @@ function FoodBit()
         assert( parentFoodBit.getAlive(), "foodbit.js: spawnFromParent: parentFoodBit.alive" );
         assert( childIndex != NULL_INDEX, "foodbit.js: spawnFromParent: childIndex != NULL_INDEX" );
         
-        /*
         if ( childIndex === parentFoodBit.getIndex() )
         {
             console.log( "warning: foodbit.js: spawnFromParent: childIndex = " + childIndex + " and parentFoodBit.getIndex() = " + parentFoodBit.getIndex() );
         }
-        assert( childIndex != parentFoodBit.getIndex(), "foodbit.js: spawnFromParent: childIndex != parentFoodBit.index" );
-        */
         
-        _index  = childIndex;
-        _energy = parentFoodBit.getEnergy();
-        _opacity = ZERO;
+        //assert( childIndex != parentFoodBit.getIndex(), "foodbit.js: spawnFromParent: childIndex != parentFoodBit.index" );
+
+        _index      = childIndex;
+        _opacity    = ZERO;
+        _energy     = parentFoodBit.getEnergy();
+        _nutrition  = parentFoodBit.getNutrition();
+        
+
+        //TEST! This is sort of like a mutation in nutrition....to keep one ntrution value from dominating the pool...
+        if ( Math.random() < FOOD_NUTRITION_MUTATION_RATE )
+        {
+            this.randomizeNutrition();
+        }
+                
+        this.setColorAccordingToNutrition();
+        
     
         //-----------------------------
         // set the position
@@ -194,14 +231,19 @@ function FoodBit()
                 if ( _position.x > pr ) { _position.x += ( ( pr - _position.x ) * 2 ); }
         else	if ( _position.x < pl ) { _position.x += ( ( pl - _position.x ) * 2 ); }
         
-        //console.log( "after:" + _position.y );
+        //console.log( "after:" + _position.y );        
+        
+        if ( SPAWN_FOOD_RANDOMLY_IN_POOL )
+        {
+            _position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
+            _position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
+        }   
+        
 
         assert( _position.x < POOL_RIGHT,   "foodbit.js: spawnFromParent: _position.x < POOL_RIGHT"  );
         assert( _position.x > POOL_LEFT,    "foodbit.js: spawnFromParent: _position.x > POOL_LEFT"   );
         assert( _position.y > POOL_TOP,     "foodbit.js: spawnFromParent: _position.y < POOL_TOP"	);
         assert( _position.y < POOL_BOTTOM,  "foodbit.js: spawnFromParent: _position.y > POOL_BOTTOM" );
-        
-        this.setNutritionAccordingToPosition();
     }
 
 
@@ -264,14 +306,12 @@ function FoodBit()
         _index = NULL_INDEX;
     }
     
-   
 	//----------------------------
 	// getters
 	//---------------------------
 	this.getPosition    = function() { return _position;    }
 	this.getEnergy      = function() { return _energy;      }
-	this.getNutrition1  = function() { return _nutrition1;  }
-	this.getNutrition2  = function() { return _nutrition2;  }
+	this.getNutrition   = function() { return _nutrition;   }
 	this.getIndex       = function() { return _index;       }
     this.getAlive       = function() { return ( _index != NULL_INDEX ); }
 

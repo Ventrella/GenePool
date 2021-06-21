@@ -752,6 +752,26 @@ function handleFiles()
 //--------------------------
 function printFamilyTree()
 {
+    let w = window.open
+    (
+        "", 
+        "swimbot data", 
+        "left           = 400, \
+         top            = 100, \
+         width          = 600, \
+         height         = 700, \
+         status         = 0, \
+         resizable      = 0, \
+         channelmode    = 0, \
+         menubar        = 0, \
+         toolbar        = 0, \
+         location       = 0, \
+         titlebar       = 0" 
+    );
+    
+    
+    w.document.title = "Swimbot Data (copy and paste into .txt file, then load into Gene Pool Lab)";
+
     let familyTree = genePool.getFamilyTree();
      
     //let f = JSON.stringify( { familyTree } );
@@ -791,19 +811,28 @@ for (let n=0; n<familyTree.getNumNodes(); n +=5 )
         f += "<br>";
     }
 
+    w.document.body.innerHTML = f;
+
+    //-------------------------------------------------------------------
+    // the following code displays the data in a div element:
+    //-------------------------------------------------------------------
+    /*
     document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
     document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
     document.getElementById( 'dataDisplay'      ).innerHTML 
-    = "<br>" 
+    = 
+    "<br>" 
     + "<big>Swimbot Data</big>"
     + "<br>" 
     + "(This is a work in progress...these data are intended to be loaded into in the Gene Pool Lab)" 
     + "<br>" 
     + "<br>" 
-    + "(" + familyTree.getNumNodes().toString() + " swimbots)"
+    + 
+    "(" + familyTree.getNumNodes().toString() + " swimbots)"
     + "<br>"
     + "<br>"
     + f;
+    */
 }
 
 

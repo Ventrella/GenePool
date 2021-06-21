@@ -8,7 +8,7 @@ const POOL_RIGHT    = 8000.0;
 const POOL_TOP      = ZERO;
 const POOL_BOTTOM   = 8000.0;
 
-const GARDEN_OF_EDEN_RADIUS = 2000;
+//const GARDEN_OF_EDEN_RADIUS = 2000;
 
 const POOL_WIDTH  = ( POOL_RIGHT  - POOL_LEFT );
 const POOL_HEIGHT = ( POOL_BOTTOM - POOL_TOP  );

@@ -1261,7 +1261,8 @@ let partAccelerationY = -strokeForceY;
     this.getBrainState                  = function() { return _brain.getState();                            }
     this.getGenotype                    = function() { return _genotype;                                    }
 	this.getSelectRadius                = function() { return _selectRadius;                                }
-
+	this.getPreferredFoodColor          = function() { return _phenotype.preferredFoodColor;                }
+	
 
 	//---------------------------------------
     this.getGoalDescription = function() 
@@ -1335,40 +1336,29 @@ let partAccelerationY = -strokeForceY;
         if (( _chosenFoodBit != null )
         &&  ( _chosenFoodBit.getAlive() ))
         {	
-            
-                   
-//------------------------------------------------------------------------
-// take into account the difference in energy to the swimbot based on its 
-// digestion of the nutritional profile of the food bit (shown as color)
-//------------------------------------------------------------------------
-
+            let energyFromFoodBit = _chosenFoodBit.getEnergy();
 /*
-let swimbotNutrition1Pref = Math.random();
-let swimbotNutrition2Pref = Math.random();
-
-let nutrition1Difference = Math.abs( _chosenFoodBit.getNutrition1() - swimbotNutrition1Pref );
-let nutrition2Difference = Math.abs( _chosenFoodBit.getNutrition2() - swimbotNutrition2Pref );
-let nutritionDifference  = ( nutrition1Difference + nutrition2Difference ) * ONE_HALF;
-
-//console.log( nutritionDifference );
-
-let nutritionEnergy = -ONE_HALF + nutritionDifference;
-
-//console.log( nutritionEnergy );
-
-//assert( nutritionEnergy <= ONE, "swimbot.js: eatChosenFoodBit: nutritionEnergy <= ONE" );
-
-//let addedEnergy = _chosenFoodBit.getEnergy() * ( ONE_HALF + nutritionEnergy * ONE_HALF );
+console.log( "-------------------------------" );
+console.log( " eating....." );
+console.log( "_chosenFoodBit.getNutrition() = " + _chosenFoodBit.getNutrition() );
+console.log( "_phenotype.foodNutritionType  = " + _phenotype.foodNutritionType  );
+console.log( " " );
+console.log( "-------------------------------" );
 */
 
+            //----------------------------------------------------------------------
+            // If the nutrition type of the chosen food bit is not compatible
+            // with the nutrition type of the swimbot, then it gets less energy...
+            //----------------------------------------------------------------------
+            if ( _chosenFoodBit.getNutrition() != _phenotype.foodNutritionType )
+            {
+                //console.log( "decrease energy from food bit..." );
+                energyFromFoodBit *= NUTRITION_OFFSET;
+            }
 
-let addedEnergy = _chosenFoodBit.getEnergy();
+            _energy += energyFromFoodBit;
+            
 
-_energy += addedEnergy;
-
-
-
-                
             _numFoodBitsEaten ++;
             
             assert( _chosenFoodBit.getEnergy() >= ZERO, "Swimbot:eatChosenFoodBit: _chosenFoodBit.getEnergy() >= ZERO" );	
