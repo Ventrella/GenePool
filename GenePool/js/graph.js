@@ -13,6 +13,8 @@ function Graph()
     const GRAPH_MAX_POPULATION  = 2000;
     const RECIPROCAL_OF_MAX_POP = 1 / GRAPH_MAX_POPULATION;
     const GRAPH_FOODBIT_COLOR   = "rgb( 20,  150,  20 )";
+    const GRAPH_FOODBIT_0_COLOR = "rgb( 20,   20, 150 )";
+    const GRAPH_FOODBIT_1_COLOR = "rgb( 200, 200,  20 )";
     const GRAPH_SWIMBOT_COLOR   = "rgb( 150,  20,  20 )";
 
 
@@ -37,6 +39,7 @@ function Graph()
 	let _time           = new Array(); 
 	let _numSwimbots    = new Array(); 
 	let _numFoodBits    = new Array(); 
+	let _numFoodBits1   = new Array(); //kind of a hack - but I wanna get it working first....
  
 
 	//---------------------------
@@ -50,15 +53,17 @@ function Graph()
 	    _time.length = 0;
 	    _numSwimbots.length = 0;
         _numFoodBits.length = 0;
+        _numFoodBits1.length = 0;
 
 	    _time = [];
 	    _numSwimbots = [];
         _numFoodBits = [];
+        _numFoodBits1 = [];
 	}
 
 
-	//---------------------------------------------------------
-	this.update = function( time, numSwimbots, numFoodBits )
+	//------------------------------------------------------------------------
+	this.update = function( time, numSwimbots, numFoodBits, numFoodBits1 )
 	{	
         if ( _maxGraphCount	< 1000 )
         {
@@ -70,6 +75,7 @@ function Graph()
             _time		[ _currentCount ] = time;
             _numSwimbots[ _currentCount ] = numSwimbots;
             _numFoodBits[ _currentCount ] = numFoodBits;
+            _numFoodBits1[ _currentCount ] = numFoodBits1;
         
             _currentCount ++;
         }
@@ -78,6 +84,7 @@ function Graph()
             _time		[ _maxGraphCount ] = time;
             _numSwimbots[ _maxGraphCount ] = numSwimbots;
             _numFoodBits[ _maxGraphCount ] = numFoodBits;
+            _numFoodBits1[ _maxGraphCount ] = numFoodBits1;
         
             this.scroll();
         }
@@ -92,6 +99,7 @@ function Graph()
             _time		[c] = _time			[c+1];
             _numSwimbots[c] = _numSwimbots	[c+1];
             _numFoodBits[c] = _numFoodBits	[c+1];
+            _numFoodBits1[c] = _numFoodBits1	[c+1];
         }
     }
     
@@ -170,13 +178,15 @@ _top = 0;
         //-------------------------------  
         if ( _currentCount > 1 )
         {
-            let timeStepString = _time       [ _currentCount -1 ].toString();
-            let swimbotString  = _numSwimbots[ _currentCount -1 ].toString();
-            let foodbitString  = _numFoodBits[ _currentCount -1 ].toString();
+            //let timeStepString = _time       [ _currentCount -1 ].toString();
+            //let swimbotString  = _numSwimbots[ _currentCount -1 ].toString();
+            //let foodbitString  = _numFoodBits[ _currentCount -1 ].toString();
+            //let foodbit1String = _numFoodBits1[ _currentCount -1 ].toString();
             
-            let timeStepTextHeight = _bottom - GRAPH_BOTTOM_MARGIN + 30;
-            let swimbotTextHeight  = _bottom - GRAPH_BOTTOM_MARGIN + 60;
-            let foodbitTextHeight  = _bottom - GRAPH_BOTTOM_MARGIN + 80;
+            let timeStep = _bottom - GRAPH_BOTTOM_MARGIN +  30;
+            let swimbot  = _bottom - GRAPH_BOTTOM_MARGIN +  60;
+            let foodbit  = _bottom - GRAPH_BOTTOM_MARGIN +  80;
+            let foodbit1 = _bottom - GRAPH_BOTTOM_MARGIN + 100;
             
             let left = _graphLeft + 7;
              
@@ -185,28 +195,31 @@ _top = 0;
             graphCanvas.font = "20px Times";
             graphCanvas.fillStyle = "rgb( 100, 100, 100 )";	
             	
-            /*
-            graphCanvas.fillText( "time step: "             + timeStepString, left, timeStepTextHeight );        
-            graphCanvas.fillText( "number of swimbots = "   + swimbotString,  left, swimbotTextHeight  );        
-            graphCanvas.fillText( "number of food bits = "  + foodbitString,  left, foodbitTextHeight  ); 
-            */
-
             graphCanvas.fillText( "0",      left, _level0000 -  8 );        
             graphCanvas.fillText( "500",    left, _level0500 +  8 );        
             graphCanvas.fillText( "1000",   left, _level1000 + 18 );        
             
             graphCanvas.lineWidth = 2; 
-            graphCanvas.strokeStyle = GRAPH_FOODBIT_COLOR;
+            graphCanvas.strokeStyle = GRAPH_FOODBIT_0_COLOR;
             graphCanvas.beginPath();
-            graphCanvas.moveTo( left + 120, foodbitTextHeight - 6 );
-            graphCanvas.lineTo( left + 180, foodbitTextHeight - 6 );
+            graphCanvas.moveTo( left + 120, foodbit - 6 );
+            graphCanvas.lineTo( left + 180, foodbit - 6 );
             graphCanvas.stroke();
             graphCanvas.closePath();
 
+            graphCanvas.lineWidth = 2; 
+            graphCanvas.strokeStyle = GRAPH_FOODBIT_1_COLOR;
+            graphCanvas.beginPath();
+            graphCanvas.moveTo( left + 120, foodbit1 - 6 );
+            graphCanvas.lineTo( left + 180, foodbit1 - 6 );
+            graphCanvas.stroke();
+            graphCanvas.closePath();
+
+            graphCanvas.lineWidth = 2; 
             graphCanvas.strokeStyle = GRAPH_SWIMBOT_COLOR;
             graphCanvas.beginPath();
-            graphCanvas.moveTo( left + 120, swimbotTextHeight - 6 );
-            graphCanvas.lineTo( left + 180, swimbotTextHeight - 6 );
+            graphCanvas.moveTo( left + 120, swimbot - 6 );
+            graphCanvas.lineTo( left + 180, swimbot - 6 );
             graphCanvas.stroke();
             graphCanvas.closePath();
         }
@@ -282,15 +295,29 @@ _top = 0;
             
             let foodY1      = _graphBottom - ( _numFoodBits[g-1] * RECIPROCAL_OF_MAX_POP ) * _graphHeight;
             let foodY2      = _graphBottom - ( _numFoodBits[g  ] * RECIPROCAL_OF_MAX_POP ) * _graphHeight;
+
+            let food1Y1      = _graphBottom - ( _numFoodBits1[g-1] * RECIPROCAL_OF_MAX_POP ) * _graphHeight;
+            let food1Y2      = _graphBottom - ( _numFoodBits1[g  ] * RECIPROCAL_OF_MAX_POP ) * _graphHeight;
+            
             let swimbotY1   = _graphBottom - ( _numSwimbots[g-1] * RECIPROCAL_OF_MAX_POP ) * _graphHeight;
             let swimbotY2   = _graphBottom - ( _numSwimbots[g  ] * RECIPROCAL_OF_MAX_POP ) * _graphHeight;
 
             if ( foodY2 > _graphBottom - _graphHeight )
             {
-                graphCanvas.strokeStyle = GRAPH_FOODBIT_COLOR;
+                graphCanvas.strokeStyle = GRAPH_FOODBIT_0_COLOR;
                 graphCanvas.beginPath();
                 graphCanvas.moveTo( x1, foodY1 );
                 graphCanvas.lineTo( x2, foodY2 );
+                graphCanvas.stroke();
+                graphCanvas.closePath();
+            }
+            
+            if ( food1Y2 > _graphBottom - _graphHeight )
+            {
+                graphCanvas.strokeStyle = GRAPH_FOODBIT_1_COLOR;
+                graphCanvas.beginPath();
+                graphCanvas.moveTo( x1, food1Y1 );
+                graphCanvas.lineTo( x2, food1Y2 );
                 graphCanvas.stroke();
                 graphCanvas.closePath();
             }

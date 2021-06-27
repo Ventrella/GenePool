@@ -867,7 +867,8 @@ function updateUI()
         //-----------------------------------------------------------------------------------
         if ( genePoolIsDefined )
         {    
-            _graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() );
+            //_graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() );
+            _graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits0(), genePool.getNumFoodBits1() );
         }
     
         //-----------------------------------------------------------------------------------
@@ -880,7 +881,9 @@ function updateUI()
             + "<br>"
             + "swimbots: " + genePool.getNumSwimbots()
             + "<br>"
-            + "food bits: " + genePool.getNumFoodBits();
+            + "food bits 0: " + genePool.getNumFoodBits0()
+            + "<br>"
+            + "food bits 1: " + genePool.getNumFoodBits1();
             
             _graph.render();
         }
