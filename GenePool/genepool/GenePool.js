@@ -40,7 +40,7 @@ function GenePool()
 	//-----------------------------------
 	// count-related constants
 	//-----------------------------------
-	const MAX_FOODBITS          = 2000;
+//const MAX_FOODBITS          = 2000;
 //const INITIAL_NUM_SWIMBOTS  = 200;
 //const INITIAL_NUM_FOODBITS  = 800;    
     const TRAIL_LENGTH          = 100;
@@ -51,7 +51,7 @@ function GenePool()
 	//---------------------------------------------
 	// rendering-related constants
 	//---------------------------------------------
-    const DEFAULT_MILLISECONDS_PER_UPDATE = 20;
+    //const DEFAULT_MILLISECONDS_PER_UPDATE = 20;
 
 //const LEVEL_OF_DETAIL_THRESHOLD         = 1000.0;
 const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
@@ -1274,26 +1274,35 @@ let hhh = 0;
 	//----------------------------
 	this.updateFood = function()
 	{		
-        //-------------------------------------
-        // general update for all food bits
-        //-------------------------------------
         let numType0FoodBits = 0;
         let numType1FoodBits = 0;
         
+        //-------------------------------------
+        // general update for all food bits
+        //-------------------------------------
         for (let f=0; f<MAX_FOODBITS; f++)
         {
             if ( _foodBits[f].getAlive() )
             {
                _foodBits[f].update();
 
+                //-----------------------------------------------------------------------
+                // calculate num foodbits of both types...
+                //-----------------------------------------------------------------------
                      if ( _foodBits[f].getNutrition() === 0 ) { numType0FoodBits ++; }
                 else if ( _foodBits[f].getNutrition() === 1 ) { numType1FoodBits ++; }
+                
+if ( numType0FoodBits > MAX_FOODBITS_PER_TYPE ) { console.log( " numType0FoodBits = " + numType0FoodBits ); }
+if ( numType1FoodBits > MAX_FOODBITS_PER_TYPE ) { console.log( " numType1FoodBits = " + numType1FoodBits ); }
+                
+             //assert( numType0FoodBits <= MAX_FOODBITS_PER_TYPE, "this.updateFood: numType0FoodBits > MAX_FOODBITS_PER_TYPE" );
+             //assert( numType1FoodBits <= MAX_FOODBITS_PER_TYPE, "this.updateFood: numType1FoodBits > MAX_FOODBITS_PER_TYPE" );
+
+                //assert( numType0FoodBits <= MAX_FOODBITS_PER_TYPE + 6, "this.updateFood: numType0FoodBits > MAX_FOODBITS_PER_TYPE" );
+                //assert( numType1FoodBits <= MAX_FOODBITS_PER_TYPE + 6, "this.updateFood: numType1FoodBits > MAX_FOODBITS_PER_TYPE" );
             }
 	    }
-	    
-        //console.log( " numType0FoodBits = " + numType0FoodBits );
-        //console.log( " numType1FoodBits = " + numType1FoodBits );
-
+	            
         //------------------------------------------------------------------------
         // if there are no more food bits left of either color (nutrition type) 
         // then create a new food bit of that type in a random location
@@ -1345,48 +1354,85 @@ let hhh = 0;
 
                 //let parentFoodBitIndex = this.findRandomLivingFoodBit();
                 
-//--------------------------------------------------------------------------
-// give both nutrition-types equal chance of being chosen to spawn....
-//--------------------------------------------------------------------------
-let nutritionType = Math.floor( Math.random() * 2 );
-//console.log( "nutritionType = " + nutritionType );
-let parentFoodBitIndex = this.findRandomLivingFoodBit( nutritionType );
-//console.log( "parentFoodBitIndex nutritionType = " + _foodBits[ parentFoodBitIndex ].getNutrition() );
-
-                if ( parentFoodBitIndex != NULL_INDEX )
+                //--------------------------------------------------------------------------
+                // give both nutrition-types equal chance of being chosen to spawn....
+                //--------------------------------------------------------------------------
+                let parentNutritionType = Math.floor( Math.random() * 2 );
+                
+                //console.log( "parentNutritionType = " + parentNutritionType );
+                
+                let numFoodBitsOfParentType = numType0FoodBits;
+                
+                if ( parentNutritionType === 1 )
                 {
-                    //console.log( parentFoodBitIndex );
+                    numFoodBitsOfParentType = numType1FoodBits;
+                }
+                
+                let childNutritionType = parentNutritionType;
+        
+                //TEST! This is sort of like a mutation in nutrition....to keep one nutrition value from dominating the pool...
+                if ( Math.random() < FOOD_NUTRITION_MUTATION_RATE )
+                {
+                    childNutritionType = Math.floor( Math.random() * 2 );
+                }
+                
+                let numFoodBitsOfChildType = numType0FoodBits;
 
-                    assert( childFoodBitIndex != _foodBits[ parentFoodBitIndex ].getIndex(), "genepool.js: updateFood: childFoodBitIndex != _foodBits[ parentFoodBitIndex ].getIndex()" );
-                    
-                    //-------------------------------------------------------------------
-                    // make sure the new food bit position is not obscured by
-                    // the obstacle. If it is, keep trying new spawn positions...
-                    //-------------------------------------------------------------------
-                    let looking = true;
-                    let num = 0;
-                    while ( looking )                    
+                if ( childNutritionType === 1 )
+                {
+                    numFoodBitsOfChildType = numType1FoodBits;
+                }
+                
+                //------------------------------------------------------------------------------------------------------
+                // Subtle: if the number of food bits of the parent type is maxed-out, and also, 
+                // if the number of foodbits of the child type is maxed-out, then the parent cannot spawn.  
+                //------------------------------------------------------------------------------------------------------
+                if (( numFoodBitsOfParentType < MAX_FOODBITS_PER_TYPE  )
+                &&  ( numFoodBitsOfChildType  < MAX_FOODBITS_PER_TYPE  ))
+                {
+                    let parentFoodBitIndex = this.findRandomLivingFoodBit( parentNutritionType );
+                    //console.log( "parentFoodBitIndex parentNutritionType = " + _foodBits[ parentFoodBitIndex ].getNutrition() );
+
+                    if ( parentFoodBitIndex != NULL_INDEX )
                     {
-                        //---------------------------------------------------
-                        // spawn the child to new position near parent...
-                        //---------------------------------------------------
-                        _foodBits[ childFoodBitIndex ].spawnFromParent( _foodBits[ parentFoodBitIndex ], childFoodBitIndex );
+                        //console.log( parentFoodBitIndex );
 
-                        if ( !_obstacle.getObstruction( _foodBits[ parentFoodBitIndex ].getPosition(), _foodBits[ childFoodBitIndex ].getPosition() ) )
+                        assert( childFoodBitIndex != _foodBits[ parentFoodBitIndex ].getIndex(), "genepool.js: updateFood: childFoodBitIndex != _foodBits[ parentFoodBitIndex ].getIndex()" );
+                    
+                        //-------------------------------------------------------------------
+                        // make sure the new food bit position is not obscured by
+                        // the obstacle. If it is, keep trying new spawn positions...
+                        //-------------------------------------------------------------------
+                        let looking = true;
+                        let num = 0;
+                        while ( looking )                    
                         {
-                            looking = false;
-                        }
+                            //----------------------------------------------------------------
+                            // spawn the child to new position relative to parent...
+                            //----------------------------------------------------------------
+                            _foodBits[ childFoodBitIndex ].setSpawnPositionRelativeToParent( _foodBits[ parentFoodBitIndex ], childFoodBitIndex, childNutritionType );
+
+                            if ( !_obstacle.getObstruction( _foodBits[ parentFoodBitIndex ].getPosition(), _foodBits[ childFoodBitIndex ].getPosition() ) )
+                            {
+                                looking = false;
+                            }
                         
-                        num ++;
-                        if ( num > 10 )
-                        {
-                            looking = false;
-                        }                        
+                            num ++;
+                            if ( num > 10 )
+                            {
+                                looking = false;
+                            }                        
+                        }
                     }
                 }
             }
         }
     }
+    
+    
+    
+    
+    
     
 	//--------------------------------
 	this.setFoodSpread = function(s)
@@ -1471,7 +1517,7 @@ let parentFoodBitIndex = this.findRandomLivingFoodBit( nutritionType );
         {
             let testIndex = Math.floor( Math.random() * ( MAX_FOODBITS - 1 ) );
             
-            assert( testIndex < MAX_FOODBITS, "Genepool.js: testIndex < MAX_FOODBITS" );
+            //assert( testIndex < MAX_FOODBITS, "Genepool.js: testIndex < MAX_FOODBITS" );
             
             if ( _foodBits[ testIndex ].getAlive() )
             {
@@ -2656,6 +2702,44 @@ let parentFoodBitIndex = this.findRandomLivingFoodBit( nutritionType );
             if ( _foodBits[f].getAlive() )
             {
                 num ++;
+            }
+        }
+                    
+	    return num;	
+	}
+
+	//------------------------------
+	this.getNumFoodBits0 = function()
+	{       
+        let num = 0;
+        
+        for (let f=0; f<MAX_FOODBITS; f++)
+        {
+            if ( _foodBits[f].getAlive() )
+            {
+                if ( _foodBits[f].getNutrition() === 0 )
+                {
+                    num ++;
+                }
+            }
+        }
+                
+	    return num;	
+	}
+
+	//------------------------------
+	this.getNumFoodBits1 = function()
+	{       
+        let num = 0;
+        
+        for (let f=0; f<MAX_FOODBITS; f++)
+        {
+            if ( _foodBits[f].getAlive() )
+            {
+                if ( _foodBits[f].getNutrition() === 1 )
+                {
+                    num ++;
+                }
             }
         }
                     

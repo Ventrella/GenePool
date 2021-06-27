@@ -1358,7 +1358,6 @@ console.log( "-------------------------------" );
 
             _energy += energyFromFoodBit;
             
-
             _numFoodBitsEaten ++;
             
             assert( _chosenFoodBit.getEnergy() >= ZERO, "Swimbot:eatChosenFoodBit: _chosenFoodBit.getEnergy() >= ZERO" );	

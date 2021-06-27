@@ -16,9 +16,12 @@
 
 // Next I will run a series of tests after removing the food niche 2 gene thing by changing the nutrition offset to 1 (so the nutrition gene has no effect). All the previous ones had nutrition offset set to 0.1, meaning a swimbot gets only 10% of the energy from a food bit if it is not adapted to that food color. These new tests are called food_niche_reg_#.txt, beginign with number 1.
 
+//const DEFAULT_MILLISECONDS_PER_UPDATE = 20; // original version
+  const DEFAULT_MILLISECONDS_PER_UPDATE = 1;  // research version
 
-//const GARDEN_OF_EDEN_RADIUS = 2000;  // original version
-  const GARDEN_OF_EDEN_RADIUS = 3000;  // research version 
+
+  const GARDEN_OF_EDEN_RADIUS = 2000;  // original version
+//const GARDEN_OF_EDEN_RADIUS = 3000;  // research version 
 
 // I then changed food regeneration period to 15 (from 20) to make it come back even faster to help prevent extinctions (that have been occuring a lot)
 // I ran two simulations, both survived: food_niche_3.txt and food_niche_4.txt
@@ -27,6 +30,8 @@ const DEFAULT_FOOD_REGENERATION_PERIOD  = 15;
   const INITIAL_NUM_SWIMBOTS =  500; // original version
 //const INITIAL_NUM_SWIMBOTS = 1000; // research version
 
+const MAX_FOODBITS           = 2000;
+const MAX_FOODBITS_PER_TYPE  = 1000; // make this one-half of MAX_FOODBITS (because there are two types)
 //const INITIAL_NUM_FOODBITS = 1000; // original version
   const INITIAL_NUM_FOODBITS = 2000; // research version
 
@@ -36,12 +41,13 @@ const NON_REPRODUCING_JUNK_DNA_LIMIT    = 0.9;
 
 const SPAWN_FOOD_RANDOMLY_IN_POOL       = false;
 
-const MUTATION_RATE	                    = 0.01;
+const MUTATION_RATE = 0.01;
 
-//this increases genetic diversity
-  const CROSSOVER_RATE = 0.01; // original version
+//const CROSSOVER_RATE = 0.01; // original version
 //const CROSSOVER_RATE = 0.5;  // research version
+  const CROSSOVER_RATE = 0.1;  // Jeffrey's suggestion
 
+//const FOOD_NUTRITION_MUTATION_RATE      = 0.99;
 const FOOD_NUTRITION_MUTATION_RATE      = 0.99;
 
 const NUTRITION_OFFSET                  = 1;

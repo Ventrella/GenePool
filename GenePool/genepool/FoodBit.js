@@ -171,37 +171,29 @@ function FoodBit()
     
         
     
-    //-------------------------------------------------------------
-	this.spawnFromParent = function( parentFoodBit, childIndex )
+    //--------------------------------------------------------------------------------------------------
+	this.setSpawnPositionRelativeToParent = function( parentFoodBit, childIndex, childNutritionType )
 	{
         //console.log( parentFoodBit.index + ", " + childIndex );
         	
-        assert( parentFoodBit.getIndex() != NULL_INDEX, "foodbit.js: spawnFromParent: parentFoodBit.index != NULL_INDEX" );
-        assert( parentFoodBit.getAlive(), "foodbit.js: spawnFromParent: parentFoodBit.alive" );
-        assert( childIndex != NULL_INDEX, "foodbit.js: spawnFromParent: childIndex != NULL_INDEX" );
+        assert( parentFoodBit.getIndex() != NULL_INDEX, "foodbit.js: setSpawnPositionRelativeToParent: parentFoodBit.index != NULL_INDEX" );
+        assert( parentFoodBit.getAlive(), "foodbit.js: setSpawnPositionRelativeToParent: parentFoodBit.getAlive()" );
+        assert( childIndex != NULL_INDEX, "foodbit.js: setSpawnPositionRelativeToParent: childIndex != NULL_INDEX" );
         
         if ( childIndex === parentFoodBit.getIndex() )
         {
-            console.log( "warning: foodbit.js: spawnFromParent: childIndex = " + childIndex + " and parentFoodBit.getIndex() = " + parentFoodBit.getIndex() );
+            console.log( "warning: foodbit.js: setSpawnPositionRelativeToParent: childIndex = " + childIndex + " and parentFoodBit.getIndex() = " + parentFoodBit.getIndex() );
         }
         
-        //assert( childIndex != parentFoodBit.getIndex(), "foodbit.js: spawnFromParent: childIndex != parentFoodBit.index" );
+        //assert( childIndex != parentFoodBit.getIndex(), "foodbit.js: setSpawnPositionRelativeToParent: childIndex != parentFoodBit.index" );
 
         _index      = childIndex;
         _opacity    = ZERO;
         _energy     = parentFoodBit.getEnergy();
-        _nutrition  = parentFoodBit.getNutrition();
-        
-
-        //TEST! This is sort of like a mutation in nutrition....to keep one ntrution value from dominating the pool...
-        if ( Math.random() < FOOD_NUTRITION_MUTATION_RATE )
-        {
-            this.randomizeNutrition();
-        }
+        _nutrition  = childNutritionType;
                 
         this.setColorAccordingToNutrition();
         
-    
         //-----------------------------
         // set the position
         //-----------------------------      
@@ -240,10 +232,10 @@ function FoodBit()
         }   
         
 
-        assert( _position.x < POOL_RIGHT,   "foodbit.js: spawnFromParent: _position.x < POOL_RIGHT"  );
-        assert( _position.x > POOL_LEFT,    "foodbit.js: spawnFromParent: _position.x > POOL_LEFT"   );
-        assert( _position.y > POOL_TOP,     "foodbit.js: spawnFromParent: _position.y < POOL_TOP"	);
-        assert( _position.y < POOL_BOTTOM,  "foodbit.js: spawnFromParent: _position.y > POOL_BOTTOM" );
+        assert( _position.x < POOL_RIGHT,   "foodbit.js: setSpawnPositionRelativeToParent: _position.x < POOL_RIGHT"  );
+        assert( _position.x > POOL_LEFT,    "foodbit.js: setSpawnPositionRelativeToParent: _position.x > POOL_LEFT"   );
+        assert( _position.y > POOL_TOP,     "foodbit.js: setSpawnPositionRelativeToParent: _position.y < POOL_TOP"	);
+        assert( _position.y < POOL_BOTTOM,  "foodbit.js: setSpawnPositionRelativeToParent: _position.y > POOL_BOTTOM" );
     }
 
 
