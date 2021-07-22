@@ -27,7 +27,7 @@
 // I ran two simulations, both survived: food_niche_3.txt and food_niche_4.txt
 const DEFAULT_FOOD_REGENERATION_PERIOD  = 15;
 
-  const INITIAL_NUM_SWIMBOTS =  500; // original version
+  const INITIAL_NUM_SWIMBOTS =  50; // original version
 //const INITIAL_NUM_SWIMBOTS = 1000; // research version
 
 const MAX_FOODBITS           = 2000;
