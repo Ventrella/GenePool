@@ -12,15 +12,17 @@ const InputMode =
     SAVE_POOL                   :  5
 };
 
+/*
 //----------------------------------------------
 // There are two collections in the database...
 //----------------------------------------------
 const collections = [ 'swimbots', 'pools' ];
+*/
 
 //----------------------------------------------------------
 // Is this needed? 
 //----------------------------------------------------------
-const firebaseCallback = function ( key, data ) 
+//const firebaseCallback = function ( key, data ) 
 {
     //console.log( "firebaseCallback: " + name );
 
@@ -39,14 +41,14 @@ const firebaseCallback = function ( key, data )
 
 
 let _inputFilenameString    = "";
-let _inputEmailString       = "";
-let _inputPasswordString    = "";
+//let _inputEmailString       = "";
+//let _inputPasswordString    = "";
 let _inputMode              = InputMode.NULL;
-let _creatingNewAccount     = false;
-let _username               = "anonymous"; 
-let _savedBeforeLoad        = false;
+//let _creatingNewAccount     = false;
+//let _username               = "anonymous"; 
+//let _savedBeforeLoad        = false;
 let _chosenPoolToLoad       = 0;
-let _database               = new FirebaseDB( collections, firebaseCallback );
+//let _database               = new FirebaseDB( collections, firebaseCallback );
 
 //console.log("_savedBeforeLoad = " + _savedBeforeLoad );
 //console.log( "_inputMode = " + _inputMode );
@@ -54,7 +56,7 @@ let _database               = new FirebaseDB( collections, firebaseCallback );
 
 
 
-
+/*
 //-------------------------------------
 // is there a user logged in? 
 //-------------------------------------
@@ -74,11 +76,11 @@ firebase.auth().onAuthStateChanged
         }
     }
 );
+*/
 
 
 
-
-
+/*
 //----------------------------
 // create an account
 //----------------------------
@@ -120,7 +122,6 @@ function createAccount()
         document.getElementById( "accountPasswordInput" ).value = "";
     }
 }
-
 
 
 //----------------------------------------------------------
@@ -235,6 +236,7 @@ function addToAccountPasswordInputString(e)
 	    submitAccountInput();
 	}
 }
+*/
 
 //-----------------------------------
 function addToFilenameInputString(e)
@@ -251,7 +253,7 @@ function addToFilenameInputString(e)
 }
 
 
-
+/*
 //-------------------------------
 function submitAccountInput()
 {
@@ -426,7 +428,6 @@ function notifyErrorInSigningIn( error )
 }
 
 
-/*
 //----------------------------
 function getCurrentUser()
 {        
@@ -663,6 +664,8 @@ function submitFilenameInput()
 // these four save/load calls are made from html...
 //--------------------------------------------------
 
+
+/*
 //-------------------------------
 function requestToSaveSwimbot()
 {
@@ -701,6 +704,7 @@ function requestToSavePool( savedBeforeLoad )
 //--------------------------------------
 function requestToLoadSwimbotFromFile()
 {
+*/
 
 /*
 // this is how to read a file that was uploaded using the fileInput element:
@@ -709,6 +713,8 @@ document.getElementById( 'fileInput' ).style.visibility = "visible";
 let selectedFile = document.getElementById('fileInput').files[0];
 console.log( "selectedFile = ", selectedFile );
 */
+
+/*
 
     if ( _username === "anonymous" )
     {   
@@ -719,7 +725,7 @@ console.log( "selectedFile = ", selectedFile );
         openPopupPanelForInput( "Load in a new swimbot from a file", InputMode.LOAD_SWIMBOT_FROM_FILE );   
     }
 }
-
+*/
 
 
 function readLocalFile( event )
@@ -752,6 +758,14 @@ function handleFiles()
 //--------------------------
 function printFamilyTree()
 {
+
+
+//------------------------------------------------------------
+// This is a quick test to generating a phylogenetic tree. 
+// I will remove this once I've got it working.  Aug.12.2021
+//------------------------------------------------------------
+genePool.generatePhyloTree();
+
     let w = window.open
     (
         "", 
@@ -770,7 +784,7 @@ function printFamilyTree()
     );
     
     
-    w.document.title = "Swimbot Data (copy and paste into .txt file, then load into Gene Pool Lab)";
+    w.document.title = "Swimbot Data (copy and paste into a text file, then load into Gene Pool Lab)";
 
     let familyTree = genePool.getFamilyTree();
      
@@ -853,7 +867,7 @@ function loadPool()
 }
 
 
-
+/*
 //-----------------------------------------
 function showAccountRequiredPopup( text )
 {
@@ -877,7 +891,7 @@ function showAccountRequiredPopup( text )
     + "<br>"
     + "Once you are signed in, you will be able to save and load swimbots and pools.</font>";
 }
-
+*/
 
 //----------------------------------------------
 function openPopupPanelForInput( text, mode )
@@ -1132,7 +1146,7 @@ function showSwimbotGenes(s)
         document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
         document.getElementById( 'dataDisplay'      ).innerHTML 
         = "<br>" 
-        + "<big>Gene values for swimbot " + s.toString() + "</big>"
+        + "<big><b>Save genes of swimbot " + s.toString() + "</b></big>"
         + "<br>" 
         + "<br>" 
         + "This is formatted as JSON, which is required "
@@ -1142,10 +1156,9 @@ function showSwimbotGenes(s)
         + "<br>"
         + "Please copy everything below and put it in an "
         + "<br>"
-        + "empty .txt file. Give it a cool name and save it."
+        + "empty text file. Give it a cool name and save it."
         + "<br>"
         + "<br>"
-        + "-------------------------------------------------------------------"
         + "<br>"
         + "<br>"
         + json;

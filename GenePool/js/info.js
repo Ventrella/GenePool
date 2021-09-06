@@ -14,14 +14,12 @@ function getInfoText( page )
         + "<br>"          
         + "<br>"          
         
-        + "(c) 2020, Wiggle Planet<br>"
-        + "<a href = 'http://www.wiggleplanet.com/' target = '_blank' style = 'text-decoration:none'>www.wiggleplanet.com</a>"
+        /*
+        + "(c) 2021, Jeffrey Ventrella<br>"
+        + "<a href = 'http://www.ventrella.com/' target = '_blank' style = 'text-decoration:none'>www.ventrella.com</a>"
         + "<br>"          
         + "<br>"          
-        
-        + "created by <a href = 'http://www.ventrella.com/' target = '_blank' style = 'text-decoration:none'>Jeffrey Ventrella</a>"
-        + "<br>"          
-        + "<br>"          
+        */
         
         + "Witness the effects of Darwinian evolution as hundreds of simulated organisms compete for mates and food. Explore this virtual aquarium of proto-swimming robots ('swimbots'), and see how mate preference can affect the course of evolution." 
         + "<br>"          
@@ -41,11 +39,11 @@ function getInfoText( page )
         + "<br>"
         + "<br>"
         
-        + "1  Start up a random pool from the 'pool' menu."
+        + "1  Go to the 'pool' menu and start up a random pool."
         + "<br>"
         + "<br>"
         
-        + "2  Explore the variety of swimbots using the view controls (below)."
+        + "2  Explore the variety of swimbots using the view controls."
         + "<br>"
         + "<br>"
         
@@ -492,7 +490,7 @@ function getInfoText( page )
     //--------------------------------
     else if ( page === 28 )
     {
-        text = "(c) copyright 2020 Wiggle Planet, LLC";
+        text = "(c) copyright 2021 Jeffrey Ventrella";
     }            
     
     return text;
