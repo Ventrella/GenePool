@@ -2,10 +2,8 @@
 	<head>
 		<title>
 			Gene Pool
-		</title>
-		
-        <link rel="stylesheet" type="text/css" href="css/genepool.css">        
-
+		</title>		
+        <link rel="stylesheet" type="text/css" href="css/genepool.css">                        
         <meta charset  = "utf-8"/>
         <meta property = "og:title"         content = "Gene Pool Swimbots">
         <meta property = "og:description"   content = "Gene Pool is an artificial life simulation invented by Jeffrey Ventrella">
@@ -30,6 +28,7 @@
 		<!-- create the html canvas and some other global variables             -->
 		<!-- ------------------------------------------------------------------ -->
 		<script>
+		
             var canvasID = document.getElementById( 'Canvas' );
             var canvas = canvasID.getContext( '2d' );
 		</script>        
@@ -37,148 +36,148 @@
 		<!-- ------------------------------------------------------------------ -->
 		<!-- The Gene Pool simulation is loaded here...                         -->
 		<!-- ------------------------------------------------------------------ -->
-		<!--
-		<script type = "text/javascript" src = "simulation.js"  ></script>
-		-->
-		
-		<script type = "text/javascript" src = "genepool/ExperimentParameters.js"   ></script>
-		<script type = "text/javascript" src = "genepool/MathConstants.js"          ></script>
-		<script type = "text/javascript" src = "genepool/Utility.js"                ></script>
-		<script type = "text/javascript" src = "genepool/Vector2D.js" 	  	        ></script>
-		<script type = "text/javascript" src = "genepool/Pool.js"                   ></script>
-		<script type = "text/javascript" src = "genepool/Camera.js"                 ></script>
-		<script type = "text/javascript" src = "genepool/FoodBit.js"                ></script>
-		<script type = "text/javascript" src = "genepool/SwimbotTypes.js"  	        ></script>
-		<script type = "text/javascript" src = "genepool/Genotype.js"  	            ></script>
-		<script type = "text/javascript" src = "genepool/Embryology.js"             ></script>
-		<script type = "text/javascript" src = "genepool/Brain.js"                  ></script>
-		<script type = "text/javascript" src = "genepool/SwimbotRenderer.js"        ></script>
-		<script type = "text/javascript" src = "genepool/Swimbot.js"  	  	        ></script>
-		<script type = "text/javascript" src = "genepool/Touch.js"		            ></script>		
-		<script type = "text/javascript" src = "genepool/ViewControl.js"            ></script>		
-		<script type = "text/javascript" src = "genepool/FamilyTree.js"             ></script>		
-		<script type = "text/javascript" src = "genepool/Obstacle.js"               ></script>		
-		<script type = "text/javascript" src = "genepool/GenePool.js"               ></script> 
-		
+		<script type = "text/javascript" src = "simulation/ExperimentParameters.js"   ></script>
+		<script type = "text/javascript" src = "simulation/MathConstants.js"          ></script>
+		<script type = "text/javascript" src = "simulation/Utility.js"                ></script>
+		<script type = "text/javascript" src = "simulation/Vector2D.js" 	  	      ></script>
+		<script type = "text/javascript" src = "simulation/Pool.js"                   ></script>
+		<script type = "text/javascript" src = "simulation/Camera.js"                 ></script>
+		<script type = "text/javascript" src = "simulation/FoodBit.js"                ></script>
+		<script type = "text/javascript" src = "simulation/SwimbotTypes.js"  	      ></script>
+		<script type = "text/javascript" src = "simulation/Genotype.js"  	          ></script>
+		<script type = "text/javascript" src = "simulation/Embryology.js"             ></script>
+		<script type = "text/javascript" src = "simulation/Brain.js"                  ></script>
+		<script type = "text/javascript" src = "simulation/SwimbotRenderer.js"        ></script>
+		<script type = "text/javascript" src = "simulation/Swimbot.js"  	  	      ></script>
+		<script type = "text/javascript" src = "simulation/Touch.js"		          ></script>		
+		<script type = "text/javascript" src = "simulation/ViewTracking.js"           ></script>		
+		<script type = "text/javascript" src = "simulation/FamilyTree.js"             ></script>		
+		<script type = "text/javascript" src = "simulation/PhyloTree.js"              ></script>		
+		<script type = "text/javascript" src = "simulation/Obstacle.js"               ></script>		
+		<script type = "text/javascript" src = "simulation/GenePool.js"               ></script> 
 		
 		<!-- ------------------------------------------------------------------------- -->
 		<!-- all the javascript files (other than the simulation) are loaded here...   -->
 		<!-- ------------------------------------------------------------------------- -->		
-        <script src = "https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script> 
-                
-        <script type = "text/javascript" src = "server/config.js"       ></script>
-        <script type = "text/javascript" src = "server/FirebaseDB.js"   ></script>
-		
 		<script type = "text/javascript" src = "js/saveLoad.js" ></script>
 		<script type = "text/javascript" src = "js/graph.js"    ></script>
 		<script type = "text/javascript" src = "js/info.js"     ></script>
 		<script type = "text/javascript" src = "js/ui.js"       ></script>
-
+        
 		<!-- ------------------------------------------------------------------ -->
 		<!-- all the divs and stuff are below                                   -->
 		<!-- ------------------------------------------------------------------ -->
         <div id = "masterPanel">
-
-            <div id = "header">
+            <div id = "mainTitle">
                 Gene Pool
             </div> 
-            
+
+
+            <div id = "swimbots_url">
+                <a href = 'http://www.swimbots.com' target = "_blank" style = 'color: #224400'>swimbots.com</a>
+            </div> 
+
+            <!--
             <button id = "accountButton" onClick = "createAccount();"   >create account </button>                
             <button id = "loginButton"   onClick = "signOnOrOff();"     >sign in        </button>                
-                        
-            <div id = "menuPanel">
-                <button id = "menuPoolButton"     class = "menuButton" onClick = "openPanel( 'menuPoolButton'    );" >pool      </button>                
-                <button id = "menuSwimbotButton"  class = "menuButton" onClick = "openPanel( 'menuSwimbotButton' );" >swimbot   </button>
-                <button id = "menuTweakButton"    class = "menuButton" onClick = "openPanel( 'menuTweakButton'   );" >tweak     </button>
-                <button id = "menuGraphButton"    class = "menuButton" onClick = "openPanel( 'menuGraphButton'   );" >graph     </button>
-                <button id = "menuInfoButton"     class = "menuButton" onClick = "openPanel( 'menuInfoButton'    );" >info      </button>
-            </div>  
-
-            <div id = "mainPanel">
-                <!-- ------------------------------------------------------------ -->
-                <!-- the graph canvas is here...                                  -->
-                <!-- ------------------------------------------------------------ -->
-                <canvas id = "graphCanvas" width = "400" height = "500" ></canvas> 
-
-                <!-- ------------------------------------------------------------ -->
-                <!-- view navigation                                              -->
-                <!-- ------------------------------------------------------------ -->
-                <div id="microscopePanel">
-                    <div id="navigation">
-                        &nbsp&nbspadjust view
-                        <button 
-                            id           = "leftNav" 
-                            class        = "navigationButton"
-                            onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.LEFT  ); clearViewModeButtons();"
-                            onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.LEFT  );"
-                            onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.LEFT  );" >                
-                        </button>    
-                        <button 
-                            id           = "rightNav" 
-                            class        = "navigationButton"
-                            onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.RIGHT ); clearViewModeButtons();"
-                            onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.RIGHT );"
-                            onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.RIGHT );" >
-                        </button>
-                        <button 
-                            id           = "downNav" 
-                            class        = "navigationButton"
-                            onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.DOWN ); clearViewModeButtons();"
-                            onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.DOWN );"
-                            onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.DOWN );" >
-                        </button>
-                        <button 
-                            id           = "upNav" 
-                            class        = "navigationButton"
-                            onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.UP ); clearViewModeButtons();"
-                            onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.UP );"
-                            onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.UP );" >
-                        </button>
-                        <button 
-                            id           = "inNav" 
-                            class        = "navigationButton"
-                            onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.IN ); clearViewModeButtons(); "
-                            onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.IN );"
-                            onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.IN );" >
-                        </button>
-                        <button 
-                            id           = "outNav" 
-                            class        = "navigationButton"
-                            onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.OUT );  clearViewModeButtons();"
-                            onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.OUT );"
-                            onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.OUT );" >
-                        </button>
-                    </div>
-
-                    <div id="view">
-                        &nbsp&nbspview options
-                        <button id="viewWholePoolButton"    class = "viewButton" onmousedown = "setViewMode( id, ViewMode.WHOLE_POOL ); " >whole pool        </button>            
-                        <button id="viewAutoTrackButton"    class = "viewButton" onmousedown = "setViewMode( id, ViewMode.AUTOTRACK  );"  >autotracking      </button>            
-                        <button id="viewSelectedButton"     class = "viewButton" onmousedown = "setViewMode( id, ViewMode.SELECTED   );"  >selected          </button>            
-                        <button id="viewMutualButton"       class = "viewButton" onmousedown = "setViewMode( id, ViewMode.MUTUAL     );"  >mutual love       </button>            
-                        <button id="viewProlificButton"     class = "viewButton" onmousedown = "setViewMode( id, ViewMode.PROLIFIC   );"  >most prolific     </button>            
-                        <button id="viewEfficientButton"    class = "viewButton" onmousedown = "setViewMode( id, ViewMode.EFFICIENT  );"  >most efficient    </button>            
-                        <button id="viewVirginButton"       class = "viewButton" onmousedown = "setViewMode( id, ViewMode.VIRGIN     );"  >oldest virgin     </button>            
-                        <button id="viewGluttonButton"      class = "viewButton" onmousedown = "setViewMode( id, ViewMode.HUNGRY     );"  >glutton           </button>   
-                        <button id="viewGoalButton"         class = "viewButton" onmousedown = "toggleGoalOverlay();"                     >mouth/genital     </button>   
-                    </div>                    
-                </div> 	<!-- microscope Panel -->
-
-
+            -->
+            
+            <!-- ------------------------------------------------------------ -->
+            <!-- view                                                         -->
+            <!-- ------------------------------------------------------------ -->
+            <div id="viewPanel"  class = "basicPanel" >
+                <div id="viewNavPanel" >
+                    <!--&nbsp&nbsppan/zoom-->
+                    <button 
+                        id           = "leftNav" 
+                        class        = "navigationButton"
+                        onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.LEFT  ); clearViewModeButtons();"
+                        onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.LEFT  );"
+                        onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.LEFT  );" >                
+                    </button>    
+                    <button 
+                        id           = "rightNav" 
+                        class        = "navigationButton"
+                        onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.RIGHT ); clearViewModeButtons();"
+                        onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.RIGHT );"
+                        onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.RIGHT );" >
+                    </button>
+                    <button 
+                        id           = "downNav" 
+                        class        = "navigationButton"
+                        onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.DOWN ); clearViewModeButtons();"
+                        onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.DOWN );"
+                        onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.DOWN );" >
+                    </button>
+                    <button 
+                        id           = "upNav" 
+                        class        = "navigationButton"
+                        onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.UP ); clearViewModeButtons();"
+                        onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.UP );"
+                        onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.UP );" >
+                    </button>
+                    <button 
+                        id           = "inNav" 
+                        class        = "navigationButton"
+                        onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.IN ); clearViewModeButtons(); "
+                        onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.IN );"
+                        onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.IN );" >
+                    </button>
+                    <button 
+                        id           = "outNav" 
+                        class        = "navigationButton"
+                        onmousedown  = "genePool.startCameraNavigation( CameraNavigationAction.OUT );  clearViewModeButtons();"
+                        onmouseup    = "genePool.stopCameraNavigation ( CameraNavigationAction.OUT );"
+                        onmouseleave = "genePool.stopCameraNavigation ( CameraNavigationAction.OUT );" >
+                    </button>
+                </div> <!-- view navigation-->
+                <div id="viewTrackingPanel" >
+                    <!--&nbsp&nbspview tracking-->
+                    <button id="viewWholePoolButton"    class = "basicButton" onmousedown = "setViewMode( id, ViewTrackingMode.WHOLE_POOL ); " >whole pool        </button>            
+                    <button id="viewAutoTrackButton"    class = "basicButton" onmousedown = "setViewMode( id, ViewTrackingMode.AUTOTRACK  );"  >autotracking      </button>            
+                    <button id="viewSelectedButton"     class = "basicButton" onmousedown = "setViewMode( id, ViewTrackingMode.SELECTED   );"  >selected          </button>            
+                    <button id="viewMutualButton"       class = "basicButton" onmousedown = "setViewMode( id, ViewTrackingMode.MUTUAL     );"  >mutual love       </button>            
+                    <button id="viewProlificButton"     class = "basicButton" onmousedown = "setViewMode( id, ViewTrackingMode.PROLIFIC   );"  >most prolific     </button>            
+                    <button id="viewEfficientButton"    class = "basicButton" onmousedown = "setViewMode( id, ViewTrackingMode.EFFICIENT  );"  >most efficient    </button>            
+                    <button id="viewVirginButton"       class = "basicButton" onmousedown = "setViewMode( id, ViewTrackingMode.VIRGIN     );"  >oldest virgin     </button>            
+                    <button id="viewGluttonButton"      class = "basicButton" onmousedown = "setViewMode( id, ViewTrackingMode.HUNGRY     );"  >glutton           </button>   
+                </div>                    
+                <div id="viewOptionsPanel" >
+                    <button id = "viewGoalButton" class = "basicButton" onClick = "toggleGoalOverlay();"        >mouth/genital  </button>   
+                    <button id = "freezeButton"   class = "basicButton" onClick = "toggleSimulationRunning();"  >freeze         </button>         
+                    <button id = "noRenderButton" class = "basicButton" onClick = "toggleRendering();"          >rendering OFF  </button>         
+                    <button id = "fastButton"     class = "basicButton" onClick = "toggleFastRendering();"      >fastest        </button>         
+                </div>                    
+            </div> <!--viewPanel-->
+            
+            
+            
+            <div id = "menuButtonPanel">
+                <button id = "menuPoolButton"     class = "basicButton" onmousedown = "openPanel( 'menuPoolButton'    );" >pool      </button>                
+                <button id = "menuSwimbotButton"  class = "basicButton" onmousedown = "openPanel( 'menuSwimbotButton' );" >swimbot   </button>
+                <button id = "menuTweakButton"    class = "basicButton" onmousedown = "openPanel( 'menuTweakButton'   );" >tweak     </button>
+                <button id = "menuGraphButton"    class = "basicButton" onmousedown = "openPanel( 'menuGraphButton'   );" >graph     </button>
+                <button id = "menuInfoButton"     class = "basicButton" onmousedown = "openPanel( 'menuInfoButton'    );" >info      </button>
+            </div>       
+            <div id = "mainPanel" class = "basicPanel" >
+        
                 <!-- ------------------------------------------------------------ -->
                 <!-- tweak panel                                                  -->
                 <!-- ------------------------------------------------------------ -->
-                <div id="tweakPanel" class = "panel">       
+                <div id="tweakPanel" class = "menuPanel">      
+                    <!-- 
                     <div id = "tweakTitle" class = "basicTitle">
                         tweak
                     </div>
+                    -->
+                    
+                    <!--
                     <div id = "ecosystemPanel" >
-                        ecosystem parameters (tweak carefully)
-                        
+                    -->                        
                         <input 
                             type            = "range" 
-                            id              = "foodGrowthDelay"    
-                            class           = "EcoSliderDisplay"
+                            id              = "foodGrowthDelaySlider"    
+                            class           = "EcoSlider"
                             name            = "foodGrowthDelay"      
                             step            = 1
                             autocomplete    = "off" 
@@ -188,8 +187,8 @@
                         <label id = "foodGrowthDelayLabel" class = "EcoSliderLabelDisplay" for = "foodGrowthDelay" >food growth delay</label>
                         <input 
                             type            = "range" 
-                            id              = "foodSpread"         
-                            class           = "EcoSliderDisplay"
+                            id              = "foodSpreadSlider"         
+                            class           = "EcoSlider"
                             name            = "foodSpread"           
                             step            = 1
                             autocomplete    = "off" 
@@ -199,8 +198,8 @@
                         <label id = "foodSpreadLabel" class = "EcoSliderLabelDisplay" for = "foodSpread" >food spread</label>
                         <input 
                             type            = "range" 
-                            id              = "foodBitEnergy"      
-                            class           = "EcoSliderDisplay"
+                            id              = "foodBitEnergySlider"      
+                            class           = "EcoSlider"
                             name            = "foodBitEnergy"        
                             step            = 10
                             autocomplete    = "off" 
@@ -210,8 +209,8 @@
                         <label id = "foodBitEnergyLabel" class = "EcoSliderLabelDisplay" for = "foodBitEnergy" >food bit energy</label>
                         <input 
                             type            = "range" 
-                            id              = "hungerThreshold"    
-                            class           = "EcoSliderDisplay"
+                            id              = "hungerThresholdSlider"    
+                            class           = "EcoSlider"
                             name            = "hungerThreshold"      
                             step            = 1
                             autocomplete    = "off" 
@@ -221,8 +220,8 @@
                         <label id = "hungerThresholdLabel" class = "EcoSliderLabelDisplay" for = "hungerThreshold" >hunger threshold</label>
                         <input 
                             type            = "range" 
-                            id              = "energyToOffspring"  
-                            class           = "EcoSliderDisplay"
+                            id              = "energyToOffspringSlider"  
+                            class           = "EcoSlider"
                             name            = "energyToOffspring"    
                             step            = 0.1
                             autocomplete    = "off" 
@@ -232,41 +231,14 @@
                         <label id = "energyToOffspringLabel" class = "EcoSliderLabelDisplay" for = "energyToOffspring" > offspring energy ratio</label>
                 
                         <button 
-                            id      = "tweakDefaultButton" 
+                            id      = "tweakDefaultButton"
+                            class   = "basicButton"  
                             onClick = "setEcosystemToDefaults(); " >reset to defaults</button>   
-                    </div>
-            
+                    <!--</div>-->
+             
                     <div id ="attractionPanel">
                         Swimbot mate preferences
-                        
-                        <!--
-                        <input 
-                            type        = "radio" 
-                            id          = "randomRadio" 
-                            name        = "attractionMode" 
-                            value       = "random" 
-                            onchange    = "chooseAttractionMode()"
-                        >
-                        <label id = "randomLabel" for = "randomRadio" >random</label>
 
-                        <input 
-                            type        = "radio" 
-                            id          = "closestRadio" 
-                            name        = "attractionMode" 
-                            value       = "closest" 
-                            onchange    = "chooseAttractionMode()"
-                        >
-                        <label id = "closestLabel" for = "closestRadio" >closest</label>
-                        
-                        <input 
-                            type        = "radio" 
-                            id          = "qualitiesRadio" 
-                            name        = "attractionMode" 
-                            value       = "qualities" 
-                            onchange    = "chooseAttractionMode()"
-                        >
-                        -->
-                        
                         <!------------------------------------- -->
                         <!-- colorful                           -->
                         <!------------------------------------- -->                
@@ -291,7 +263,6 @@
                         >
                         <label id = "bigLabel" for = "radioBig" >big</label>
                         
-                        
                         <!------------------------------------- -->
                         <!-- hyper                              -->
                         <!------------------------------------- -->                
@@ -303,7 +274,7 @@
                             onchange    = "chooseAttraction()"
                         >
                         <label id = "hyperLabel" for = "radioHyper" >hyper</label>
-                        
+
                         <!------------------------------------- -->
                         <!-- long                               -->
                         <!------------------------------------- -->                
@@ -315,6 +286,7 @@
                             onchange    = "chooseAttraction()"
                         >
                         <label id ="longLabel" for = "radioLong">long</label>
+                        
 
                         <!------------------------------------- -->
                         <!-- straight                           -->
@@ -340,6 +312,7 @@
                         >
                         <label id = "noColorLabel" for = "radioNoColor" >not colorful</label>
                         
+                        
                         <!------------------------------------- -->
                         <!-- small                              -->
                         <!------------------------------------- -->                
@@ -363,6 +336,7 @@
                             onchange    = "chooseAttraction()"
                         >
                         <label id ="stillLabel" for = "radioStill">still</label>
+
 
                         <!------------------------------------- -->
                         <!-- short                              -->
@@ -388,7 +362,7 @@
                         >
                         <label id = "crookedLabel" for = "radioCrooked" >crooked</label>
 
-                
+             
                         <!------------------------------------- -->
                         <!-- similar color                      -->
                         <!------------------------------------- -->                
@@ -470,21 +444,14 @@
                             value       = "random"       
                             onchange    = "chooseAttraction()"
                         >
-                        <label id = "randomLabel" for = "radioRandom" >random</label>
-                    </div>
- 
-                    <div id ="freezePanel">
-                        freeze simulation...
-                        <button id = "freezeButton"   onClick = "toggleSimulationRunning();" >freeze</button>         
-                        <button id = "noRenderButton" onClick = "toggleRendering();" >turn rendering OFF</button>         
-                    </div>
-                    
+                        <label id = "randomLabel" for = "radioRandom" >random</label>                        
+                    </div> <!-- attractionPanel -->
                 </div> <!-- tweak Panel -->
-
+                
                 <!-- ------------------------------------------------------------ -->
                 <!-- graph panel                                                  -->
                 <!-- ------------------------------------------------------------ -->
-                <div id="graphPanel" class = "panel">
+                <div id="graphPanel" class = "menuPanel">
                     <div id = "graphTitle" class = "basicTitle">
                         population graph
                     </div>
@@ -492,16 +459,22 @@
                         (no data)     
                     </div>
                 </div> 	 <!-- graph Panel -->	
- 
 
+            
+                <!-- ------------------------------------------------------------ -->
+                <!-- the graph canvas is here...                                  -->
+                <!-- ------------------------------------------------------------ -->
+                <canvas id = "graphCanvas" width = "500" height = "500" ></canvas> 
+                
                 <!-- ------------------------------------------------------------ -->
                 <!-- pool panel                                                   -->
                 <!-- ------------------------------------------------------------ -->
-                <div id = "poolPanel" class = "panel" >
+                <div id = "poolPanel" class = "menuPanel">
+                    <!--
                     <div id = "poolSettingsTitle" class = "basicTitle">
                         pool
                     </div>
-           
+                    -->                    
                     <div id = "startPoolTitle" >           
                         start a new pool with one of these presets...
                     </div> 
@@ -539,52 +512,76 @@
                         onClick = "choosePoolToLoad( SimulationStartMode.EMPTY ); requestToLoadPoolFromPreset();" >empty</button>            
 
                     <div id = "saveLoadPanel" >
+                        SORRY! At the moment, you cannot save or load pool files: the save/load feature of 
+                        Gene Pool is under construction. I will try to get that done soon. I am 
+                        switching over to a local file system, using the html file api.
+                        <br>
+                        <br>
+                        -Jeffrey
+                    
+                        <!--
                         <div id = "saveLoadTitle" >
                             save the current pool or load one from file...                
                         </div>      
+                        -->
+                        
                         <!-- file load input  -->
+                        <!--
                         <input type = "file" id = "fileInput" multiple onchange = "readLocalFile( event )" >    
 
                         <button id = "saveButton" class = "basicButton" onClick = "requestToSavePool( false );" >save pool</button> 
                         <button id = "loadButton" class = "basicButton" onClick = "choosePoolToLoad( SimulationStartMode.FILE ); requestToLoadPoolFromFile();" >load pool</button>    
+                        -->
+                        <br>
+                        <br>
+                        <br>
+                        Select the button below to get data collected during the simulation. You can load it into 
+                        <a href = 'https://lnegoita.shinyapps.io/gene-pool-laboratory/' target = "_blank" style = 'text-decoration:none'>GenePool Lab</a>                        
+                        <br>
+                        ( <a href = 'https://lnegoita.shinyapps.io/gene-pool-laboratory/' target = "_blank" style = 'text-decoration:none'>https://lnegoita.shinyapps.io/gene-pool-laboratory/</a> )
+                        <br>
+                        (Contact jeffrey@ventrella.com for details).
                     </div>                    
                     <button id = "familyTreeButton" class = "basicButton" onClick = "printFamilyTree( false );" >print swimbot data</button> 
-                    
-                </div> <!-- poolPanel -->
-
-
+                </div>  <!-- poolPanel -->
+                 
                 <!-- ------------------------------------------------------------ -->
                 <!-- swimbot panel                                                -->
                 <!-- ------------------------------------------------------------ -->
-                <div id="swimbotPanel" class = "panel">        
+                <div id="swimbotPanel" class = "menuPanel" >     
+                    <!--   
                     <div id = "swimbotControlsTitle" class = "basicTitle">
                         swimbot
                     </div>
+                    -->
+                    
                     <div id="noSelectedSwimbotPanel">
                         No swimbot is selected. 
                         <br>
-                        Please select one in the pool...
+                        Please select one in the pool. Or...
                         <br>
                         <br>
-                        or load a random swimbot...
-                        <br>
-                        <br>
-                        <br>
-                        <br>
-                        or load one from a file...
+                        Create a new swimbot with randoized genes:
                         <br>
                         <br>
                         <br>
                         <br>
-                        or load one from a preset...
+                        <!--or load a swimbot (from saved gene data)... -->
+                        Sorry, but currently you cannot load swimbot genes. The code for that is being rewritten. 
+                        <br>
+                        <br>
+                        <br>
+                        Create a new swimbot with genes from one of these presets:
                         <button 
                             id      = "createRandomSwimbotButton" 
                             class   = "basicButton" 
                             onClick = "genePool.makeNewRandomSwimbot();" >create random</button> 
+                        <!--                            
                         <button 
                             id      = "loadSwimbotButton" 
                             class   = "basicButton" 
-                            onClick = "requestToLoadSwimbotFromFile(); " >load from file...</button>   
+                            onClick = "requestToLoadSwimbotFromFile(); " >load genes...</button>   
+                        -->
                         <button 
                             id      = "presetSwimbot1Button" 
                             class   = "basicButton" 
@@ -619,10 +616,10 @@
                             onClick = "loadSwimbotFromPreset(7); " >Dennett</button>   
                     </div>
 
-                    <div id="selectedSwimbotPanel">
-                        information about the selected swimbot:
+                    <div id="selectedSwimbotPanel" class = "basicPanel">
+                        <!--information about the selected swimbot:-->
                         <div id="swimbotDataPanel" ></div>
-                
+                        
                         <button 
                             id      = "zapSwimbotButton" 
                             class   = "basicButton" 
@@ -639,66 +636,64 @@
                             id      = "killSwimbotButton" 
                             class   = "basicButton" 
                             onClick = "genePool.killSwimbot( genePool.getSelectedSwimbotID() );" >kill</button> 
+                        
+                        <!--
                         <button 
                             id      = "saveGenesButton" 
                             class   = "basicButton" 
                             onClick = "requestToSaveSwimbot(); " >save swimbot</button>   
+                        -->
+                        
                         <button 
                             id      = "showGenesButton" 
                             class   = "basicButton" 
-                            onClick = "showSwimbotGenes( genePool.getSelectedSwimbotID() );" >show gene data</button>   
+                            onClick = "showSwimbotGenes( genePool.getSelectedSwimbotID() );" >save genes</button>   
                         <button 
                             id      = "tweakGenesButton" 
                             class   = "basicButton" 
-                            onClick = "openTweakGenesPanel( genePool.getSelectedSwimbotID() ); genePool.setViewMode( ViewMode.SELECTED );" >tweak genes!</button>  
-                    </div> 
-                                        
+                            onClick = "openTweakGenesPanel( genePool.getSelectedSwimbotID() ); genePool.setViewMode( ViewTrackingMode.SELECTED );" >tweak genes!</button>  
+                        
+                    </div>
+
                 </div> <!-- swimbot Panel -->
- 		                
+ 		                                 
+                 
                 <!-- ------------------------------------------------------------ -->
                 <!-- info panel                                                   -->
                 <!-- ------------------------------------------------------------ -->
-                <div id="infoPanel">
-        
+                <div id="infoPanel"  class = "menuPanel" >
                     <div id="infoText"></div> 	
-            
                     <!-- ------------------------------------------------------------ -->
                     <!-- buttons on bottom of the info page                           -->
                     <!-- ------------------------------------------------------------ -->     			
                     <font size = 3 color = '#335500' face='arial'>
-                        <button id = "prevInfoButton" onClick = "advanceInfoPage(-1);" >previous</button>  
+                        <button id = "prevInfoButton" class = "basicButton"onClick = "advanceInfoPage(-1);" >previous</button>  
                         <div    id = "pageNumberLabel">page 1 of 28</div>                        
-                        <button id = "nextInfoButton" onClick = "advanceInfoPage( 1);" >next    </button>  
+                        <button id = "nextInfoButton" class = "basicButton" onClick = "advanceInfoPage( 1);" >next    </button>  
                     </font>     	
                     	
-                </div> 	<!-- info Panel -->
-                                      
+                </div> 	<!-- info Panel -->            
+    
+                
                 <div id = "donatePanel" >
-                    Swimbots need your help! 
-                    <br>                    
-                    <br>                    
-                    <a href = "donate.html" target = "_blank"><button id = "donateButton">Donate</button> </a>   
-                </div>
-                <div id = "donateHeart" >
-                    <img src = "images/heart.png" width = 20></img>
-                </div>
+                    <a href = "donate.html" target = "_blank"><button id = "donateButton" class = "basicButton" >Donate</button> </a>   
+                    <!--
+                    <div id = "donateHeart" >
+                        <img src = "images/heart.png" width = 20></img>
+                    </div>
+                    -->
+                </div><!-- donate Panel --> 
                 <div id = "contactPanel" >
-                    Problems? Suggestions? Ideas? 
+                    &copy2021 Jeffrey Ventrella 
                     <br>
-                    Email me: Jeffrey@Ventrella.com
-                    <br>
+                    <a href = 'http://www.ventrella.com/' target = "_blank" style = 'text-decoration:none'>Ventrella.com</a>
                     <br>                    
-                    &copy2020 
-                    
-                    <a href = 'http://www.ventrella.com/' target = "_blank" style = 'text-decoration:none'>Jeffrey Ventrella</a>
-                </div>
-                       
-            </div> <!-- main panel -->
-            
-        </div> <!-- masterPanel -->
+                    Jeffrey@Ventrella.com
+                </div> <!-- contact Panel -->    
+                                
+            </div> <!--main Panel-->
+        </div>  <!--masterPanel-->
 
-        
- 
         <!-- ------------------------------------------------------------------ -->
         <!-- popUp panel...                                                     -->
         <!-- ------------------------------------------------------------------ -->
@@ -714,13 +709,14 @@
         <!-- ------------------------------------------------------------------ -->
         <button id = "cancelPopUpPanelButton"   onClick = "closePopupPanel(); "     >X</button>
         
-  
+        <!--
         <div id = "accountPanel" >
             <br>
             User Accounts        
         </div>
 
         <button id = "cancelAccountPanelButton" onClick = "closeAccountPanel(); ">X</button>
+        -->
         
         <!-- ------------------------------------------------------------------ -->
         <!-- user input...                                                      -->
@@ -728,10 +724,11 @@
         <!--<input id='popUpPanelInput' type='text' onkeypress='addToInputString( event )'></input>-->
         <!-- onkeyup makes the difference!!!!! - it allows the event to capture the last character (don't ask, cause I'm just as confused) -->
         
+        <!--
         <input id='popUpPanelInput'      type='text' onkeyup='addToFilenameInputString       ( event )'></input>
         <input id='accountEmailInput'    type='text' onkeyup='addToAccountEmailInputString   ( event )'></input>
         <input id='accountPasswordInput' type='text' onkeyup='addToAccountPasswordInputString( event )'></input>
-
+        
         <button 
             id = "savePopUpPanelButton" 
             onClick = "requestToSavePool( true );" >
@@ -740,19 +737,21 @@
 
         <button id = "noSavePopUpPanelButton"   onClick = "loadPool           ();" >No      </button> 
         <button id = "submitFilenameButton"     onClick = "submitFilenameInput();" >submit  </button>   
+        
         <button id = "submitAccountButton"      onClick = "submitAccountInput ();" >OK      </button>   
-        
-        
+        -->
         
         <!-- ------------------------------------------------------------------ -->
         <!-- error notice...                                                    -->
         <!-- ------------------------------------------------------------------ -->
+        <!--
         <div id = "PopUpPanelError" >
             <br>
             (error)            
         </div>
         <button id = "cancelErrorButton" onClick = "closeErrorPanel(); ">X</button>
-                
+        -->
+            
         <!-- ------------------------------------------------------------------ -->
         <!-- the data from saving swimbots and pools is displayed here          -->
         <!-- ------------------------------------------------------------------ -->
@@ -763,39 +762,47 @@
         <!-- ------------------------------------------------------------------ -->
         <!-- data display                                                       -->
         <!-- ------------------------------------------------------------------ -->
-        <div id = "dataDisplay">
+        <div id = "dataDisplay" class = "basicPanel">
         </div>
         
         <!-- ------------------------------------------------------------------ -->
         <!-- close data display                                                 -->
         <!-- ------------------------------------------------------------------ -->
-        <button id = "closeDataDisplay" onClick = "closeDataDisplay();" >X</button>  
+        <button id = "closeDataDisplay" class = "basicButton" onClick = "closeDataDisplay();" >X</button>  
 
         <!-- ------------------------------------------------------------------ -->
         <!-- tweak genes!                                                       -->
         <!-- ------------------------------------------------------------------ -->
-        <div id = "tweakGenesPanel">
+        <div id = "tweakGenesPanel" class = "basicPanel" >
         </div>
 
         <!-- ------------------------------------------------------------------ -->
         <!-- close tweak genes panel                                            -->
         <!-- ------------------------------------------------------------------ -->
-        <button id = "closeTweakGenesPanel" onClick = "closeTweakGenesPanel();" >X</button>  
-        
+        <button id = "closeTweakGenesPanel" class = "basicButton" onClick = "closeTweakGenesPanel();" >X</button>  
+                  
         <!-- ------------------------------------------------------------------ -->
         <!-- no Render notice                                                   -->
         <!-- ------------------------------------------------------------------ -->
-        <div id = "noRenderPanel" onClick = "setRendering( true );" >
-            <big>Click HERE to turn rendering back on.</big>
+        <div id = "noRenderPanel" class = "basicPanel" onClick = "setRendering( true );" >
+            <big>
+                Rendering is turned off!
+            </big>
+            <br>
+            (It makes the simulation run faster)
             <br>
             <br>
-            While rendering is turned off, the simulation will continue running in the background 
-            as fast as it can. Results may vary across computer systems and browsers. 
+            Select the "fast" button to make the simulation run as fast as possible. 
+            (Keep in mind that running fast uses more power).
             <br>
             <br>
-            To monitor population and progress, select the population graph from the menu. 
-        </div>  
-                
+            To monitor population and progress, select the graph menu button. 
+            <br>
+            <br>
+            Click on this panel at any time to turn rendering back on.                
+        </div>                  
+        
+        
 		<!-- ------------------------------------------------------------ -->
 		<!-- turn on the info panel and set it to the first page...       -->
 		<!-- also, show that autotracking is on...                        -->
@@ -803,10 +810,9 @@
 		<script type = "text/javascript"> 	
             resize();
 		    openInfoPanel();
-		    setInfoPage(1);
+		    setInfoPage(2);
 		    initializeUI();
         </script>
-	    		
 		
 	</body>
 </html>
