@@ -1,6 +1,5 @@
-
 GENEPOOL SWIMBOTS
-Copyright (c) 2021 by Jeffrey Ventrella - All Rights Reserved. 
+Copyright (c) 2021 by Jeffrey Ventrella 
 
 swimbots.com
 ventrella.com
@@ -10,8 +9,8 @@ ventrella.com
 
 This software is intended for education, game design, and research.
 You may use, distribute, and modify this code under the terms of 
-the "Commons Clause" license (please read the LICENSE file for 
-details). 
+the MIT (with the "Commons Clause") License. See the LICENSE file 
+for details). 
 
 --------------------------------------------------------------------
 2. DESCRIPTION
