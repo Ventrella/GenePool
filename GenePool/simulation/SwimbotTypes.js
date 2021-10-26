@@ -3,9 +3,6 @@
 //-------------------------------------------
 //  time-related constants
 //-------------------------------------------
-//const FULLY_GROWN_AGE    = 1000;  // this has been moved to ExperimentParameters.js
-//const OLD_AGE            = 39000; // this has been moved to ExperimentParameters.js
-//const MAXIMUM_LIFESPAN   = 40000; // this has been moved to ExperimentParameters.js
 const TIMER_DELTA_INCREASE_RATE = 0.02;
 const STARVING_TIMER_DELTA = 0.05;
 
@@ -62,7 +59,7 @@ const SWIMBOT_GENITAL_WIDTH     = 1.0;
 const SWIMBOT_VIEW_RADIUS	    = 300.0;
 const SWIMBOT_EGG_RADIUS	    = 6.0;
 
-const SELECT_RADIUS_SCALAR      = 7.0;
+//const SELECT_RADIUS_SCALAR      = 7.0;
 
 //const SWIMBOT_NUTRITION_ENERGY  = 10.0;
 
@@ -112,11 +109,6 @@ const WALL_BOUNCE = 0.1;
 const ENERGY_USED_UP_SWIMMING				= 0.01;
 const STARVING								= 4.0;
 const CONTINUAL_ENERGY_DRAIN				= 0.0001;
-const MIN_CHILD_ENERGY_RATIO                = ZERO;
-const DEFAULT_CHILD_ENERGY_RATIO	        = ONE_HALF;
-const MAX_CHILD_ENERGY_RATIO                = ONE;
-const MIN_SWIMBOT_HUNGER_THRESHOLD          = ZERO;
-
 
 
 // ranges from 0 to 1 with 0 being not picky at all and 1 being totally 'nothing else'
@@ -160,7 +152,7 @@ function Part()
 	this.green				= ZERO;
 	this.blue				= ZERO;
     this.endCapSpline       = ZERO;     // how pointy the splined end-cap is for parts that terminate body sequence
-	this.branch             = false;    //set to true if this part branches off (not a continuation of a category)
+	this.branch             = false;    // set to true if this part branches off (not a continuation of a category)
     this.splined		    = false;
 	this.numDecendents		= 0;
 	this.decendent			= new Array( MAX_PARTS );
@@ -176,14 +168,14 @@ function Part()
 //--------------------
 function Phenotype()
 {	
-	this.numParts       = 0;
-	this.frequency      = ZERO;
-	this.parts          = new Array( MAX_PARTS ); 
-	this.sumPartLengths = ZERO;
-	this.mass           = ZERO;
-	this.preferredFoodColor = 0;
-	this.foodNutritionType  = 0;
-
+	this.numParts           = 0;
+	this.frequency          = ZERO;
+	this.parts              = new Array( MAX_PARTS ); 
+	this.sumPartLengths     = ZERO;
+	this.mass               = ZERO;
+	this.preferredFoodType  = 0;
+	this.digestibleFoodType = 0;
+	
 	for (let p=0; p<MAX_PARTS; p++)
 	{
 		this.parts[p] = new Part(); 

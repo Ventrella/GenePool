@@ -795,7 +795,11 @@ genePool.generatePhyloTree();
 //for (let n=0; n<familyTree.getNumNodes(); n++)
 
 //YO - this is Luka's change to cull the data so it is not too big...
-for (let n=0; n<familyTree.getNumNodes(); n +=5 )
+
+let THROTTLE = 5;
+
+
+for (let n=0; n<familyTree.getNumNodes(); n +=THROTTLE )
     {
         f += "swimbot index: " + n.toString();
         f += "<br>";
@@ -1149,14 +1153,14 @@ function showSwimbotGenes(s)
         + "<big><b>Save genes of swimbot " + s.toString() + "</b></big>"
         + "<br>" 
         + "<br>" 
+        + "Please copy the genetic data below and put it in an "
+        + "<br>"
+        + "empty text file. Give it a cool name and save it."
+        + "<br>"
+        + "<br>"
         + "This is formatted as JSON, which is required "
         + "<br>"
         + "for it to be loaded back into the pool."
-        + "<br>"
-        + "<br>"
-        + "Please copy everything below and put it in an "
-        + "<br>"
-        + "empty text file. Give it a cool name and save it."
         + "<br>"
         + "<br>"
         + "<br>"

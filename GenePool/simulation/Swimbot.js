@@ -17,6 +17,9 @@ var    flopperYV = 0;
     //---------------------------------
     //  colors 
     //---------------------------------
+    
+    // I believe all of these have been moved over to swimbot renderer...
+    /*
     const COLOR_WHITENESS   = 0.4; // 0.0 = normal-saturated color; 0.5 = white-washed; 1.0 = pure white
     const DEAD_COLOR_RED    = 0.2;
     const DEAD_COLOR_GREEN  = 0.25;
@@ -24,8 +27,8 @@ var    flopperYV = 0;
     const ROLLOVER_COLOR    = "rgba( 180, 190, 200, 0.7 )";	
     const SELECT_COLOR      = "rgba( 255, 255, 255, 0.8 )";	
     const OUTLINE_COLOR     = "rgba( 0, 0, 0, 0.4 )";	
-
-
+    */
+    
 	//-----------------------------------------
 	// variables
 	//-----------------------------------------
@@ -46,6 +49,7 @@ var    flopperYV = 0;
 	let _age 	  		    = 0;
 	let _numOffspring       = 0;
 	let _numFoodBitsEaten   = 0;
+	//let _maximumLifeSpan    = 0;
 	let _index              = NULL_INDEX;
 	let _chosenMateIndex    = NULL_INDEX;
 	let _chosenFoodBitIndex = NULL_INDEX;
@@ -103,17 +107,19 @@ this.setParent = function( parent )
 	//-----------------------------------------
 	this.updateBodyParts = function()
 	{
+        let oldAgeThreshold = globalTweakers.maximumLifeSpan - OLD_AGE_DURATION;
+
         //----------------------------------
         // swimmer is not old yet
         //----------------------------------
-        if ( _age < OLD_AGE )
+        if ( _age < oldAgeThreshold )
         {	
-            if ( _age < FULLY_GROWN_AGE )
+            if ( _age < YOUNG_AGE_DURATION )
             {
                 //----------------------------------
                 // swimmer is still growing
                 //----------------------------------
-                _growthScale = _age / FULLY_GROWN_AGE;
+                _growthScale = _age / YOUNG_AGE_DURATION;
             }
             else
             {
@@ -148,13 +154,13 @@ this.setParent = function( parent )
         }
         else 
         //----------------------------------
-        // swimmer is past old age
+        // swimmer is past old age threshold
         //----------------------------------
         {
             //----------------------------------
             // dying of old age
             //----------------------------------
-            if ( _age > MAXIMUM_LIFESPAN ) 
+            if ( _age > globalTweakers.maximumLifeSpan ) 
             {
                 this.die();
             }
@@ -163,7 +169,6 @@ this.setParent = function( parent )
                 //----------------------------------
                 // slowing down because dying
                 //----------------------------------
-                let oldAgeDuration = MAXIMUM_LIFESPAN - OLD_AGE;
                 //let earlyDeath = 200;
                 //earlyDeath = 0;
                 //let inc = ( _age - OLD_AGE ) / ( oldAgeDuration - earlyDeath );
@@ -177,7 +182,10 @@ this.setParent = function( parent )
                 }
                 */
                 
-                _timerDelta = ONE - ( _age - OLD_AGE ) / oldAgeDuration;                
+                _timerDelta = ONE - ( _age - oldAgeThreshold ) / OLD_AGE_DURATION;     
+                
+                assert( _timerDelta >= 0.0, "assert swimbot.js:updateBodyParts: _timerDelta >= 0.0" )
+                assert( _timerDelta <= 1.0, "assert swimbot.js:updateBodyParts: _timerDelta <= 1.0" )    
             }
         }
 
@@ -249,7 +257,7 @@ _phenotype.parts[p].bendingAngle = ( perpAmpModulator + ampModulator ) * Math.si
 			let radian = _phenotype.parts[p].currentAngle * PI_OVER_180;
 			let length = _phenotype.parts[p].length;
 			
-			if ( _age < FULLY_GROWN_AGE ) 
+			if ( _age < YOUNG_AGE_DURATION ) 
 			{
                 length *= _growthScale;
 			}
@@ -313,7 +321,7 @@ _phenotype.parts[p].bendingAngle = ( perpAmpModulator + ampModulator ) * Math.si
                     {	    	    
                         let distance = _phenotype.parts[p].position.getDistanceTo( _phenotype.parts[o].position );
                         
-                        distance = SELECT_RADIUS_SCALAR * Math.sqrt( distance );
+                        distance = SWIMBOT_SELECT_RADIUS_SCALAR * Math.sqrt( distance );
                         
                         if ( distance > _selectRadius )
                         {
@@ -497,6 +505,7 @@ _position.copyFrom( position );
 		_energy             = energy;
 		_alive		        = true;
 		_growthScale        = ONE;
+		//_maximumLifeSpan    = DEFAULT_MAXIMUM_LIFESPAN;
 		
 		//_spin		        = ZERO;
         //_numOffspring       = 0;
@@ -642,7 +651,7 @@ _position.copyFrom( position );
 		// HACK...
 		// I don't know why - but this makes is come out basically okay...
 		//-------------------------------------------------------------------------
-		//_selectRadius = SELECT_RADIUS_SCALAR * Math.sqrt( _selectRadius );
+		//_selectRadius = SWIMBOT_SELECT_RADIUS_SCALAR * Math.sqrt( _selectRadius );
 		
 		if ( _selectRadius < MIN_SELECT_RADIUS )
 		{
@@ -673,7 +682,7 @@ _position.copyFrom( position );
         this.processPhenotype();
      }
 
-
+	
 	//---------------------------------------------------------------
 	this.setGeneValue = function( geneIndex, geneValue, embryology )
 	{
@@ -1264,7 +1273,8 @@ let partAccelerationY = -strokeForceY;
     this.getBrainState                  = function() { return _brain.getState();                            }
     this.getGenotype                    = function() { return _genotype;                                    }
 	this.getSelectRadius                = function() { return _selectRadius;                                }
-	this.getPreferredFoodColor          = function() { return _phenotype.preferredFoodColor;                }
+	this.getPreferredFoodType           = function() { return _phenotype.preferredFoodType;                 }
+	this.getDigestibleFoodType          = function() { return _phenotype.digestibleFoodType;                }
 	
 
 	//---------------------------------------
@@ -1335,32 +1345,31 @@ let partAccelerationY = -strokeForceY;
     
         assert( _chosenFoodBit != null, "Swimbot:eatChosenFoodBit: _chosenFoodBit != null" );
         assert( _chosenFoodBit.getAlive(), "Swimbot:eatChosenFoodBit: _chosenFoodBit.getAlive()" );
-    
+        
         if (( _chosenFoodBit != null )
         &&  ( _chosenFoodBit.getAlive() ))
         {	
             let energyFromFoodBit = _chosenFoodBit.getEnergy();
-/*
-console.log( "-------------------------------" );
-console.log( " eating....." );
-console.log( "_chosenFoodBit.getNutrition() = " + _chosenFoodBit.getNutrition() );
-console.log( "_phenotype.foodNutritionType  = " + _phenotype.foodNutritionType  );
-console.log( " " );
-console.log( "-------------------------------" );
-*/
 
+            if ( globalTweakers.numFoodTypes > 1 )
+            {
+                console.log( "-------------------------------" );
+                console.log( " eating....." );
+                console.log( "_chosenFoodBit.getType() = " + _chosenFoodBit.getType() );
+                console.log( "_phenotype.digestibleFoodType  = " + _phenotype.digestibleFoodType  );
+                console.log( " " );
+                console.log( "-------------------------------" );
 
-/*
-//----------------------------------------------------------------------
-// If the nutrition type of the chosen food bit is not compatible
-// with the nutrition type of the swimbot, then it gets less energy...
-//----------------------------------------------------------------------
-if ( _chosenFoodBit.getNutrition() != _phenotype.foodNutritionType )
-{
-    //console.log( "decrease energy from food bit..." );
-    energyFromFoodBit *= NUTRITION_OFFSET;
-}
-*/
+                //----------------------------------------------------------------------
+                // If the type of the chosen food bit is not compatible with the 
+                // digestible type of the swimbot, then it gets less energy...
+                //----------------------------------------------------------------------
+                if ( _chosenFoodBit.getType() != _phenotype.digestibleFoodType )
+                {
+                    //console.log( "decrease energy from food bit..." );
+                    energyFromFoodBit *= FOOD_TYPE_OFFSET;
+                }
+            }
 
             _energy += energyFromFoodBit;
             
@@ -1430,7 +1439,7 @@ if ( _chosenFoodBit.getNutrition() != _phenotype.foodNutritionType )
 
                 if (( babeFactor > highestBabeFactor )
                 &&  ( babeFactor > TOO_UGLY_TO_CHOOSE )
-                &&  ( nearbySwimbotArray[o].getAge() > FULLY_GROWN_AGE )
+                &&  ( nearbySwimbotArray[o].getAge() > YOUNG_AGE_DURATION )
                 &&  ( nearbySwimbotArray[o].getEnergy() > STARVING ))
                 {
                     //console.log( "ok" );
@@ -1968,7 +1977,7 @@ console.log( "contributeToOffspring: _childEnergyRatio = " + _childEnergyRatio )
 */
         
 //let energyToContribute = _energy * _childEnergyRatio;
-        let energyToContribute = _energy * GLOBAL_childEnergyRatio;
+        let energyToContribute = _energy * globalTweakers.childEnergyRatio;
 
 //GLOBAL_childEnergyRatio
 //console.log( "GLOBAL_childEnergyRatio = " + GLOBAL_childEnergyRatio );

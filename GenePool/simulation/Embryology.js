@@ -107,12 +107,11 @@ let testNoEel = true;
     let _numGenesUsed           = 0;
     let _numGenesPerCategory    = 0;
     let _cutOff                 = 0;
+    let preferredFoodTypeGene   = 0;
+    let digestibleFoodTypeGene  = 0;
     
-    
-    let foodColorGene           = 0;
-    let foodNutritionGene       = 0;
-	this.getFoodColorGene       = function() { return foodColorGene;        }
-	this.getFoodNutritionGene   = function() { return foodNutritionGene;    }
+	this.getPreferredFoodTypeGene   = function() { return preferredFoodTypeGene;    }
+	this.getDigestibleFoodTypeGene  = function() { return digestibleFoodTypeGene;   }
 
     for (let g=0; g<NUM_GENES; g++)
     {
@@ -231,21 +230,17 @@ let testNoEel = true;
         }
 
         //-------------------------------------------------------------------
-        // add genes for food color preference and food nutrition type
+        // add genes for food type preference and food digestibility
         //-------------------------------------------------------------------
-        g++;  phenotype.preferredFoodColor  = Math.floor( _normalizedGenes[g] * 2 ); foodColorGene = g;
-        //console.log( "gene " + g + " is for preferred food color." );        
+        g++;  phenotype.preferredFoodType = Math.floor( _normalizedGenes[g] * 2 ); preferredFoodTypeGene = g; _geneNames[g] = "preferred food type";
+        //console.log( "gene " + g + " is for preferred food type." );        
         
-        g++;  phenotype.foodNutritionType   = Math.floor( _normalizedGenes[g] * 2 ); foodNutritionGene = g;
-        //console.log( "gene " + g + " is for nutrition type." );        
+        g++;  phenotype.digestibleFoodType = Math.floor( _normalizedGenes[g] * 2 ); digestibleFoodTypeGene = g; _geneNames[g] = "digestible food type";
+        //console.log( "gene " + g + " is for digestible food type." );        
         
-// quick test....        
-//if ( phenotype.preferredFoodColor === 0 ) { phenotype.foodNutritionType = 1; }
-//if ( phenotype.preferredFoodColor === 1 ) { phenotype.foodNutritionType = 0; }
-        
-//console.log( "in embryology: " + phenotype.preferredFoodColor );
-//console.log( "phenotype.preferredFoodColor = " + phenotype.preferredFoodColor );
-//console.log( "phenotype.foodNutritionType  = " + phenotype.foodNutritionType  );
+//console.log( "in embryology: " );
+//console.log( "phenotype.preferredFoodType  = " + phenotype.preferredFoodType  );
+//console.log( "phenotype.digestibleFoodType = " + phenotype.digestibleFoodType );
 //console.log( "-------------------------------" );
         
         //---------------------------------------

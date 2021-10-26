@@ -1,3 +1,18 @@
+<!-- ---------------------------------------------------------------------- -->
+<!--                                                                        -->
+<!--    This file is part of GenePool Swimbots.                             -->
+<!--    Copyright (c) 2021 by Jeffrey Ventrella - All Rights Reserved.      -->
+<!--                                                                        -->
+<!--    See the README file or go to swimbots.com for full license details. -->          
+<!--    You may use, distribute and modify this code under the terms of     -->
+<!--    the "Commons Clause" license (commonsclause.com).                   -->
+<!--                                                                        -->
+<!--    This software is intended for education, game design, and research. -->
+<!--    You are not allowed to commercialize the software unless you make   -->
+<!--    substantial changes to the code that add value.                     -->
+<!--                                                                        -->
+<!-- ---------------------------------------------------------------------- -->
+
 <html>
 	<head>
 		<title>
@@ -33,28 +48,28 @@
             var canvas = canvasID.getContext( '2d' );
 		</script>        
 
-		<!-- ------------------------------------------------------------------ -->
-		<!-- The Gene Pool simulation is loaded here...                         -->
-		<!-- ------------------------------------------------------------------ -->
-		<script type = "text/javascript" src = "simulation/ExperimentParameters.js"   ></script>
-		<script type = "text/javascript" src = "simulation/MathConstants.js"          ></script>
-		<script type = "text/javascript" src = "simulation/Utility.js"                ></script>
-		<script type = "text/javascript" src = "simulation/Vector2D.js" 	  	      ></script>
-		<script type = "text/javascript" src = "simulation/Pool.js"                   ></script>
-		<script type = "text/javascript" src = "simulation/Camera.js"                 ></script>
-		<script type = "text/javascript" src = "simulation/FoodBit.js"                ></script>
-		<script type = "text/javascript" src = "simulation/SwimbotTypes.js"  	      ></script>
-		<script type = "text/javascript" src = "simulation/Genotype.js"  	          ></script>
-		<script type = "text/javascript" src = "simulation/Embryology.js"             ></script>
-		<script type = "text/javascript" src = "simulation/Brain.js"                  ></script>
-		<script type = "text/javascript" src = "simulation/SwimbotRenderer.js"        ></script>
-		<script type = "text/javascript" src = "simulation/Swimbot.js"  	  	      ></script>
-		<script type = "text/javascript" src = "simulation/Touch.js"		          ></script>		
-		<script type = "text/javascript" src = "simulation/ViewTracking.js"           ></script>		
-		<script type = "text/javascript" src = "simulation/FamilyTree.js"             ></script>		
-		<script type = "text/javascript" src = "simulation/PhyloTree.js"              ></script>		
-		<script type = "text/javascript" src = "simulation/Obstacle.js"               ></script>		
-		<script type = "text/javascript" src = "simulation/GenePool.js"               ></script> 
+		<!-- ------------------------------------------------------------------------- -->
+		<!-- The Gene Pool simulation is loaded here...                                -->
+		<!-- ------------------------------------------------------------------------- -->
+		<script type = "text/javascript" src = "simulation/MathConstants.js"    ></script>
+		<script type = "text/javascript" src = "simulation/Parameters.js"       ></script>
+		<script type = "text/javascript" src = "simulation/Utility.js"          ></script>
+		<script type = "text/javascript" src = "simulation/Vector2D.js" 	    ></script>
+		<script type = "text/javascript" src = "simulation/Pool.js"             ></script>
+		<script type = "text/javascript" src = "simulation/Camera.js"           ></script>
+		<script type = "text/javascript" src = "simulation/FoodBit.js"          ></script>
+		<script type = "text/javascript" src = "simulation/SwimbotTypes.js"  	></script>
+		<script type = "text/javascript" src = "simulation/Genotype.js"  	    ></script>
+		<script type = "text/javascript" src = "simulation/Embryology.js"       ></script>
+		<script type = "text/javascript" src = "simulation/Brain.js"            ></script>
+		<script type = "text/javascript" src = "simulation/SwimbotRenderer.js"  ></script>
+		<script type = "text/javascript" src = "simulation/Swimbot.js"  	  	></script>
+		<script type = "text/javascript" src = "simulation/Touch.js"		    ></script>		
+		<script type = "text/javascript" src = "simulation/ViewTracking.js"     ></script>		
+		<script type = "text/javascript" src = "simulation/FamilyTree.js"       ></script>		
+		<script type = "text/javascript" src = "simulation/PhyloTree.js"        ></script>		
+		<script type = "text/javascript" src = "simulation/Obstacle.js"         ></script>		
+		<script type = "text/javascript" src = "simulation/GenePool.js"         ></script> 
 		
 		<!-- ------------------------------------------------------------------------- -->
 		<!-- all the javascript files (other than the simulation) are loaded here...   -->
@@ -229,6 +244,19 @@
                         >
                         <div   id = "energyToOffspringValue" class = "EcoSliderValueDisplay"  >(unknown value)</div>
                         <label id = "energyToOffspringLabel" class = "EcoSliderLabelDisplay" for = "energyToOffspring" > offspring energy ratio</label>
+
+
+                        <input 
+                            type            = "range" 
+                            id              = "maxAgeSlider"  
+                            class           = "EcoSlider"
+                            name            = "maximumAge"    
+                            step            = 0.1
+                            autocomplete    = "off" 
+                            oninput        = "setEcosystemValue( id )"
+                        >
+                        <div   id = "maxAgeValue" class = "EcoSliderValueDisplay"  >(unknown value)</div>
+                        <label id = "maxAgeLabel" class = "EcoSliderLabelDisplay" for = "maximumAge" > maximum age</label>
                 
                         <button 
                             id      = "tweakDefaultButton"
@@ -489,11 +517,17 @@
                     <button 
                         id      = "pool3Button" 
                         class   = "basicButton" 
-                        onClick = "choosePoolToLoad( SimulationStartMode.FROGGIES ); requestToLoadPoolFromPreset();" >froggies</button>       
+                        onClick = "choosePoolToLoad( SimulationStartMode.FROGGIES ); requestToLoadPoolFromPreset();" >froggies</button>    
+                    <!--       
                     <button 
                         id      = "pool4Button" 
                         class   = "basicButton" 
                         onClick = "choosePoolToLoad( SimulationStartMode.TANGO ); requestToLoadPoolFromPreset();" >two to tango</button>  
+                    -->
+                    <button 
+                        id      = "pool4Button" 
+                        class   = "basicButton" 
+                        onClick = "choosePoolToLoad( SimulationStartMode.SPECIES ); requestToLoadPoolFromPreset();" >**Speciation**</button>
                     <button 
                         id      = "pool5Button" 
                         class   = "basicButton" 
@@ -534,8 +568,8 @@
                         -->
                         <br>
                         <br>
-                        <br>
-                        Select the button below to get data collected during the simulation. You can load it into 
+                        After starting a pool from the **Speciation** preset and running it for tens of thousands of time steps, 
+                        select the button below to get data collected during the simulation. You can load it into 
                         <a href = 'https://lnegoita.shinyapps.io/gene-pool-laboratory/' target = "_blank" style = 'text-decoration:none'>GenePool Lab</a>                        
                         <br>
                         ( <a href = 'https://lnegoita.shinyapps.io/gene-pool-laboratory/' target = "_blank" style = 'text-decoration:none'>https://lnegoita.shinyapps.io/gene-pool-laboratory/</a> )
@@ -544,7 +578,7 @@
                     </div>                    
                     <button id = "familyTreeButton" class = "basicButton" onClick = "printFamilyTree( false );" >print swimbot data</button> 
                 </div>  <!-- poolPanel -->
-                 
+                
                 <!-- ------------------------------------------------------------ -->
                 <!-- swimbot panel                                                -->
                 <!-- ------------------------------------------------------------ -->

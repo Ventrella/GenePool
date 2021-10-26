@@ -16,6 +16,10 @@ const FOOD_BIT_ROLLOVER_COLOR           = "rgba( 100, 200, 100, 0.5 )";
 const FOOD_BIT_SELECT_COLOR             = "rgba( 200, 200, 200, 1.0 )";	
 const FOOD_OPACITY_INCREMENT            = 0.01;
 
+//const FOOD_TYPE_NULL   = -1;
+//const FOOD_TYPE_GREEN  =  0;
+//const FOOD_TYPE_BLUE   =  1;
+
 //------------------------
 // Food bit
 //------------------------
@@ -23,7 +27,7 @@ function FoodBit()
 {
     let _position       = new Vector2D();
     let _energy         = ZERO;
-    let _nutrition      = ZERO;
+    let _type           = 0;
     let _red            = ZERO;
     let _green          = ZERO;
     let _blue           = ZERO;
@@ -38,79 +42,70 @@ function FoodBit()
 	{
         _index      = f;
         _energy     = DEFAULT_FOOD_BIT_ENERGY;  
-        _opacity    = ZERO      
-		
-        //--------------------------------------------------------
-        // place randomly in a disk in the middle of the pool
-        //--------------------------------------------------------
-        let poolCenter = new Vector2D();
-		poolCenter.x = POOL_LEFT + POOL_WIDTH  * ONE_HALF; 
-		poolCenter.y = POOL_TOP  + POOL_HEIGHT * ONE_HALF; 
-		
-        _position.setToRandomLocationInDisk( poolCenter, GARDEN_OF_EDEN_RADIUS ); 
-
-//_position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
-//_position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
-
-
-//this.randomizeNutrition();
-_nutrition = 0;
-this.setColorAccordingToNutrition();
-
+        _opacity    = ZERO;
+        _position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
+        _position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
+        _type       = 0;
     }
 
 
-
-/*
+    /*
     //--------------------------------------
-	this.randomizeNutrition = function()
+	this.randomizeType = function()
 	{
-	    //console.log( "randomizeNutrition" ) ;
+	    //console.log( "randomizeType" ) ;
 	    
-	    _nutrition = Math.floor( Math.random() * 2 );
+	    _type = Math.floor( Math.random() * 2 );
 	    
-        this.setColorAccordingToNutrition();
+        this.setColorAccordingToType();
 	}
-*/
-	
+	*/
 
     //--------------------------------------
-	this.setNutrition = function(n)
+	this.setType = function(n)
 	{
-//assert ( ( n === 0 ) || ( n === 1 ), "Foodbit.js: setNutrition: ( n === 0 ) || ( n === 1 )" );
+//assert ( ( n === 0 ) || ( n === 1 ), "Foodbit.js: setType: ( n === 0 ) || ( n === 1 )" );
 	    
-	    _nutrition = n;
+	    _type = n;
 	    
-        this.setColorAccordingToNutrition();
+        this.setColorAccordingToType();
 	}
 
     /*
     //-------------------------------------------------
-	this.setNutritionAccordingToPosition = function()
+	this.setTypeAccordingToPosition = function()
 	{
-        _nutrition1 = ( _position.x - POOL_LEFT ) / POOL_WIDTH;
-        _nutrition2 = ( _position.y - POOL_TOP  ) / POOL_HEIGHT;
+        _type1 = ( _position.x - POOL_LEFT ) / POOL_WIDTH;
+        _type2 = ( _position.y - POOL_TOP  ) / POOL_HEIGHT;
          
-        assert( _nutrition1 >  ZERO, "foodbit.js: _nutrition1 >  ZERO" );
-        assert( _nutrition2 >  ZERO, "foodbit.js: _nutrition2 >  ZERO" );        
-        assert( _nutrition1 <= ONE,  "foodbit.js: _nutrition1 <= ONE"  );
-        assert( _nutrition2 <= ONE,  "foodbit.js: _nutrition2 <= ONE"  );  
+        assert( _type1 >  ZERO, "foodbit.js: _type1 >  ZERO" );
+        assert( _type2 >  ZERO, "foodbit.js: _type2 >  ZERO" );        
+        assert( _type1 <= ONE,  "foodbit.js: _type1 <= ONE"  );
+        assert( _type2 <= ONE,  "foodbit.js: _type2 <= ONE"  );  
 
-        this.setColorAccordingToNutrition();
+        this.setColorAccordingToType();
 	}
     */
-    
+
+
+/*
+    //--------------------------------------
+	this.setColor = function( r, g, b )
+	{
+	    _red    = r;
+	    _green  = g;
+	    _blue   = b;
+	}
+*/  
 
     //------------------------------------------------
-	this.setColorAccordingToNutrition = function()
+	this.setColorAccordingToType = function()
 	{
-	    //if ( _nutrition === 0 ) { _red = 0.5; _green = 0.5; _blue = 1.0; }
-	    //if ( _nutrition === 1 ) { _red = 0.9; _green = 0.9; _blue = 0.3; }
+        if ( _type === 0 ) { _red = 0.2; _green = 0.8; _blue = 0.2; }
+        if ( _type === 1 ) { _red = 0.3; _green = 0.5; _blue = 0.7; }
 
-//if ( _nutrition === 0 ) { _red = 0.3; _green = 0.7; _blue = 0.7; }
-//if ( _nutrition === 1 ) { _red = 0.7; _green = 0.7; _blue = 0.3; }
-
-_red = 0.2; _green = 0.8; _blue = 0.2;
+        // slam it to green - for debugging...
+        //_red = 0.2; _green = 0.8; _blue = 0.2;
 
         /*	
         let redX    = 0.0; 
@@ -123,8 +118,8 @@ _red = 0.2; _green = 0.8; _blue = 0.2;
         let greenC  = 0.0; 
         let blueC   = 0.0; 
         
-        let xx = ( _nutrition1 - ONE_HALF ) * 1.5;
-        let yy = ( _nutrition2 - ONE_HALF ) * 1.5;
+        let xx = ( _type1 - ONE_HALF ) * 1.5;
+        let yy = ( _type2 - ONE_HALF ) * 1.5;
         
         let distance = Math.sqrt( xx * xx + yy * yy );
         
@@ -134,9 +129,9 @@ _red = 0.2; _green = 0.8; _blue = 0.2;
         greenC  = 1.0 * centerIntensity;
         blueC   = 0.0 * centerIntensity;
         
-        if ( _nutrition1 < ONE_HALF ) 
+        if ( _type1 < ONE_HALF ) 
         { 
-            let n = ONE - _nutrition1 * 2;
+            let n = ONE - _type1 * 2;
             
             redX   = n * 1.0;//2.0; 
             greenX = n * 0.0;//0.2; 
@@ -144,16 +139,16 @@ _red = 0.2; _green = 0.8; _blue = 0.2;
         }
         else
         {
-            let n = ( _nutrition1 - ONE_HALF ) * 2;
+            let n = ( _type1 - ONE_HALF ) * 2;
             
             redX   = n * 0.0;//0.4; 
             greenX = n * 0.0;//0.4; 
             blueX  = n * 1.0;//2.0; 
         }
 
-        if ( _nutrition2 < ONE_HALF ) 
+        if ( _type2 < ONE_HALF ) 
         { 
-            let n = ONE - _nutrition2 * 2;
+            let n = ONE - _type2 * 2;
             
             redY   = n * 0.5;//2.0; 
             greenY = n * 1.0;//2.0; 
@@ -161,7 +156,7 @@ _red = 0.2; _green = 0.8; _blue = 0.2;
         }
         else
         {
-            let n = ( _nutrition2 - ONE_HALF ) * 2;
+            let n = ( _type2 - ONE_HALF ) * 2;
             
             redY   = n * 1.0;//0.4; 
             greenY = n * 0.0;//2.0; 
@@ -181,7 +176,7 @@ _red = 0.2; _green = 0.8; _blue = 0.2;
         
     
     //--------------------------------------------------------------------------------------------------
-	this.setSpawnPositionRelativeToParent = function( parentFoodBit, childIndex, childNutritionType )
+	this.setSpawnPositionRelativeToParent = function( parentFoodBit, childIndex, childTypeType )
 	{
         //console.log( parentFoodBit.index + ", " + childIndex );
         	
@@ -199,9 +194,9 @@ _red = 0.2; _green = 0.8; _blue = 0.2;
         _index      = childIndex;
         _opacity    = ZERO;
         _energy     = parentFoodBit.getEnergy();
-        _nutrition  = childNutritionType;
+        _type  = childTypeType;
                 
-        this.setColorAccordingToNutrition();
+        this.setColorAccordingToType();
         
         //-----------------------------
         // set the position
@@ -312,7 +307,7 @@ _red = 0.2; _green = 0.8; _blue = 0.2;
 	//---------------------------
 	this.getPosition    = function() { return _position;    }
 	this.getEnergy      = function() { return _energy;      }
-	this.getNutrition   = function() { return _nutrition;   }
+	this.getType   = function() { return _type;   }
 	this.getIndex       = function() { return _index;       }
     this.getAlive       = function() { return ( _index != NULL_INDEX ); }
 

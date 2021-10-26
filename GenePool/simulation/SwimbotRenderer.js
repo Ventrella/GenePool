@@ -790,9 +790,9 @@ if ( _index === 0 )
 	    _colorUtility.green = _phenotype.parts[p].green;
 	    _colorUtility.blue  = _phenotype.parts[p].blue;
         
-        if ( _age < OLD_AGE )
+        if ( _age < globalTweakers.maximumLifeSpan - OLD_AGE_DURATION )
         {
-            if ( _age < FULLY_GROWN_AGE )
+            if ( _age < YOUNG_AGE_DURATION )
             {
                 //------------------------------
                 // newborns start white...
@@ -817,9 +817,12 @@ if ( _index === 0 )
         }
         else
         {
-            let f = 
-            ( _age			    - OLD_AGE ) / 
-            ( MAXIMUM_LIFESPAN	- OLD_AGE );
+            let oldAgeThreshold = globalTweakers.maximumLifeSpan - OLD_AGE_DURATION;
+        
+            let f = ( _age - oldAgeThreshold ) / OLD_AGE_DURATION;
+            
+            assert( f >= ZERO, "SwibotRenderer:renderPartSplined: f >= ZERO" );
+            assert( f <= ONE,  "SwibotRenderer:renderPartSplined: f <= ONE"  );
         
             // I had an assert before, but this is just graphics, and 
             // I assume if it is above 1, it's only by a tiny amount.

@@ -115,6 +115,7 @@ function setEcosystemValue( id )
     else if ( id === "foodBitEnergySlider"      ) { genePool.setFoodBitEnergy       ( input.value ); }
     else if ( id === "hungerThresholdSlider"    ) { genePool.setHungerThreshold     ( input.value ); }
     else if ( id === "energyToOffspringSlider"  ) { genePool.setOffspringEnergyRatio( input.value ); }
+    else if ( id === "maxAgeSlider"             ) { genePool.setMaximumSwimbotAge   ( input.value ); }
         
     updateEcosystemUI(); 
 }
@@ -127,6 +128,7 @@ function setEcosystemToDefaults()
     genePool.setFoodBitEnergy       ( DEFAULT_FOOD_BIT_ENERGY           );
     genePool.setHungerThreshold     ( DEFAULT_SWIMBOT_HUNGER_THRESHOLD  );
     genePool.setOffspringEnergyRatio( DEFAULT_CHILD_ENERGY_RATIO        );
+    genePool.setMaximumSwimbotAge   ( DEFAULT_MAXIMUM_LIFESPAN          );
     
     updateEcosystemUI(); 
 }
@@ -150,6 +152,9 @@ function initializeEcosystemUI()
         
     document.getElementById( 'energyToOffspringSlider'  ).min = MIN_CHILD_ENERGY_RATIO;
     document.getElementById( 'energyToOffspringSlider'  ).max = MAX_CHILD_ENERGY_RATIO;
+    
+    document.getElementById( 'maxAgeSlider'             ).min = MIN_MAXIMUM_AGE;
+    document.getElementById( 'maxAgeSlider'             ).max = MAX_MAXIMUM_AGE;
     
     updateEcosystemUI();
 }
@@ -175,6 +180,9 @@ function updateEcosystemUI()
 
         document.getElementById( "energyToOffspringSlider"  ).value     = genePool.getEnergyToOffspring();
         document.getElementById( "energyToOffspringValue"   ).innerHTML = genePool.getEnergyToOffspring();   
+
+        document.getElementById( "maxAgeSlider"             ).value     = genePool.getMaximumSwimbotAge();
+        document.getElementById( "maxAgeValue"              ).innerHTML = genePool.getMaximumSwimbotAge();   
         
     
         //--------------------------------------------------------------------------    
@@ -945,9 +953,15 @@ function updateUI()
                 else if ( brainState ===  BRAIN_STATE_PURSUING_MATE      ) { goalDescription = "pursuing mate " + mateString;   }
                 else if ( brainState ===  BRAIN_STATE_LOOKING_FOR_FOOD   ) { goalDescription = "looking for food bit";          }
                 else if ( brainState ===  BRAIN_STATE_PURSUING_FOOD      ) { goalDescription = "pursuing food bit";             }
+                
+                let foodPreferenceText = "blue";
+                let foodTypeText       = "blue";
+
+                if ( genePool.getSwimbotPreferredFoodType ( selectedSwimbot ) === 1 ) { foodPreferenceText = "green"; }
+                if ( genePool.getSwimbotDigestibleFoodType( selectedSwimbot ) === 1 ) { foodTypeText       = "green"; }
             
                 document.getElementById( 'swimbotDataPanel' ).innerHTML
-                = "<b>Selected Swimbot:</b>"
+                = "<b>Info about the selected swimbot:</b>"
                 + "<br>"
                 + "<br>"
                 + "ID = " + genePool.getSwimbotIndex( selectedSwimbot ).toString()
@@ -956,17 +970,19 @@ function updateUI()
                 + "<br>"
                 + "goal = " + goalDescription
                 + "<br>"
+                + "<br>"
+                + "food type preference = " + foodPreferenceText
+                + "<br>"
+                + "best-digested food type = " + foodTypeText
+                + "<br>"
+                + "number of food bits eaten = " + Math.floor( genePool.getSwimbotNumFoodBitsEaten( selectedSwimbot ).toString() )
+                + "<br>"
                 + "energy = " + Math.floor( genePool.getSwimbotEnergy( selectedSwimbot ).toString() )
                 + "<br>"
-                + "food bits eaten = " + Math.floor( genePool.getSwimbotNumFoodBitsEaten( selectedSwimbot ).toString() )
-                + "<br>"
-                + "num offspring = " + Math.floor( genePool.getSwimbotNumOffspring( selectedSwimbot ).toString() )
                 + "<br>"
                 + "sexual attraction = " + genePool.getSwimbotAttractionDescription( selectedSwimbot )
                 + "<br>"
-                + "food color preference = " + genePool.getSwimbotFoodPreference( selectedSwimbot );
-                //+ "<br>"
-                //+ "food color digestion = " + genePool.getSwimbotFoodType( selectedSwimbot );
+                + "number of offspring = " + Math.floor( genePool.getSwimbotNumOffspring( selectedSwimbot ).toString() );
             }              
         }
 
