@@ -1,3 +1,16 @@
+//--------------------------------------------------------------------------
+//                                                                        
+//    This file is part of GenePool Swimbots.                             
+//    Copyright (c) 2021 by Jeffrey Ventrella - All Rights Reserved.      
+//                                                                        
+//    See the README file or go to swimbots.com for full license details.           
+//    You may use, distribute, and modify this code only under the terms  
+//    of the "Commons Clause" license (commonsclause.com).                
+//                                                                        
+//    This software is intended for education, game design, and research. 
+//                                                                        
+// -------------------------------------------------------------------------- 
+
 "use strict";
 
 function SwimbotRenderer()
