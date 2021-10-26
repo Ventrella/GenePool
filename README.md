@@ -13,7 +13,6 @@ You may use, distribute, and modify this code under the terms of
 the "Commons Clause" license (please read the LICENSE file for 
 details). 
 
-
 --------------------------------------------------------------------
 2. DESCRIPTION
 
