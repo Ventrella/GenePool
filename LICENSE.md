@@ -1,15 +1,21 @@
 GENEPOOL SWIMBOTS
 Copyright (c) 2021 Jeffrey Ventrella 
 
-SOFTWARE LICENSE INFORMATION
+swimbots.com
+ventrella.com
 
-You may use, distribute, and modify this code under the terms of the MIT (with the "Commons Clause") License. As long as you have no intention of selling the software [as is], you are free to use it under the terms of the MIT Open Source License. 
+---------------------------------------------------------------------------
+1. GENERAL SOFTWARE LICENSE INFORMATION AND MOTIVATION
 
-To anyone wishing to sell this Commons Clause licensed software [as is], an action that the Commons Clause license prohibits, it appears "proprietary", in the sense that it would be necessary to negotiate a license to do that with the owner of the Commons Clause software.
+You may use, distribute, and modify this code under the terms of the MIT License (with the "Commons Clause" [commonsclause.com] - See below). As long as you have no intention of selling the software [AS IS], you are free to use it under the terms of the MIT Open Source License. To anyone wishing to sell this Commons Clause licensed software [as is], an action that the Commons Clause license prohibits, it appears "proprietary", in the sense that it would be necessary to negotiate a license to do that with the owner of the Commons Clause software.
+
+For this software, the Commons Clause License is appended to the MIT License to signify that this is an original work of art/invention that I am offering to like-minded people to build upon for purposes of art, education, research, and exploratory game design. You are not permitted to take the software and commercialize it without contributing something of your own, and adding substantial value to it. Furthermore, you are required to include this license information, and enforce it, for all future distribution and publishing. This stipulation is not easy to define accurately, however, it doesn't't matter if you have no commercial ambitions. If you do, I would love to hear your ideas and plans, and perhaps I can help with making something bigger and better. 
+
+The Commons Clause License (commonsclause.com) was created in response to large coporations abusing open source culture. While the MIT License is completely open-source (even allowing commercialization of the software), the Commons Clause License puts one specific limitation on usage: namely, that future developers cannot simply make a profit on the original value of the software (in this case, as it existed when I offered this license, on January 1, 2022 on https://github.com/Ventrella/GenePool) unless they have added something new of value. According to the strict definition of open source, this software is not truly open-source, because there is at least one limitation on its use. I believe this limitation is appropriate, given the culture of artificial life researchers, simulation game enthusiasts, biology teachers, artists, hackers, and makers, who are motivated to share, collaborate, and advance the art of educational evolutionary simulations. 
 
 
 ---------------------------------------------------------------------------
-“Commons Clause” License Condition v1.0 (commonsclause.com) 
+2. “Commons Clause” License Condition v1.0 (commonsclause.com) 
 
 The Software is provided to you by the Licensor under the License, as defined below, subject to the following condition.
 
@@ -22,8 +28,8 @@ License:    MIT License
 Licensor:   Jeffrey Ventrella
 
 
------------------------------------------------
-MIT License
+---------------------------------------------------------------------------
+3. MIT License
 (Subject to the Commons Clause)
 
 Copyright (c) 2021 Jeffrey Ventrella
