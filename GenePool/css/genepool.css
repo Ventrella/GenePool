@@ -1176,16 +1176,27 @@ body
 /* -------------------------------------------- */
 #noRenderPanel
 {
+    /*
     right:          400px;
     top:             40px;
     width:          400px; 
     height:         200px;
+    */
+
+right:          17px;
+top:             42px;
+width:          317px; 
+height:         105px;
+
+
+    
     padding-top:     20px;
     padding-right:   20px;
     padding-bottom:  20px;
     padding-left:    20px;
-    font-size:      14px;
+    font-size:      12px;
     visibility:     hidden;
+    z-index: 2;
 }
 
 
@@ -1310,6 +1321,7 @@ overflow:auto; /* added for the family tree display
 /* -------------------------------------------- */
 /* donate panel                                 */
 /* -------------------------------------------- */
+
 #donatePanel
 {
     /*

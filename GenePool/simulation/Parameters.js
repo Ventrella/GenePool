@@ -102,7 +102,7 @@ const CROSSOVER_RATE = 0.2;     // I just decided to make this bigger (sept.3.20
 const MAX_SWIMBOT_HUNGER_THRESHOLD      = 200;
 const DEFAULT_SWIMBOT_HUNGER_THRESHOLD	=  50;
 
-const FOOD_TYPE_MUTATION_RATE = 0.99; // essentially 1: makes it so newborn foodbits can be either type
+//const FOOD_TYPE_MUTATION_RATE = 0.99; // essentially 1: makes it so newborn foodbits can be either type
 
 
 // FOOD_TYPE_OFFSET is the proportion of energy a swimbot gets from food if 

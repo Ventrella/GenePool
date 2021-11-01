@@ -564,7 +564,12 @@ function setRendering(r)
     if ( r )
     {
         genePool.setRendering( true ); 
-        document.getElementById( "noRenderButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR      
+        //document.getElementById( "noRenderButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR      
+        //document.getElementById( "noRenderButton" ).style.zIndex = '4';                     
+        //document.getElementById( "noRenderButton" ).style.zIndex = '1';     
+        
+        
+                        
         canvasID.style.visibility = 'visible';
         document.getElementById( "noRenderPanel" ).style.visibility = 'hidden';
 
@@ -577,8 +582,13 @@ function setRendering(r)
     else
     {
         genePool.setRendering( false ); 
-        document.getElementById( "noRenderButton" ).style = "border-color: " + ACTIVE_BORDER_COLOR + ";"                     
-        document.getElementById( "noRenderButton" ).style.borderWidth =  "3px";   
+        //document.getElementById( "noRenderButton" ).style = "border-color: " + ACTIVE_BORDER_COLOR + ";"                     
+        //document.getElementById( "noRenderButton" ).style.borderWidth =  "3px";   
+
+        //document.getElementById( "noRenderButton" ).style.content = 'fdf';       
+                
+
+        //document.getElementById( "noRenderButton" ).style.zIndex = '4';                     
         canvasID.style.visibility = 'hidden';
         document.getElementById( "noRenderPanel" ).style.visibility = 'visible';
         
@@ -796,6 +806,7 @@ function switchToChosenPresetPool()
     clearViewMode(); 
     updateEcosystemUI(); 
     _graph.initialize(); 
+    setRendering( true );    
 }
 
 
@@ -966,11 +977,11 @@ function updateUI()
                 else if ( brainState ===  BRAIN_STATE_LOOKING_FOR_FOOD   ) { goalDescription = "looking for food bit";          }
                 else if ( brainState ===  BRAIN_STATE_PURSUING_FOOD      ) { goalDescription = "pursuing food bit";             }
                 
-                let foodPreferenceText = "blue";
-                let foodTypeText       = "blue";
+                let foodPreferenceText = "green";
+                let foodTypeText       = "green";
 
-                if ( genePool.getSwimbotPreferredFoodType ( selectedSwimbot ) === 1 ) { foodPreferenceText = "green"; }
-                if ( genePool.getSwimbotDigestibleFoodType( selectedSwimbot ) === 1 ) { foodTypeText       = "green"; }
+                if ( genePool.getSwimbotPreferredFoodType ( selectedSwimbot ) === 1 ) { foodPreferenceText = "blue"; }
+                if ( genePool.getSwimbotDigestibleFoodType( selectedSwimbot ) === 1 ) { foodTypeText       = "blue"; }
             
                 document.getElementById( 'swimbotDataPanel' ).innerHTML
                 = "<b>Info about the selected swimbot:</b>"

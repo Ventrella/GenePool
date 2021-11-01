@@ -1366,13 +1366,15 @@ let partAccelerationY = -strokeForceY;
 
             if ( globalTweakers.numFoodTypes > 1 )
             {
+                /*
                 console.log( "-------------------------------" );
                 console.log( " eating....." );
                 console.log( "_chosenFoodBit.getType() = " + _chosenFoodBit.getType() );
                 console.log( "_phenotype.digestibleFoodType  = " + _phenotype.digestibleFoodType  );
                 console.log( " " );
                 console.log( "-------------------------------" );
-
+                */
+                
                 //----------------------------------------------------------------------
                 // If the type of the chosen food bit is not compatible with the 
                 // digestible type of the swimbot, then it gets less energy...

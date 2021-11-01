@@ -242,26 +242,59 @@ let testNoEel = true;
             _categoryValues[c].splined          = Math.round( ZERO  + _categoryValues[c].splined        );
         }
 
-        //-------------------------------------------------------------------
-        // add genes for food type preference and food digestibility
-        //-------------------------------------------------------------------
-        g++;  phenotype.preferredFoodType = Math.floor( _normalizedGenes[g] * 2 ); preferredFoodTypeGene = g; _geneNames[g] = "preferred food type";
-        //console.log( "gene " + g + " is for preferred food type." );        
+        //-----------------------------------------------------------------------------------------
+        // add genes for food type preference and digestibility:
+        //
+        // by default, swimbots are all born with a preferrence for 0 (green), but if numFoodTypes 
+        // is set to 2, then they are born with a genetically-determined preferrence.
+        //-----------------------------------------------------------------------------------------
+        phenotype.preferredFoodType  = 0;
+        phenotype.digestibleFoodType = 0;
+
+        g++;  
+        preferredFoodTypeGene = g; 
+        _geneNames[g] = "preferred food type";
+        if ( globalTweakers.numFoodTypes === 2 ) 
+        {
+            phenotype.preferredFoodType = Math.floor( _normalizedGenes[g] * 2 );     
+        }   
+
+        g++;  
+        digestibleFoodTypeGene = g; 
+        _geneNames[g] = "digestible food type";
+        if ( globalTweakers.numFoodTypes === 2 ) 
+        {
+            phenotype.digestibleFoodType = Math.floor( _normalizedGenes[g] * 2 );     
+        }   
         
-        g++;  phenotype.digestibleFoodType = Math.floor( _normalizedGenes[g] * 2 ); digestibleFoodTypeGene = g; _geneNames[g] = "digestible food type";
-        //console.log( "gene " + g + " is for digestible food type." );        
         
-//console.log( "in embryology: " );
-//console.log( "phenotype.preferredFoodType  = " + phenotype.preferredFoodType  );
-//console.log( "phenotype.digestibleFoodType = " + phenotype.digestibleFoodType );
-//console.log( "-------------------------------" );
         
+        
+
+        /*
+        let preferredFoodType  = 0;
+        let digestibleFoodType = 0;
+        
+        if ( globalTweakers.numFoodTypes === 2 )
+        {            
+            preferredFoodType  = Math.floor( _normalizedGenes[g] * 2 ); 
+            digestibleFoodType = Math.floor( _normalizedGenes[g] * 2 ); 
+        }
+
+        g++;  phenotype.preferredFoodType  = preferredFoodType;  preferredFoodTypeGene  = g; _geneNames[g] = "preferred food type";
+        g++;  phenotype.digestibleFoodType = digestibleFoodType; digestibleFoodTypeGene = g; _geneNames[g] = "digestible food type";
+        */
+        
+        
+        
+        //---------------------------------------
+        // important: set _numGenesUsed
+        //---------------------------------------
+        _numGenesUsed = g + 1;
+
         //---------------------------------------
         // make sure this is kosher
         //---------------------------------------
-        g++; // important
-        
-        _numGenesUsed = g;
         //console.log( "num genes used = " + _numGenesUsed + " out of " + NUM_GENES );
 		assert( _numGenesUsed < NUM_GENES, "embryology: _numGenesUsed < NUM_GENES" );
         

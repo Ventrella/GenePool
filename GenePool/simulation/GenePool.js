@@ -414,8 +414,15 @@ SwimbotRenderer.js
             // yo, initial age varies but is weighted towards the young
             //------------------------------------------------------------
             let weightedRandomNormal = Math.random() * Math.random();
+            
+            
+//console.log( "globalTweakers.maximumLifeSpan = " + globalTweakers.maximumLifeSpan );            
 
-            let initialAge      = YOUNG_AGE_DURATION + Math.floor( ( DEFAULT_MAXIMUM_AGE - YOUNG_AGE_DURATION ) * weightedRandomNormal );
+//let initialAge      = YOUNG_AGE_DURATION + Math.floor( ( DEFAULT_MAXIMUM_AGE - YOUNG_AGE_DURATION ) * weightedRandomNormal );
+  let initialAge      = YOUNG_AGE_DURATION + Math.floor( ( globalTweakers.maximumLifeSpan - YOUNG_AGE_DURATION ) * weightedRandomNormal );
+                        
+            
+            
             let initialAngle    = getRandomAngleInDegrees(); //-180.0 + Math.random() * 360.0;
             let initialEnergy   = DEFAULT_SWIMBOT_HUNGER_THRESHOLD;
 
@@ -560,18 +567,26 @@ SwimbotRenderer.js
                 _myGenotype.setGeneValue( g, 0 );
             }            
 
-/*
-            //-------------------------------------------------------------------------------------------------
-            // This sets the food type gene to be the same as the preferredFoodColor gene
-            //-------------------------------------------------------------------------------------------------
-            let foodColorGene = _embryology.getFoodColorGene();
-            let foodTypeGene  = _embryology.getFoodNutritionGene();            
-            //console.log( "foodColorGene     = " + foodColorGene     );
-            //console.log( "foodNutritionGene = " + foodNutritionGene );
-            let geneValue = _myGenotype.getGeneValue( foodColorGene );
-            //console.log( "geneValue = " + geneValue );
-            _myGenotype.setGeneValue( foodNutritionGene, geneValue );
-*/
+            //-------------------------------------------------------------------------------
+            // This is not the most elegant way to do this, but just to get it working.....
+            // For any simulation mode (pool preset) other than Species, the swimbot genes 
+            // for food type preferrence and food type digestion are set to 0 (green).
+            //-------------------------------------------------------------------------------
+            if ( mode != SimulationStartMode.SPECIES )
+            {
+                //-------------------------------------------------------------------------------------------------
+                // This sets the food type gene to be the same as the preferredFoodColor gene
+                //-------------------------------------------------------------------------------------------------
+                //let foodColorGene = _embryology.getFoodColorGene();
+                //let foodTypeGene  = _embryology.getFoodNutritionGene();  
+                          
+                //console.log( "foodColorGene     = " + foodColorGene     );
+                //console.log( "foodNutritionGene = " + foodNutritionGene );
+                //let geneValue = _myGenotype.getGeneValue( foodColorGene );
+                //console.log( "geneValue = " + geneValue );
+                //_myGenotype.setGeneValue( foodNutritionGene, 0 );                
+                //_myGenotype.setGeneValue( foodNutritionGene, 0 );                
+            }
             
             //--------------------------------------------------
             // create the swimbot
@@ -590,13 +605,13 @@ SwimbotRenderer.js
 		let end1 = new Vector2D();
 		let end2 = new Vector2D();
 		
-		end1.setXY( POOL_LEFT + POOL_WIDTH * 0.02, POOL_TOP + POOL_HEIGHT * 0.02 );
-		end2.setXY( POOL_LEFT + POOL_WIDTH * 0.1,  POOL_TOP + POOL_HEIGHT * 0.02 );
+		end1.setXY( POOL_LEFT + POOL_WIDTH * 0.005, POOL_TOP + POOL_HEIGHT * 0.005 );
+		end2.setXY( POOL_LEFT + POOL_WIDTH * 0.01,  POOL_TOP + POOL_HEIGHT * 0.005 );
 
         if ( mode === SimulationStartMode.BARRIER )
         {
-    		end1.setXY( POOL_LEFT + POOL_WIDTH * 0.2, POOL_TOP + POOL_HEIGHT * 0.5 );
-	    	end2.setXY( POOL_LEFT + POOL_WIDTH * 0.8, POOL_TOP + POOL_HEIGHT * 0.5 );
+    		end1.setXY( POOL_LEFT + POOL_WIDTH * 0.2, POOL_TOP + POOL_HEIGHT * ONE_HALF );
+	    	end2.setXY( POOL_LEFT + POOL_WIDTH * 0.8, POOL_TOP + POOL_HEIGHT * ONE_HALF );
         }
 
 
@@ -675,7 +690,7 @@ SwimbotRenderer.js
             //-------------------------------------------------------------------
             let n = 0;
                       
-            if ( globalTweakers.numFoodTypes > 1 )
+            if ( globalTweakers.numFoodTypes === 2 )
             { 
                 // just random...
                 //if ( Math.random() < ONE_HALF ) 
@@ -1020,10 +1035,18 @@ SwimbotRenderer.js
 	//--------------------------------
 	this.updateSwimbots = function()
 	{		
+
+//let testNumLiving = 0;	
+	
         for (let s=0; s<MAX_SWIMBOTS; s++)
         {
             if ( _swimbots[s].getAlive() )
             {
+            
+//testNumLiving ++;
+            
+            
+            
                 _swimbots[s].update();
                 
                 //-----------------------------------------------------------------
@@ -1185,6 +1208,10 @@ SwimbotRenderer.js
                 _viewTracking.stopTracking();
             }
         }
+        
+        
+        //console.log( "num living swimbots = " + testNumLiving.toString() );            
+
     }
     
     
@@ -1278,10 +1305,10 @@ SwimbotRenderer.js
                 }
             }
         }
-
+        
         //console.log( "_numNearbySwimbots = " + _numNearbySwimbots );
-
-
+        
+        
         /*
 	    //----------------------------------
 	    // find the closest food bit...
@@ -1366,18 +1393,20 @@ SwimbotRenderer.js
         let smallestDistance = Number.MAX_SAFE_INTEGER;
         for (let f=0; f<MAX_FOODBITS; f++)
         { 
+            let okay = true;        
 
-let okay = true;        
+            //--------------------------------------------------------------------
+            // In the current implementation, if the number of food types is 2, 
+            // then the swimbot only "sees" a foodbit of its preferred type. 
+            //--------------------------------------------------------------------
+            if ( globalTweakers.numFoodTypes === 2 )
+            {
+                if ( _foodBits[f].getType() != _swimbots[s].getPreferredFoodType() )
+                {
+                    okay = false;
+                }
+            }
 
-/*        
-if ( globalTweakers.numFoodTypes > 1 )
-{
-    if ( _foodBits[f].getType() != _swimbots[s].getPreferredFoodColor() )
-    {
-        okay = false;
-    }
-}
-*/
             if ( okay )
             {
                 if ( _foodBits[f].getAlive() )
@@ -1400,13 +1429,6 @@ if ( globalTweakers.numFoodTypes > 1 )
                     }
                 }
             }
-        }
-        
-        
-        
-        
-        
-        
         
             /*
             //------------------------------------------------------
@@ -1434,8 +1456,8 @@ if ( globalTweakers.numFoodTypes > 1 )
                     }
                 }
             }
+            */   
         }     
-        */   
         
 	    //------------------------------------------------------------------------------
 	    // pass these environmental stimuli along to the swimbot...
@@ -1443,8 +1465,6 @@ if ( globalTweakers.numFoodTypes > 1 )
         _swimbots[s].setEnvironmentalStimuli( _numNearbySwimbots, _nearbySwimbotsArray, foundFoodBit, _chosenFoodBit );
      }
      
-    
-    
     
 	//----------------------------
 	this.updateFood = function()
@@ -1461,14 +1481,16 @@ if ( globalTweakers.numFoodTypes > 1 )
             {
                _foodBits[f].update();
 
-                //-----------------------------------------------------------------------
-                // calculate num foodbits of both types...
-                //-----------------------------------------------------------------------
-                     if ( _foodBits[f].getType() === 0 ) { numType0FoodBits ++; }
-                else if ( _foodBits[f].getType() === 1 ) { numType1FoodBits ++; }
-                            
-                if ( globalTweakers.numFoodTypes > 1  )
+                if ( globalTweakers.numFoodTypes === 2 )
                 {
+                    //-----------------------------------------------------------------------
+                    // calculate num foodbits of both types...
+                    //-----------------------------------------------------------------------
+                         if ( _foodBits[f].getType() === 0 ) { numType0FoodBits ++; }
+                    else if ( _foodBits[f].getType() === 1 ) { numType1FoodBits ++; }
+                
+                    assert( ( ( _foodBits[f].getType() === 0 ) || ( _foodBits[f].getType() === 1 ) ), "genepool.updateFood: _foodBits[f].getType() invalid!" );                   
+                    
                     assert( numType0FoodBits <= MAX_FOODBITS_PER_TYPE, "this.updateFood: numType0FoodBits > MAX_FOODBITS_PER_TYPE" );
                     assert( numType1FoodBits <= MAX_FOODBITS_PER_TYPE, "this.updateFood: numType1FoodBits > MAX_FOODBITS_PER_TYPE" );
                 }            
@@ -1476,31 +1498,154 @@ if ( globalTweakers.numFoodTypes > 1 )
         }
         
         
-        //------------------------------------------------------------------------
-        // if there are no more food bits left of either type, then
-        // create a new food bit of that type in a random location
-        //------------------------------------------------------------------------
-	    if ( numType0FoodBits === 0 ) 
-	    { 
-	        //console.log( "create new food bit of type 0" );	    
-            let f = this.findLowestDeadFoodBitInArray();
-            if ( f != NULL_INDEX )
-            {
-                _vectorUtility.x = POOL_LEFT + POOL_WIDTH  * Math.random();
-                _vectorUtility.y = POOL_TOP  + POOL_HEIGHT * Math.random();
-                _foodBits[f].initialize(f); 
-                _foodBits[f].setType(0); 
-                _foodBits[f].setPosition( _vectorUtility ); 
-                _numFoodBits ++; 
-    	    }
-        }
+        //-------------------------------------
+        // periodically regenerate food
+        //-------------------------------------
+        assert( globalTweakers.foodRegenerationPeriod > 0, "GenePool:updateFood:globalTweakers.foodRegenerationPeriod > 0"  );
+        
+        if ( _clock % globalTweakers.foodRegenerationPeriod == 0 )
+        {
+            let childFoodBitIndex = this.findLowestDeadFoodBitInArray();
+        
+            //console.log( "time to spawn a new food bit" );
+                    
+            if ( childFoodBitIndex != NULL_INDEX )
+            {            
+                assert( ! _foodBits[ childFoodBitIndex ].getAlive(), "GenePool:updateFood: ! _foodBits[ childFoodBit ].getAlive" );
 
+                //console.log( "I found a dead food bit to reincarnate, with ID " + childFoodBitIndex );
 
-        //if ( globalTweakers.numFoodTypes > 1  )
+                let newFoodType = 0;
+                let parentFoodBitIndex = this.findRandomLivingFoodBit( newFoodType ); 
+
+                //-------------------------------------------------------------------------------------------------------
+                // If we are using two types of food bits, then we need to do some housekeping to make sure that 
+                // neither type exceeds max population and also that there is always at least one bit of each type  
+                //-------------------------------------------------------------------------------------------------------
+                if ( globalTweakers.numFoodTypes === 2  )
+                {
+                    //---------------------------------------------------------------------
+                    // make sure the number of food bits of both types do not exceed the 
+                    // maximum limit. Otherwise, randomize the new food bit type, so that 
+                    // both food types have a chance to grow at the same rate.
+                    //---------------------------------------------------------------------
+                    assert
+                    ( 
+                         ( ( numType0FoodBits < MAX_FOODBITS_PER_TYPE ) || ( numType1FoodBits < MAX_FOODBITS_PER_TYPE ) ),
+                        "( ( numType0FoodBits < MAX_FOODBITS_PER_TYPE ) || ( numType1FoodBits < MAX_FOODBITS_PER_TYPE ) )"
+                    );
+                    
+                    if ( numType0FoodBits == MAX_FOODBITS_PER_TYPE )
+                    {
+                        newFoodType = 1;
+                    }
+                    else if ( numType1FoodBits == MAX_FOODBITS_PER_TYPE )
+                    {
+                        newFoodType = 0;
+                    }
+                    else
+                    {
+                        newFoodType = Math.floor( Math.random() * 2 );
+                    }
+                    
+                    //-------------------------------------------------------------------
+                    // If there are no more food bits left of a particular type, then
+                    // I will force the child to have that type, and I will choose
+                    // one of the existing food bits of the other type as its parent.
+                    //-------------------------------------------------------------------
+                    if ( numType0FoodBits === 0 ) 
+                    { 
+                        newFoodType = 0;
+                        parentFoodBitIndex = this.findRandomLivingFoodBit(1); 
+                    }
+
+                    if ( numType1FoodBits === 0 ) 
+                    { 
+                        newFoodType = 1;
+                        parentFoodBitIndex = this.findRandomLivingFoodBit(0); 
+                    }
+                }
+                
+                if ( parentFoodBitIndex != NULL_INDEX )
+                {
+                    //console.log( "I found a living food bit with ID " + parentFoodBitIndex + " of type " + newFoodType + " to be the parent." );
+                    assert( ! _foodBits[ childFoodBitIndex ].getAlive(), "GenePool:updateFood: ! _foodBits[ childFoodBit ].getAlive" );
+                    assert( childFoodBitIndex != _foodBits[ parentFoodBitIndex ].getIndex(), "genepool.js: updateFood: childFoodBitIndex != _foodBits[ parentFoodBitIndex ].getIndex()" );
+                
+                    //----------------------------------------------------------------
+                    // spawn the child in a position relative to parent...
+                    //----------------------------------------------------------------
+                    _foodBits[ childFoodBitIndex ].spawnFromParent( _foodBits[ parentFoodBitIndex ], childFoodBitIndex, newFoodType );
+
+                    //-------------------------------------------------------------------
+                    // make sure the new food bit position is not obscured by
+                    // the obstacle. If it is, keep trying new spawn positions...
+                    //-------------------------------------------------------------------
+                    let looking = true;
+                    let num = 0;
+                    while ( looking )                    
+                    {                        
+                        //----------------------------------------------------------------
+                        // spawn the child to new position relative to parent...
+                        //----------------------------------------------------------------
+                        _foodBits[ childFoodBitIndex ].randomizeSpawnPosition( _foodBits[ parentFoodBitIndex ] );
+
+                        if ( !_obstacle.getObstruction( _foodBits[ parentFoodBitIndex ].getPosition(), _foodBits[ childFoodBitIndex ].getPosition() ) )
+                        {
+                            looking = false;
+                        }
+                    
+                        num ++;
+                        if ( num > 10 )
+                        {
+                            looking = false;
+                        }                        
+                    }
+                }
+            }
+        }        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        /*
+        if ( globalTweakers.numFoodTypes === 2  )
         { 
+            if ( _clock %100 === 0 )
+            {
+                console.log( "numType0FoodBits = " + numType0FoodBits + "; numType1FoodBits = " + numType1FoodBits  );	    
+            }
+            
+            //------------------------------------------------------------------------
+            // if there are no more food bits left of either type, then
+            // create a new food bit of that type in a random location
+            //------------------------------------------------------------------------
+            if ( numType0FoodBits === 0 ) 
+            { 
+                console.log( "create new food bit of type 0" );	    
+                let f = this.findLowestDeadFoodBitInArray();
+                if ( f != NULL_INDEX )
+                {
+                    _vectorUtility.x = POOL_LEFT + POOL_WIDTH  * Math.random();
+                    _vectorUtility.y = POOL_TOP  + POOL_HEIGHT * Math.random();
+                    _foodBits[f].initialize(f); 
+                    _foodBits[f].setType(0); 
+                    _foodBits[f].setPosition( _vectorUtility ); 
+                    _numFoodBits ++; 
+                }
+            }
+
             if ( numType1FoodBits === 0 ) 
             { 
-                //console.log( "create new food bit of type 1" );
+                console.log( "create new food bit of type 1" );
                 let f = this.findLowestDeadFoodBitInArray();
                 if ( f != NULL_INDEX )
                 {
@@ -1528,57 +1673,42 @@ if ( globalTweakers.numFoodTypes > 1 )
             {
                 assert( ! _foodBits[ childFoodBitIndex ].getAlive(), "GenePool:updateFood: ! _foodBits[ childFoodBit ].getAlive" );
 
-                let parentFoodType = 0;
+                //let parentFoodType = 0;
+                let childFoodType = 0;
+                let numFoodBitsOfChildType = numType0FoodBits;
                 
-                if ( globalTweakers.numFoodTypes > 1  )
-                { 
-                    //--------------------------------------------------------------------------
-                    // give both food types equal chance of being chosen to spawn....
-                    //--------------------------------------------------------------------------
-                    if ( Math.random() > ONE_HALF ) 
-                    {
-                        parentFoodType = 0;
-                    }
-                    else
-                    {
-                        parentFoodType = 1;
-                    }
-                }
+                //This is not working correctly yet:
+                //------------------------------------------------------------------------------------------------------
+                // Subtle: if the number of food bits of the parent type is maxed-out, and also...
+                // if the number of foodbits of the child type is maxed-out, then the parent cannot spawn.  
+                //------------------------------------------------------------------------------------------------------
+                let okay = true;
+
+
+
                 
-                let childFoodType = parentFoodType;
+if ( globalTweakers.numFoodTypes === 2 )
+{ 
+    //-------------------------------------------------------
+    // 50% chance of being born with the other food type...
+    //-------------------------------------------------------
+    if ( Math.random() > ONE_HALF ) 
+    {
+        childFoodType = 1;
+        numFoodBitsOfChildType  = numType1FoodBits;
+    }
 
-                /*
-                //TEST! This is sort of like a mutation in food type....to keep one type from dominating the pool...
-                if ( Math.random() < FOOD_NUTRITION_MUTATION_RATE )
-                {
-                    childNutritionType = Math.floor( Math.random() * 2 );
-                }
-                */
-                
-                let numFoodBitsOfParentType = numType0FoodBits;         
-                let numFoodBitsOfChildType  = numType0FoodBits;
+    //let childFoodType = parentFoodType;
 
-                if ( parentFoodType === 1 ) { numFoodBitsOfParentType = numType1FoodBits; }
-                if ( childFoodType  === 1 ) { numFoodBitsOfChildType  = numType1FoodBits; }
+    //let numFoodBitsOfParentType = numType0FoodBits;         
 
+    //if ( parentFoodType === 1 ) { numFoodBitsOfParentType = numType1FoodBits; }
+    //if ( childFoodType === 1 ) { ; }
 
-//This is not working correctly yet:
+    //assert( numFoodBitsOfParentType < MAX_FOODBITS_PER_TYPE, "GenePool.js:updateFood: numFoodBitsOfParentType < MAX_FOODBITS_PER_TYPE" );
+    //assert( numFoodBitsOfChildType < MAX_FOODBITS_PER_TYPE, "GenePool.js:updateFood: numFoodBitsOfChildType  < MAX_FOODBITS_PER_TYPE" );
 
-//------------------------------------------------------------------------------------------------------
-// Subtle: if the number of food bits of the parent type is maxed-out, and also...
-// if the number of foodbits of the child type is maxed-out, then the parent cannot spawn.  
-//------------------------------------------------------------------------------------------------------
-let okay = true;
-
-
-/*
-if ( globalTweakers.numFoodTypes > 1  )
-{
-    assert( numFoodBitsOfParentType < MAX_FOODBITS_PER_TYPE, "GenePool.js:updateFood: numFoodBitsOfParentType < MAX_FOODBITS_PER_TYPE" );
-    assert( numFoodBitsOfChildType  < MAX_FOODBITS_PER_TYPE, "GenePool.js:updateFood: numFoodBitsOfChildType  < MAX_FOODBITS_PER_TYPE" );
-
-    if (( numFoodBitsOfParentType < MAX_FOODBITS_PER_TYPE  )
-    &&  ( numFoodBitsOfChildType  < MAX_FOODBITS_PER_TYPE  ))
+    if ( numFoodBitsOfChildType < MAX_FOODBITS_PER_TYPE )
     {
         okay = true;
     }
@@ -1587,11 +1717,14 @@ if ( globalTweakers.numFoodTypes > 1  )
         okay = false;
     }
 }
-*/
+
+
+
+
 
                 if ( okay )
                 {
-                    let parentFoodBitIndex = this.findRandomLivingFoodBit( parentFoodType );
+                    let parentFoodBitIndex = this.findRandomLivingFoodBit( childFoodType );
                     //console.log( "parentFoodBitIndex parentFoodType = " + _foodBits[ parentFoodBitIndex ].getType() );
 
                     if ( parentFoodBitIndex != NULL_INDEX )
@@ -1628,11 +1761,9 @@ if ( globalTweakers.numFoodTypes > 1  )
                 }
             }
         }
+            
+            */
     }
-    
-    
-    
-    
     
     
 	//--------------------------------
@@ -1720,6 +1851,33 @@ if ( globalTweakers.numFoodTypes > 1  )
 	//-------------------------------------------------------------
 	this.findRandomLivingFoodBit = function( foodType )
 	{		
+        /*
+	    let randomShift = Math.floor( Math.random() * MAX_FOODBITS );
+
+        for (let i=0; i<MAX_FOODBITS; i++)
+        {
+            let f = ( i + randomShift ) % MAX_FOODBITS;
+
+            assert( f < MAX_FOODBITS, "Genepool.js: f < MAX_FOODBITS" );
+            assert( f >= -1, "Genepool.js:findRandomLivingFoodBit: assert( f >= -1)" );
+
+            if ( _foodBits[f].getAlive() )
+            {
+                if ( _foodBits[f].getType() === foodType )
+                {
+                    return f;
+                }
+            }
+        }
+
+        return NULL_INDEX;
+	    */
+	
+	
+	
+	
+	
+	    // original version
         let f = NULL_INDEX;
         let numTimesLooking = 200;
         let i = 0;
@@ -2137,17 +2295,6 @@ if ( globalTweakers.numFoodTypes > 1  )
 	this.setRendering = function(r)
 	{	
         _rendering = r;
-        
-        /*
-        if ( _rendering )
-        {
-            _millisecondsPerUpdate = DEFAULT_MILLISECONDS_PER_UPDATE;
-        }
-        else
-        {
-            _millisecondsPerUpdate = 0;
-        }
-        */
     }
     
 
@@ -2621,13 +2768,6 @@ if ( globalTweakers.numFoodTypes > 1  )
                         // set the new moved position       
                         //--------------------------------------
                         _vectorUtility = this.convertScreenCoordinatesToPoolPosition( x, y );
-                        
-                        let buffer = 20;
-                        if ( _vectorUtility.x > POOL_RIGHT  - buffer ) { _vectorUtility.x = POOL_RIGHT  - buffer; }
-                        if ( _vectorUtility.x < POOL_LEFT   + buffer ) { _vectorUtility.x = POOL_LEFT   + buffer; }
-                        if ( _vectorUtility.y > POOL_BOTTOM - buffer ) { _vectorUtility.y = POOL_BOTTOM - buffer; }
-                        if ( _vectorUtility.y < POOL_TOP    + buffer ) { _vectorUtility.y = POOL_TOP    + buffer; }
-                        
                         _obstacle.setMovePosition( _vectorUtility );
                         
                         //--------------------------------------

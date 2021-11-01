@@ -188,32 +188,87 @@ function FoodBit()
     
         
     
-    //--------------------------------------------------------------------------------------------------
-	this.setSpawnPositionRelativeToParent = function( parentFoodBit, childIndex, childTypeType )
+    //----------------------------------------------------------------------------
+	this.spawnFromParent = function( parentFoodBit, childIndex, childType )
 	{
         //console.log( parentFoodBit.index + ", " + childIndex );
         	
-        assert( parentFoodBit.getIndex() != NULL_INDEX, "foodbit.js: setSpawnPositionRelativeToParent: parentFoodBit.index != NULL_INDEX" );
-        assert( parentFoodBit.getAlive(), "foodbit.js: setSpawnPositionRelativeToParent: parentFoodBit.getAlive()" );
-        assert( childIndex != NULL_INDEX, "foodbit.js: setSpawnPositionRelativeToParent: childIndex != NULL_INDEX" );
+        assert( parentFoodBit.getIndex() != NULL_INDEX, "foodbit.js: spawnNearParent: parentFoodBit.index != NULL_INDEX" );
+        assert( parentFoodBit.getAlive(), "foodbit.js: spawnNearParent: parentFoodBit.getAlive()" );
+        assert( childIndex != NULL_INDEX, "foodbit.js: spawnNearParent: childIndex != NULL_INDEX" );
         
         if ( childIndex === parentFoodBit.getIndex() )
         {
-            console.log( "warning: foodbit.js: setSpawnPositionRelativeToParent: childIndex = " + childIndex + " and parentFoodBit.getIndex() = " + parentFoodBit.getIndex() );
+            console.log( "warning: foodbit.js: spawnNearParent: childIndex = " + childIndex + " and parentFoodBit.getIndex() = " + parentFoodBit.getIndex() );
         }
         
-        //assert( childIndex != parentFoodBit.getIndex(), "foodbit.js: setSpawnPositionRelativeToParent: childIndex != parentFoodBit.index" );
+        //assert( childIndex != parentFoodBit.getIndex(), "foodbit.js: spawnNearParent: childIndex != parentFoodBit.index" );
 
         _index      = childIndex;
         _opacity    = ZERO;
         _energy     = parentFoodBit.getEnergy();
-        _type  = childTypeType;
+        _type       = childType;
                 
         this.setColorAccordingToType();
         
         //-----------------------------
         // set the position
         //-----------------------------      
+        _position.set( parentFoodBit.getPosition() );
+
+        //-----------------------------
+        // randomize position
+        //-----------------------------      
+        this.randomizeSpawnPosition( parentFoodBit );
+
+        /*
+        let xx = Math.random() * Math.random();
+        let yy = Math.random() * Math.random();
+
+        if ( Math.random() < ONE_HALF ) { xx *= -ONE; }
+        if ( Math.random() < ONE_HALF ) { yy *= -ONE; }
+
+        _position.x += xx *= _maxSpawnRadius;
+        _position.y += yy *= _maxSpawnRadius;
+
+        //-----------------------------
+        // pool boundary collisions
+        //-----------------------------      
+        let pb = POOL_TOP       + FOOD_BIT_BOUNDARY_MARGIN;
+        let pt = POOL_BOTTOM    - FOOD_BIT_BOUNDARY_MARGIN;
+        let pl = POOL_LEFT	    + FOOD_BIT_BOUNDARY_MARGIN;
+        let pr = POOL_RIGHT	    - FOOD_BIT_BOUNDARY_MARGIN;
+        
+        //console.log( "before:" + _position.y );
+        
+                if ( _position.y < pb ) { _position.y += ( ( pb - _position.y ) * 2 ); }
+        else	if ( _position.y > pt ) { _position.y += ( ( pt - _position.y ) * 2 ); }
+                if ( _position.x > pr ) { _position.x += ( ( pr - _position.x ) * 2 ); }
+        else	if ( _position.x < pl ) { _position.x += ( ( pl - _position.x ) * 2 ); }
+        
+        //console.log( "after:" + _position.y );        
+        
+        if ( SPAWN_FOOD_RANDOMLY_IN_POOL )
+        {
+            _position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
+            _position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
+        }   
+        
+
+        assert( _position.x < POOL_RIGHT,   "foodbit.js: spawnNearParent: _position.x < POOL_RIGHT"  );
+        assert( _position.x > POOL_LEFT,    "foodbit.js: spawnNearParent: _position.x > POOL_LEFT"   );
+        assert( _position.y > POOL_TOP,     "foodbit.js: spawnNearParent: _position.y < POOL_TOP"	);
+        assert( _position.y < POOL_BOTTOM,  "foodbit.js: spawnNearParent: _position.y > POOL_BOTTOM" );
+        */
+        
+    }
+
+
+
+
+    //-----------------------------------------------------------
+	this.randomizeSpawnPosition = function( parentFoodBit )
+    {
         _position.set( parentFoodBit.getPosition() );
 
         let xx = Math.random() * Math.random();
@@ -249,12 +304,11 @@ function FoodBit()
         }   
         
 
-        assert( _position.x < POOL_RIGHT,   "foodbit.js: setSpawnPositionRelativeToParent: _position.x < POOL_RIGHT"  );
-        assert( _position.x > POOL_LEFT,    "foodbit.js: setSpawnPositionRelativeToParent: _position.x > POOL_LEFT"   );
-        assert( _position.y > POOL_TOP,     "foodbit.js: setSpawnPositionRelativeToParent: _position.y < POOL_TOP"	);
-        assert( _position.y < POOL_BOTTOM,  "foodbit.js: setSpawnPositionRelativeToParent: _position.y > POOL_BOTTOM" );
+        assert( _position.x < POOL_RIGHT,   "foodbit.js: spawnNearParent: _position.x < POOL_RIGHT"  );
+        assert( _position.x > POOL_LEFT,    "foodbit.js: spawnNearParent: _position.x > POOL_LEFT"   );
+        assert( _position.y > POOL_TOP,     "foodbit.js: spawnNearParent: _position.y < POOL_TOP"	);
+        assert( _position.y < POOL_BOTTOM,  "foodbit.js: spawnNearParent: _position.y > POOL_BOTTOM" );
     }
-
 
 
 

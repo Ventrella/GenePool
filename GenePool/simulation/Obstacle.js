@@ -155,14 +155,14 @@ function Obstacle()
         calculateStuff();
     }
     
-    //-----------------------------------
+    //----------------------------------------------
     // move
-    //-----------------------------------
+    //----------------------------------------------
 	this.setMovePosition = function( movePosition )
 	{
         if ( _end1.moved )
         {     
-            _end1.setPosition( movePosition );   	    
+            _end1.setPosition( movePosition );              
         }
         else if ( _end2.moved )
         {        	    
@@ -186,7 +186,7 @@ function Obstacle()
     
     
 	//---------------------------------------------------
-	// detect collision with the position
+	// detect collision with a given position
 	//---------------------------------------------------
 	this.getCollision = function( testPosition, radius ) 
 	{
@@ -342,6 +342,25 @@ function Obstacle()
 	        _end2.position.x += xShift;
 	        _end2.position.y += yShift;
 	    }
+	    
+	    
+        //---------------------------------------
+        // handle collisions with the pool walls
+        //---------------------------------------
+        let left   = POOL_LEFT   + END_RADIUS;
+        let right  = POOL_RIGHT  - END_RADIUS
+        let bottom = POOL_BOTTOM - END_RADIUS
+        let top    = POOL_TOP    + END_RADIUS
+        
+             if ( _end1.position.x > right  ) { _end1.position.x = right;  }
+        else if ( _end1.position.x < left   ) { _end1.position.x = left;   }
+             if ( _end1.position.y > bottom ) { _end1.position.y = bottom; }
+        else if ( _end1.position.y < top    ) { _end1.position.y = top;    }
+
+             if ( _end2.position.x > right  ) { _end2.position.x = right;  }
+        else if ( _end2.position.x < left   ) { _end2.position.x = left;   }
+             if ( _end2.position.y > bottom ) { _end2.position.y = bottom; }
+        else if ( _end2.position.y < top    ) { _end2.position.y = top;    }
 	}
     
 	//--------------------------------
