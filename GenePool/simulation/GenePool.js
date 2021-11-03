@@ -273,8 +273,8 @@ function GenePool()
         }            
         
         //-------------------------------------------------------------------
-        // set ecosystem tweak values to their defaults. Some of them 
-        // may be changed afterwards depending on the simulation mode.
+        // Here I set ecosystem tweak values to their defaults. Some of 
+        // them may be changed afterwards depending on the simulation mode.
         //-------------------------------------------------------------------
         this.setFoodGrowthDelay     ( DEFAULT_FOOD_REGENERATION_PERIOD  );
         this.setFoodSpread          ( DEFAULT_FOOD_BIT_MAX_SPAWN_RADIUS );
@@ -285,6 +285,12 @@ function GenePool()
         this.setOffspringEnergyRatio( DEFAULT_CHILD_ENERGY_RATIO        );
         this.setMaximumSwimbotAge   ( DEFAULT_MAXIMUM_AGE               );
         
+        // do this stuff after doing the stuff above:
+        _numSwimbots = INITIAL_NUM_SWIMBOTS;
+        _numFoodBits = INITIAL_NUM_FOODBITS;
+
+        this.randomizeFood();
+        
         //console.log( "startSimulation: setOffspringEnergyRatio to default: " + DEFAULT_CHILD_ENERGY_RATIO );
         
         //---------------------------------------------------------------------
@@ -292,61 +298,27 @@ function GenePool()
         //---------------------------------------------------------------------
         if ( mode === SimulationStartMode.RANDOM )
         {
-            _numSwimbots = INITIAL_NUM_SWIMBOTS;
-            _numFoodBits = INITIAL_NUM_FOODBITS;
-            this.randomizeFood();
+            //this uses all default values
         }
         else if ( mode === SimulationStartMode.SPECIES )
         {
-            // important!
             globalTweakers.numFoodTypes = 2;
+            this.randomizeFood(); // Important: do this after setting numFoodTypes!
 
-            this.setFoodGrowthDelay( 15 );  
-            this.setGardenOfEdenRadius( 3000 );
-            this.setMaximumSwimbotAge( 15000 );
-
-            _numSwimbots = 1000;
-            _numFoodBits = 2000;
-            this.randomizeFood();
-            
-/*
-Currently, MAXIMUM_LIFESPAN is defined in ExperimentalParameters and is used in:
-GenePool.js
-Swimbot.js
-SwimbotRenderer.js
-*/
-
-            /*
-              const GARDEN_OF_EDEN_RADIUS = 2000;  		// original version
-            //const GARDEN_OF_EDEN_RADIUS = 3000;  		// research version 
-
-              const DEFAULT_FOOD_REGENERATION_PERIOD  = 40;	// original version
-            //const DEFAULT_FOOD_REGENERATION_PERIOD  = 15;	// research version
-
-              const INITIAL_NUM_SWIMBOTS =  500;   		// original version
-            //const INITIAL_NUM_SWIMBOTS = 1000;   		// research version
-
-              const INITIAL_NUM_FOODBITS = 1000;   		// original version
-            //const INITIAL_NUM_FOODBITS = 2000;   		// research version
-
-              const CROSSOVER_RATE = 0.01;    		// original version
-            //const CROSSOVER_RATE = 0.5;  			// research version
-  
-              const MAXIMUM_LIFESPAN   = 40000; 		// original version
-            //const MAXIMUM_LIFESPAN   = 15000; 		// research version
-            */
+this.setGardenOfEdenRadius( 3000 );
+this.setFoodGrowthDelay( 15 );  
+this.setMaximumSwimbotAge( 15000 );
+_numSwimbots = 1000;
+_numFoodBits = 2000;
         }
         else if ( mode === SimulationStartMode.FROGGIES )
         {
-            _numSwimbots = INITIAL_NUM_SWIMBOTS;
-            _numFoodBits = INITIAL_NUM_FOODBITS;
-            this.randomizeFood();
+            //this.randomizeFood();
         }
         else if ( mode === SimulationStartMode.TANGO )
         {
             _numSwimbots = 2;
-            _numFoodBits = INITIAL_NUM_FOODBITS;
-            this.randomizeFood();
+            //this.randomizeFood();
         }
         else if ( mode === SimulationStartMode.RACE )
         {
@@ -377,10 +349,10 @@ SwimbotRenderer.js
         }
         else if ( mode === SimulationStartMode.BARRIER )
         {        
-            _numSwimbots = INITIAL_NUM_SWIMBOTS;
-            _numFoodBits = INITIAL_NUM_FOODBITS;
+            // the obstacle is initialized below to be in the middle of the pool!
+            
             //this.setFoodToBarrierConfiguration();
-            this.randomizeFood();
+            //this.randomizeFood();
             
             //_camera.setScale( PARENT_VIEW_SCALE );
         }
@@ -394,8 +366,7 @@ SwimbotRenderer.js
         else if ( mode === SimulationStartMode.EMPTY )
         {
             _numSwimbots = 0;
-            _numFoodBits = INITIAL_NUM_FOODBITS;
-            this.randomizeFood();
+            //this.randomizeFood();
         }
 
         //----------------------------------
@@ -407,21 +378,19 @@ SwimbotRenderer.js
 
             initialPosition.setToRandomLocationInDisk( _poolCenter, _gardenOfEdenRadius ); 
 
-//initialPosition.x = POOL_LEFT + POOL_WIDTH  * Math.random();
-//initialPosition.y = POOL_TOP  + POOL_HEIGHT * Math.random();
-        
-            //------------------------------------------------------------
-            // yo, initial age varies but is weighted towards the young
-            //------------------------------------------------------------
+            //------------------------------------------------------------------------------
+            // yo, initial age is distributed, but is weighted towards the young
+            //------------------------------------------------------------------------------
             let weightedRandomNormal = Math.random() * Math.random();
             
-            
-//console.log( "globalTweakers.maximumLifeSpan = " + globalTweakers.maximumLifeSpan );            
-
-//let initialAge      = YOUNG_AGE_DURATION + Math.floor( ( DEFAULT_MAXIMUM_AGE - YOUNG_AGE_DURATION ) * weightedRandomNormal );
-  let initialAge      = YOUNG_AGE_DURATION + Math.floor( ( globalTweakers.maximumLifeSpan - YOUNG_AGE_DURATION ) * weightedRandomNormal );
-                        
-            
+            //I'm running various tests - to understand why there's a die-off when maximumLifeSpan is 15000. 
+            //let weightedRandomNormal = Math.sqrt( Math.random() );
+            //let weightedRandomNormal = Math.random() * Math.random() * Math.random();
+            //let weightedRandomNormal = Math.random();
+            let initialAge = YOUNG_AGE_DURATION + Math.floor( ( globalTweakers.maximumLifeSpan - YOUNG_AGE_DURATION ) * weightedRandomNormal );
+                                    
+            assert( ( initialAge >= YOUNG_AGE_DURATION ), "Genepool.js: startSimulation: ( initialAge >= YOUNG_AGE_DURATION )" );                        
+            assert( ( initialAge <= globalTweakers.maximumLifeSpan ), "Genepool.js: startSimulation: ( initialAge <= globalTweakers.maximumLifeSpan )" );                        
             
             let initialAngle    = getRandomAngleInDegrees(); //-180.0 + Math.random() * 360.0;
             let initialEnergy   = DEFAULT_SWIMBOT_HUNGER_THRESHOLD;
@@ -692,18 +661,19 @@ SwimbotRenderer.js
                       
             if ( globalTweakers.numFoodTypes === 2 )
             { 
-                // just random...
-                //if ( Math.random() < ONE_HALF ) 
+                n = Math.floor( Math.random() * 2 ); 
 
+                /*
                 //first half is one type, the other half is the other type...
-                if ( f < MAX_FOODBITS_PER_TYPE ) 
+                if ( f < _numFoodBits * ONE_HALF  ) 
                 {
                     n = 0;
                 }
                 else
                 {
                     n = 1;
-                }      
+                } 
+                */
             }
             
             _foodBits[f].setType(n);
@@ -2387,6 +2357,49 @@ if ( globalTweakers.numFoodTypes === 2 )
                 if ( _camera.getWithinView( _swimbots[s].getPosition(), _swimbots[s].getBoundingRadius() ) )
 				{ 
                     _swimbots[s].render( _levelOfDetail );
+                    
+
+
+/// debug test!!!!! 
+// I'm removing swimbot rendering and replacing it with these colored circles to visualize food preferences...         
+/*
+canvas.lineWidth = 2;
+
+if ( _swimbots[s].getPreferredFoodType() == 0 )
+{
+    canvas.strokeStyle = "rgb( 100, 255, 100 )";	
+    canvas.beginPath();
+    canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, 20, 0, PI2, false );
+    canvas.stroke();
+    canvas.closePath();	
+}
+else
+{
+    canvas.strokeStyle = "rgb( 100, 150, 255 )";	
+    canvas.beginPath();
+    canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, 20, 0, PI2, false );
+    canvas.stroke();
+    canvas.closePath();	
+}
+
+if ( _swimbots[s].getDigestibleFoodType() == 0 )
+{
+    canvas.strokeStyle = "rgb( 100, 255, 100 )";	
+    canvas.beginPath();
+    canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, 15, 0, PI2, false );
+    canvas.stroke();
+    canvas.closePath();	
+}
+else
+{
+    canvas.strokeStyle = "rgb( 100, 150, 255 )";	
+    canvas.beginPath();
+    canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, 15, 0, PI2, false );
+    canvas.stroke();
+    canvas.closePath();	
+}
+*/
+
 
                     if (( s === _mousedOverSwimbot )
                     ||  ( s === _selectedSwimbot   ))
@@ -3091,18 +3104,55 @@ if ( globalTweakers.numFoodTypes === 2 )
 	this.getNumFoodBits = function()
 	{       
         let num = 0;
-        
+    
         for (let f=0; f<MAX_FOODBITS; f++)
         {
             if ( _foodBits[f].getAlive() )
             {
-                num ++;
+                if ( globalTweakers.numFoodTypes === 2  )
+                {
+                    if ( _foodBits[f].getType() === 0 )
+                    {
+                        num ++;
+                    }
+                }
+                else
+                {
+                    num ++;
+                }
             }
         }
-                    
+    
+        /*
+        if ( globalTweakers.numFoodTypes === 2  )
+        {
+            for (let f=0; f<MAX_FOODBITS; f++)
+            {
+                if ( _foodBits[f].getAlive() )
+                {
+                    if ( _foodBits[f].getType() === 0 )
+                    {
+                        num ++;
+                    }
+                }
+            }
+        }        
+        else
+        {
+            for (let f=0; f<MAX_FOODBITS; f++)
+            {
+                if ( _foodBits[f].getAlive() )
+                {
+                    num ++;
+                }
+            }
+        }       
+        */         
+            
 	    return num;	
 	}
 
+    /*
 	//------------------------------
 	this.getNumFoodBits0 = function()
 	{       
@@ -3121,7 +3171,8 @@ if ( globalTweakers.numFoodTypes === 2 )
                 
 	    return num;	
 	}
-
+    */
+    
 	//------------------------------
 	this.getNumFoodBits1 = function()
 	{       

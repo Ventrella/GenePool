@@ -23,7 +23,7 @@ const DEFAULT_BASIC_BUTTON_COLOR        = "#dadad0";
 const DEFAULT_BASIC_BUTTON_BORDER_COLOR = "#7f7f77";   
 const ACTIVE_BORDER_COLOR               = '#ffffff';   
 
-const UPDATE_PERIOD = 500;
+const UI_UPDATE_PERIOD = 500;
 
 
 let _currentInfoPage            = FIRST_INFO_PAGE;
@@ -1015,7 +1015,7 @@ function updateUI()
         if ( genePoolIsDefined )
         {    
             //_graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() );
-            _graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() );
+            _graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() , genePool.getNumFoodBits1() );
         }
     
         //-----------------------------------------------------------------------------------
@@ -1028,11 +1028,11 @@ function updateUI()
             + "<br>"
             + "swimbots: " + genePool.getNumSwimbots()
             + "<br>"
-            + "food bits: " + genePool.getNumFoodBits0();
+            + "food bits: " + genePool.getNumFoodBits()
             
             
-            //+ "<br>"
-            //+ "food bits 1: " + genePool.getNumFoodBits1();
+            + "<br>"
+            + "food bits 1: " + genePool.getNumFoodBits1();
             
             _graph.render();
         }
@@ -1042,7 +1042,7 @@ function updateUI()
     // trigger next update...
     //---------------------------
     //this.timer = setTimeout( "updateUI()", 100 );
-    setTimeout( "updateUI()", UPDATE_PERIOD );
+    setTimeout( "updateUI()", UI_UPDATE_PERIOD );
 }	
 
 
