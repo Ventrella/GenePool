@@ -1,0 +1,35 @@
+# Research Notes
+
+# General bug/improvement notes:
+- The graph is still updating at the same rate regardless of the speed of the simulation or even when away from the simulation.
+
+Trial 1:
+- Parameters as set for the **speciation** pool
+
+So far up to timestep 125k and so far so good in terms of what it should be doing. Only one species evolved so far. It will take a while until the second one diverges and evolves the ability to eat the other color foodbit. Some have actually already evolved to want to eat the other color foodbit but they are not able to digest it yet, so sporadic browsing of the blue.
+
+At 400k timestep now both foodbits are being eaten successfully but by what appears to be the same species that is probably interbreeding. The question is, will those two different ecotypes eventually diverge into separate species? There needs to be a gene-flow barrier of some sort. *Maybe something as simple as preventing the food bits from regenerating next to each other?*
+
+For example, when green foodbit regenerates, it can't regenerate anywhere within X distance of any other blue foodbit. If it has no where to regenerate at all, then ignore that rule. And the X can be a user-set parameter. By keeping the foodbits spatially a bit more separated, you can also keep reproduction a bit more separated, reducing geneflow between the two ecotypes and increasing the chance for divergence to occur.
+
+### What are the common paths to speciation in GenePool? It could happen two different ways. Simply put, speciation will happen as long as two populations are kept from interbreeding with each other for long enough that mutations accumulate and the two populations can no longer interbreed. That barrier to interbreeding or gene-flow barrier can be physical, such as the barrier, or distance between food bit types, or it can be reproductive, such as by having the two populations be different colors and then not attract each other.
+
+So there are two different paths I've observed with speciation in GenePool:
+
+1) At the begining of the simulation, by chance alone, two different morphotypes (different colors, etc) survive on the two different color foodbits and since they start as different colors they never interbreed. 
+
+2) Or, only one morphotype survives the starting population and eventually it branches out to have two different ecotypes--one for each foodbit color. Eventually, by chance alone, the two ecotypes will be separated in the pool long enough that they differentiate and become incompatible.
+
+However, that is likely to be impossible if the amount of time necessary for the gene-flow barrier is longer than the amount of time those two ecotypes would be separated for.
+
+One solution is what I mentioned above in which the regenerating foodbits have to stay physically distanced from the opposite color to create a bit of a spatial barrier.
+
+**By the way, I love the new note about what type of food they like and can digest. Helps a lot with the testing!**
+
+Or maybe it is as simple as reducing the spawning distance of the foodbits so that they spawn near their own color. THat should create some spatial heterogeneity between the two colors? I'll try that now:
+
+## Changed foodspread to 1000 right at timestep 480k... We'll see what happens from here.
+Ohhh, but the problem is that the foodbits don't keep true to their color when they respawn nearby. In other words, if foodspread is very low then a new foodbit that spawns near a green bit might come up as green or blue.
+
+But after running genepool lab I got a tree that showed quite a few speciation events happening. So that means that despite a lot of geneflow, there is still some speciation happening. All of those species have gone extinct though, probably because they were not great swimmers, but eventually we may have a new one that sticks around on the new color. But it would just be by chance alone. Not sure what that probability actually looks like.
+
