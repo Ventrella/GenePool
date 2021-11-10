@@ -2084,6 +2084,50 @@ console.log( "contributeToOffspring: _childEnergyRatio = " + _childEnergyRatio )
 	        levelOfDetail
 	    );
 
+              
+
+
+/// debug test!!!!! 
+// I'm adding these colored circles to visualize food preferences...  
+/*       
+canvas.lineWidth = 2;
+
+if ( _phenotype.preferredFoodType == 0 )
+{
+    canvas.strokeStyle = "rgb( 100, 255, 100 )";	
+    canvas.beginPath();
+    canvas.arc( _position.x, _position.y, 60, 0, PI2, false );
+    canvas.stroke();
+    canvas.closePath();	
+}
+else
+{
+    canvas.strokeStyle = "rgb( 100, 150, 255 )";	
+    canvas.beginPath();
+    canvas.arc( _position.x, _position.y, 60, 0, PI2, false );
+    canvas.stroke();
+    canvas.closePath();	
+}
+
+if (_phenotype.digestibleFoodType == 0 )
+{
+    canvas.strokeStyle = "rgb( 100, 255, 100 )";	
+    canvas.beginPath();
+    canvas.arc( _position.x, _position.y, 45, 0, PI2, false );
+    canvas.stroke();
+    canvas.closePath();	
+}
+else
+{
+    canvas.strokeStyle = "rgb( 100, 150, 255 )";	
+    canvas.beginPath();
+    canvas.arc( _position.x, _position.y, 45, 0, PI2, false );
+    canvas.stroke();
+    canvas.closePath();	
+}
+*/
+
+
 	    /*
 		//-------------------------------------
 		// show position

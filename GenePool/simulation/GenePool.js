@@ -310,6 +310,7 @@ this.setFoodGrowthDelay( 15 );
 this.setMaximumSwimbotAge( 15000 );
 _numSwimbots = 1000;
 _numFoodBits = 2000;
+this.setFoodToSpeciesConfiguration();
         }
         else if ( mode === SimulationStartMode.FROGGIES )
         {
@@ -378,15 +379,32 @@ _numFoodBits = 2000;
 
             initialPosition.setToRandomLocationInDisk( _poolCenter, _gardenOfEdenRadius ); 
 
+if ( mode === SimulationStartMode.SPECIES )
+{
+    let s = POOL_WIDTH * 0.47;
+
+    let x = Math.random() * s;
+    let y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + Math.random() * s;
+    
+    if ( Math.random() < ONE_HALF )
+    {
+        x = POOL_WIDTH - x;
+    }
+    
+    initialPosition.setXY( x, y )
+}
             //------------------------------------------------------------------------------
             // yo, initial age is distributed, but is weighted towards the young
             //------------------------------------------------------------------------------
             let weightedRandomNormal = Math.random() * Math.random();
             
-            //I'm running various tests - to understand why there's a die-off when maximumLifeSpan is 15000. 
+            //I'm running various tests - to understand why there's a sharp die-off when maximumLifeSpan is 15000. 
             //let weightedRandomNormal = Math.sqrt( Math.random() );
             //let weightedRandomNormal = Math.random() * Math.random() * Math.random();
             //let weightedRandomNormal = Math.random();
+            
+            
+            
             let initialAge = YOUNG_AGE_DURATION + Math.floor( ( globalTweakers.maximumLifeSpan - YOUNG_AGE_DURATION ) * weightedRandomNormal );
                                     
             assert( ( initialAge >= YOUNG_AGE_DURATION ), "Genepool.js: startSimulation: ( initialAge >= YOUNG_AGE_DURATION )" );                        
@@ -687,6 +705,20 @@ _numFoodBits = 2000;
             
             let foodBitPosition = new Vector2D();        
             foodBitPosition.setToRandomLocationInDisk( poolCenter, _gardenOfEdenRadius ); 
+            
+/*
+if ( mode === SimulationStartMode.SPECIES )
+{
+    lfoodBitPosition.x = Math.random() * POOL_WIDTH * 0.24;
+    foodBitPosition.y = Math.random() * POOL_HEIGHT;
+    
+    if ( Math.random() < ONE_HALF )
+    {
+        foodBitPosition.x = POOL_WIDTH - foodBitPosition.x;
+    }
+}
+            */
+            
             _foodBits[f].setPosition( foodBitPosition );
         }
 	}
@@ -834,7 +866,34 @@ _numFoodBits = 2000;
         this.setFoodGrowthDelay( DEFAULT_FOOD_REGENERATION_PERIOD );
         this.setFoodSpread( 20 );
 	}
+	
 
+	//-------------------------------------------
+	this.setFoodToSpeciesConfiguration = function()
+	{	
+    	let p = new Vector2D();
+
+        for (let f=0; f<_numFoodBits; f++)
+        {            
+            //p.x = Math.random() * POOL_WIDTH * 0.24;
+            //p.y = Math.random() * POOL_HEIGHT;
+            
+            let s = POOL_WIDTH * 0.47;
+            p.x = Math.random() * s;
+            p.y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + Math.random() * s;
+
+            _foodBits[f].setType(0);
+    
+            if ( Math.random() < ONE_HALF )
+            {
+                p.x = POOL_WIDTH - p.x;
+                _foodBits[f].setType(1);
+            }
+            
+            _foodBits[f].setPosition(p); 
+    	}
+	}
+	
 	//-------------------------------------------
 	this.setFoodToRaceConfiguration = function()
 	{	
@@ -1080,6 +1139,10 @@ _numFoodBits = 2000;
                             //------------------------------------------------------------------------------
                             // if the junk dna of each swimbot are similar enough...
                             //------------------------------------------------------------------------------
+if ( !this.getJunkDnaSimilarity( _myGenotype, _mateGenotype ) > NON_REPRODUCING_JUNK_DNA_LIMIT )
+{
+    console.log( "attempting to mate but junk dna too dissimilar!" );
+}
                             if ( this.getJunkDnaSimilarity( _myGenotype, _mateGenotype ) > NON_REPRODUCING_JUNK_DNA_LIMIT )
                             {
                                 //-----------------------------------
@@ -1489,34 +1552,38 @@ _numFoodBits = 2000;
                 let parentFoodBitIndex = this.findRandomLivingFoodBit( newFoodType ); 
 
                 //-------------------------------------------------------------------------------------------------------
-                // If we are using two types of food bits, then we need to do some housekeping to make sure that 
+                // If we are using two types of food bits, then we need to do some housekeeping to make sure that 
                 // neither type exceeds max population and also that there is always at least one bit of each type  
                 //-------------------------------------------------------------------------------------------------------
                 if ( globalTweakers.numFoodTypes === 2  )
                 {
-                    //---------------------------------------------------------------------
-                    // make sure the number of food bits of both types do not exceed the 
-                    // maximum limit. Otherwise, randomize the new food bit type, so that 
-                    // both food types have a chance to grow at the same rate.
-                    //---------------------------------------------------------------------
+                    //------------------------------------------------------
+                    // randomize the new food bit type, so that both
+                    // food types have a chance to grow at the same rate.
+                    //------------------------------------------------------
+                    newFoodType = Math.floor( Math.random() * 2 );
+
+                    //-------------------------------------------------------------------------------------
+                    // make sure the number of food bits of both types do not exceed the maximum limit...
+                    //-------------------------------------------------------------------------------------
+                    /*
                     assert
                     ( 
                          ( ( numType0FoodBits < MAX_FOODBITS_PER_TYPE ) || ( numType1FoodBits < MAX_FOODBITS_PER_TYPE ) ),
                         "( ( numType0FoodBits < MAX_FOODBITS_PER_TYPE ) || ( numType1FoodBits < MAX_FOODBITS_PER_TYPE ) )"
-                    );
-                    
-                    if ( numType0FoodBits == MAX_FOODBITS_PER_TYPE )
+                    );         
+                    */
+                                                   
+                    if ( numType0FoodBits === MAX_FOODBITS_PER_TYPE )
                     {
                         newFoodType = 1;
                     }
-                    else if ( numType1FoodBits == MAX_FOODBITS_PER_TYPE )
+                    else if ( numType1FoodBits === MAX_FOODBITS_PER_TYPE )
                     {
                         newFoodType = 0;
                     }
-                    else
-                    {
-                        newFoodType = Math.floor( Math.random() * 2 );
-                    }
+
+                    parentFoodBitIndex = this.findRandomLivingFoodBit( newFoodType ); 
                     
                     //-------------------------------------------------------------------
                     // If there are no more food bits left of a particular type, then
@@ -1533,7 +1600,11 @@ _numFoodBits = 2000;
                     { 
                         newFoodType = 1;
                         parentFoodBitIndex = this.findRandomLivingFoodBit(0); 
-                    }
+                    }                    
+                }
+                else
+                {
+                    assert( numType1FoodBits === 0, "genepool.js:updateFood: numType1FoodBits === 0" );
                 }
                 
                 if ( parentFoodBitIndex != NULL_INDEX )
@@ -2357,63 +2428,16 @@ if ( globalTweakers.numFoodTypes === 2 )
                 if ( _camera.getWithinView( _swimbots[s].getPosition(), _swimbots[s].getBoundingRadius() ) )
 				{ 
                     _swimbots[s].render( _levelOfDetail );
-                    
-
-
-/// debug test!!!!! 
-// I'm removing swimbot rendering and replacing it with these colored circles to visualize food preferences...         
-/*
-canvas.lineWidth = 2;
-
-if ( _swimbots[s].getPreferredFoodType() == 0 )
-{
-    canvas.strokeStyle = "rgb( 100, 255, 100 )";	
-    canvas.beginPath();
-    canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, 20, 0, PI2, false );
-    canvas.stroke();
-    canvas.closePath();	
-}
-else
-{
-    canvas.strokeStyle = "rgb( 100, 150, 255 )";	
-    canvas.beginPath();
-    canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, 20, 0, PI2, false );
-    canvas.stroke();
-    canvas.closePath();	
-}
-
-if ( _swimbots[s].getDigestibleFoodType() == 0 )
-{
-    canvas.strokeStyle = "rgb( 100, 255, 100 )";	
-    canvas.beginPath();
-    canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, 15, 0, PI2, false );
-    canvas.stroke();
-    canvas.closePath();	
-}
-else
-{
-    canvas.strokeStyle = "rgb( 100, 150, 255 )";	
-    canvas.beginPath();
-    canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, 15, 0, PI2, false );
-    canvas.stroke();
-    canvas.closePath();	
-}
-*/
-
-
+      
                     if (( s === _mousedOverSwimbot )
                     ||  ( s === _selectedSwimbot   ))
                     {
                         if ( s === _selectedSwimbot )
                         {
-                            //_swimbots[s].renderSelectOutline( _camera.getScale() );
-                            //renderSwimbotSelectCircle( s, false );
                             renderSelectCircle( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, _swimbots[s].getSelectRadius(), false );
                         }
                         else
                         {
-                            //_swimbots[s].renderMousedOverOutline( _camera.getScale() );
-                            //renderSwimbotSelectCircle( s, true );
                             renderSelectCircle( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, _swimbots[s].getSelectRadius(), true );
                         }
 

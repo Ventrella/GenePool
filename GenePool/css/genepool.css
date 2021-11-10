@@ -977,6 +977,7 @@ body
 #hungerThresholdLabel,  #hungerThresholdValue   { top:  70; }
 #energyToOffspringLabel,#energyToOffspringValue { top:  90; }
 #maxAgeLabel,           #maxAgeValue            { top: 110; }
+#mutationRateLabel,     #mutationRateValue      { top: 130; }
 
 #foodGrowthDelaySlider  { top:   6; }
 #foodSpreadSlider       { top:  26; }
@@ -984,13 +985,14 @@ body
 #hungerThresholdSlider  { top:  66; }
 #energyToOffspringSlider{ top:  86; }
 #maxAgeSlider           { top: 106; }
+#mutationRateSlider     { top: 126; }
 
 #tweakDefaultButton
 {
     width: 130; 
     height: 25;    
     left: 120; 
-    top: 140;
+    top: 160;
     font-size: 12;       
 }
 

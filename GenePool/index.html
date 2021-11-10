@@ -242,8 +242,6 @@
                         >
                         <div   id = "energyToOffspringValue" class = "EcoSliderValueDisplay"  >(unknown value)</div>
                         <label id = "energyToOffspringLabel" class = "EcoSliderLabelDisplay" for = "energyToOffspring" > offspring energy ratio</label>
-
-
                         <input 
                             type            = "range" 
                             id              = "maxAgeSlider"  
@@ -255,6 +253,17 @@
                         >
                         <div   id = "maxAgeValue" class = "EcoSliderValueDisplay"  >(unknown value)</div>
                         <label id = "maxAgeLabel" class = "EcoSliderLabelDisplay" for = "maximumAge" > maximum age</label>
+                        <input 
+                            type            = "range" 
+                            id              = "mutationRateSlider"  
+                            class           = "EcoSlider"
+                            name            = "mutationRate"    
+                            step            = 0.1
+                            autocomplete    = "off" 
+                            oninput        = "setEcosystemValue( id )"
+                        >
+                        <div   id = "mutationRateValue" class = "EcoSliderValueDisplay"  >(unknown value)</div>
+                        <label id = "mutationRateLabel" class = "EcoSliderLabelDisplay" for = "mutationRate" > mutation rate</label>
                 
                         <button 
                             id      = "tweakDefaultButton"

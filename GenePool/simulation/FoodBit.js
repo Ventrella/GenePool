@@ -277,8 +277,8 @@ function FoodBit()
         if ( Math.random() < ONE_HALF ) { xx *= -ONE; }
         if ( Math.random() < ONE_HALF ) { yy *= -ONE; }
 
-        _position.x += xx *= _maxSpawnRadius;
-        _position.y += yy *= _maxSpawnRadius;
+        _position.x += xx * _maxSpawnRadius;
+        _position.y += yy * _maxSpawnRadius;
 
         //-----------------------------
         // pool boundary collisions
