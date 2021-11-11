@@ -305,12 +305,12 @@ function GenePool()
             globalTweakers.numFoodTypes = 2;
             this.randomizeFood(); // Important: do this after setting numFoodTypes!
 
-this.setGardenOfEdenRadius( 3000 );
+//this.setGardenOfEdenRadius( 3000 );
 this.setFoodGrowthDelay( 15 );  
 this.setMaximumSwimbotAge( 15000 );
 _numSwimbots = 1000;
 _numFoodBits = 2000;
-this.setFoodToSpeciesConfiguration();
+//this.setFoodToSpeciesConfiguration();
         }
         else if ( mode === SimulationStartMode.FROGGIES )
         {
@@ -379,9 +379,10 @@ this.setFoodToSpeciesConfiguration();
 
             initialPosition.setToRandomLocationInDisk( _poolCenter, _gardenOfEdenRadius ); 
 
+/*
 if ( mode === SimulationStartMode.SPECIES )
 {
-    let s = POOL_WIDTH * 0.47;
+    let s = POOL_WIDTH * 0.4;
 
     let x = Math.random() * s;
     let y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + Math.random() * s;
@@ -393,6 +394,8 @@ if ( mode === SimulationStartMode.SPECIES )
     
     initialPosition.setXY( x, y )
 }
+*/
+
             //------------------------------------------------------------------------------
             // yo, initial age is distributed, but is weighted towards the young
             //------------------------------------------------------------------------------
@@ -878,7 +881,7 @@ if ( mode === SimulationStartMode.SPECIES )
             //p.x = Math.random() * POOL_WIDTH * 0.24;
             //p.y = Math.random() * POOL_HEIGHT;
             
-            let s = POOL_WIDTH * 0.47;
+            let s = POOL_WIDTH * 0.4;
             p.x = Math.random() * s;
             p.y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + Math.random() * s;
 
