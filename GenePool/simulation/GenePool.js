@@ -305,7 +305,7 @@ function GenePool()
             globalTweakers.numFoodTypes = 2;
             this.randomizeFood(); // Important: do this after setting numFoodTypes!
 
-this.setGardenOfEdenRadius( 1500 ); /* again... */ //this.randomizeFood();
+this.setGardenOfEdenRadius( 1500 ); /* again... */ this.randomizeFood();
 this.setFoodGrowthDelay( 15 );  
 this.setMaximumSwimbotAge( 15000 );
 _numSwimbots = 1000;
