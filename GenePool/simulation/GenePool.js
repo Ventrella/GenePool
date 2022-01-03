@@ -305,12 +305,14 @@ function GenePool()
             globalTweakers.numFoodTypes = 2;
             this.randomizeFood(); // Important: do this after setting numFoodTypes!
 
-this.setGardenOfEdenRadius( 1500 ); /* again... */ this.randomizeFood();
+//this.setGardenOfEdenRadius( 1500 ); /* again... */ this.randomizeFood();
 this.setFoodGrowthDelay( 15 );  
-this.setMaximumSwimbotAge( 15000 );
+//this.setMaximumSwimbotAge( 15000 );
+this.setMaximumSwimbotAge( 20000 );
 _numSwimbots = 1000;
 _numFoodBits = 2000;
-//this.setFoodToSpeciesConfiguration();
+this.setFoodToSpeciesConfiguration();
+_camera.setScale( POOL_WIDTH );
         }
         else if ( mode === SimulationStartMode.FROGGIES )
         {
@@ -379,7 +381,7 @@ _numFoodBits = 2000;
 
             initialPosition.setToRandomLocationInDisk( _poolCenter, _gardenOfEdenRadius ); 
 
-/*
+
 if ( mode === SimulationStartMode.SPECIES )
 {
     let s = POOL_WIDTH * 0.4;
@@ -394,18 +396,17 @@ if ( mode === SimulationStartMode.SPECIES )
     
     initialPosition.setXY( x, y )
 }
-*/
 
-            //------------------------------------------------------------------------------
-            // yo, initial age is distributed, but is weighted towards the young
-            //------------------------------------------------------------------------------
-            let weightedRandomNormal = Math.random() * Math.random();
+
+            //-----------------------------------------
+            // yo, initial age is distributed
+            //-----------------------------------------
+            let weightedRandomNormal = Math.random();
             
             //I'm running various tests - to understand why there's a sharp die-off when maximumLifeSpan is 15000. 
-            //let weightedRandomNormal = Math.sqrt( Math.random() );
+            //let weightedRandomNormal = Math.random() * Math.random();
             //let weightedRandomNormal = Math.random() * Math.random() * Math.random();
-            //let weightedRandomNormal = Math.random();
-            
+            //let weightedRandomNormal = Math.sqrt( Math.random() );
             
             
             let initialAge = YOUNG_AGE_DURATION + Math.floor( ( globalTweakers.maximumLifeSpan - YOUNG_AGE_DURATION ) * weightedRandomNormal );
@@ -885,12 +886,13 @@ if ( mode === SimulationStartMode.SPECIES )
             p.x = Math.random() * s;
             p.y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + Math.random() * s;
 
-            _foodBits[f].setType(0);
+            //_foodBits[f].setType(0);
+            _foodBits[f].setType( Math.floor( Math.random() * 2 ) );
     
             if ( Math.random() < ONE_HALF )
             {
                 p.x = POOL_WIDTH - p.x;
-                _foodBits[f].setType(1);
+                //_foodBits[f].setType(1);
             }
             
             _foodBits[f].setPosition(p); 

@@ -114,8 +114,8 @@ function FoodBit()
     //------------------------------------------------
 	this.setColorAccordingToType = function()
 	{
-        if ( _type === 0 ) { _red = 0.2; _green = 0.8; _blue = 0.2; }
-        if ( _type === 1 ) { _red = 0.3; _green = 0.5; _blue = 0.7; }
+        if ( _type === 0 ) { _red = 0.3; _green = 0.8; _blue = 0.2; }
+        if ( _type === 1 ) { _red = 0.3; _green = 0.5; _blue = 0.9; }
 
         // slam it to green - for debugging...
         //_red = 0.2; _green = 0.8; _blue = 0.2;
