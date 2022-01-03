@@ -289,6 +289,10 @@ function GenePool()
         _numSwimbots = INITIAL_NUM_SWIMBOTS;
         _numFoodBits = INITIAL_NUM_FOODBITS;
 
+        //-----------------------------------
+        // default
+        //-----------------------------------
+        globalTweakers.numFoodTypes = 1;
         this.randomizeFood();
         
         //console.log( "startSimulation: setOffspringEnergyRatio to default: " + DEFAULT_CHILD_ENERGY_RATIO );
@@ -879,20 +883,15 @@ if ( mode === SimulationStartMode.SPECIES )
 
         for (let f=0; f<_numFoodBits; f++)
         {            
-            //p.x = Math.random() * POOL_WIDTH * 0.24;
-            //p.y = Math.random() * POOL_HEIGHT;
-            
             let s = POOL_WIDTH * 0.4;
             p.x = Math.random() * s;
             p.y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + Math.random() * s;
 
-            //_foodBits[f].setType(0);
             _foodBits[f].setType( Math.floor( Math.random() * 2 ) );
     
             if ( Math.random() < ONE_HALF )
             {
                 p.x = POOL_WIDTH - p.x;
-                //_foodBits[f].setType(1);
             }
             
             _foodBits[f].setPosition(p); 
