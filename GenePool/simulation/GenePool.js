@@ -47,6 +47,7 @@ const NUM_GENES_USED = 112;
 // The global tweakers are all adjustable through the UI.
 //---------------------------------------------------------------
 var globalTweakers = new GlobalTweakers();
+var _numDeadSwimbots = 0;
 
 //------------------
 function GenePool() 
@@ -137,6 +138,7 @@ function GenePool()
     let _zoomingIn              = false;
     let _zoomingOut             = false;
     let _renderingGoals         = false;
+    let _showViewTrackingMode   = false;
     let _windowWidth            = 0;
     let _windowHeight           = 0;
     
@@ -2388,7 +2390,12 @@ if ( globalTweakers.numFoodTypes === 2 )
         }             
     }
 
-	
+	//---------------------------------------------
+	this.setShowingViewTrackingMode = function(s)
+	{
+        _showViewTrackingMode = s;		
+	}
+
 	//-------------------------
 	this.render = function()
 	{
@@ -2510,25 +2517,28 @@ if ( globalTweakers.numFoodTypes === 2 )
 		//----------------------------------
 		// render view tracking info
 		//----------------------------------
-		let viewTrackingMode = _viewTracking.getMode();
-		
-		if ( viewTrackingMode != NULL_INDEX )
+		if ( _showViewTrackingMode )
 		{
-		    let modeString = "(error)";
-		    
-    	         if ( viewTrackingMode === ViewTrackingMode.WHOLE_POOL ) { modeString = "viewing whole pool"         }
-    		else if ( viewTrackingMode === ViewTrackingMode.AUTOTRACK  ) { modeString = "autotracking group"         }
-    		else if ( viewTrackingMode === ViewTrackingMode.SELECTED   ) { modeString = "viewing selected swimbot"   }
-    		else if ( viewTrackingMode === ViewTrackingMode.MUTUAL     ) { modeString = "viewing mutual love"        }
-    		else if ( viewTrackingMode === ViewTrackingMode.PROLIFIC   ) { modeString = "viewing most prolific"      }
-    		else if ( viewTrackingMode === ViewTrackingMode.EFFICIENT  ) { modeString = "viewing most efficient"     }
-    		else if ( viewTrackingMode === ViewTrackingMode.VIRGIN     ) { modeString = "viewing oldest virgin"      }
-    		else if ( viewTrackingMode === ViewTrackingMode.HUNGRY     ) { modeString = "viewing glutton"            }
-		    
-            _canvas.font = "14px Arial";
-            _canvas.fillStyle = "rgba( 255, 255, 255, 0.5 )";		
-            _canvas.fillText( modeString, _canvasWidth - 170, _canvasHeight - 30 );        
-        }        
+            let viewTrackingMode = _viewTracking.getMode();
+        
+            if ( viewTrackingMode != NULL_INDEX )
+            {
+                let modeString = "(error)";
+            
+                     if ( viewTrackingMode === ViewTrackingMode.WHOLE_POOL ) { modeString = "viewing whole pool"         }
+                else if ( viewTrackingMode === ViewTrackingMode.AUTOTRACK  ) { modeString = "autotracking group"         }
+                else if ( viewTrackingMode === ViewTrackingMode.SELECTED   ) { modeString = "viewing selected swimbot"   }
+                else if ( viewTrackingMode === ViewTrackingMode.MUTUAL     ) { modeString = "viewing mutual love"        }
+                else if ( viewTrackingMode === ViewTrackingMode.PROLIFIC   ) { modeString = "viewing most prolific"      }
+                else if ( viewTrackingMode === ViewTrackingMode.EFFICIENT  ) { modeString = "viewing most efficient"     }
+                else if ( viewTrackingMode === ViewTrackingMode.VIRGIN     ) { modeString = "viewing oldest virgin"      }
+                else if ( viewTrackingMode === ViewTrackingMode.HUNGRY     ) { modeString = "viewing glutton"            }
+            
+                _canvas.font = "14px Arial";
+                _canvas.fillStyle = "rgba( 255, 255, 255, 0.5 )";		
+                _canvas.fillText( modeString, _canvasWidth - 170, _canvasHeight - 30 );        
+            }        
+        }
         
 		//---------------------------
 		// render touch state
@@ -3079,7 +3089,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	//----------------------------------------------------------------------------
 	// various quickie getters...
 	//----------------------------------------------------------------------------
-	this.getFoodGrowthDelay     = function() { return globalTweakers.foodRegenerationPeriod;          }
+	this.getFoodGrowthDelay     = function() { return globalTweakers.foodRegenerationPeriod; }
 	this.getFoodSpread          = function() { return globalTweakers.foodSpread;        }
     this.getFoodBitEnergy       = function() { return globalTweakers.foodBitEnergy;     }
     this.getHungerThreshold     = function() { return globalTweakers.hungerThreshold;   }
@@ -3091,6 +3101,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	this.getRendering           = function() { return _rendering;               }
 	this.getSelectedSwimbotID   = function() { return _selectedSwimbot;         }
 	this.getViewMode            = function() { return _viewTracking.getMode();  }
+    this.getNumDeadSwimbots     = function() { return _numDeadSwimbots;         }   
     
 	//--------------------------------------------------
 	// check to see if the camera navigation is active
