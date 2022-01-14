@@ -863,13 +863,13 @@ _position.copyFrom( position );
 	    if ( length === ZERO )
 	    {
 	        //console.log( "ZERO!!!" );
-	        _directionToGoal.x = -ONE_HALF + Math.random();
-	        _directionToGoal.y = -ONE_HALF + Math.random();
+	        _directionToGoal.x = -ONE_HALF + gpRandom();
+	        _directionToGoal.y = -ONE_HALF + gpRandom();
 	        length = _directionToGoal.getMagnitude();
 	    }
 	
-        _directionToGoal.x += ( -BRAIN_WANDER_AMOUNT * ONE_HALF + Math.random() * BRAIN_WANDER_AMOUNT );
-        _directionToGoal.y += ( -BRAIN_WANDER_AMOUNT * ONE_HALF + Math.random() * BRAIN_WANDER_AMOUNT );
+        _directionToGoal.x += ( -BRAIN_WANDER_AMOUNT * ONE_HALF + gpRandom() * BRAIN_WANDER_AMOUNT );
+        _directionToGoal.y += ( -BRAIN_WANDER_AMOUNT * ONE_HALF + gpRandom() * BRAIN_WANDER_AMOUNT );
         
         _directionToGoal.x /= length;
         _directionToGoal.y /= length;
@@ -1544,7 +1544,7 @@ let partAccelerationY = -strokeForceY;
 	//-----------------------------------------
 	this.getAttractiveness = function( judge )
 	{
-        let attractiveness = Math.random();
+        let attractiveness = gpRandom();
         
         let attractionCriterion = _brain.getAttractionCriterion();
         
@@ -1569,7 +1569,7 @@ let partAccelerationY = -strokeForceY;
         if ( attractionCriterion === ATTRACTION_SIMILAR_STRAIGHT) { attractiveness =        this.getStraightessSimilarity   ( judge ); }
         
         if ( attractionCriterion === ATTRACTION_CLOSEST         ) { attractiveness =        this.getCloseness               ( judge ); }
-        if ( attractionCriterion === ATTRACTION_RANDOM          ) { attractiveness =        Math.random(); }
+        if ( attractionCriterion === ATTRACTION_RANDOM          ) { attractiveness =        gpRandom(); }
     
         return attractiveness;
     }

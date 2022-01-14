@@ -128,8 +128,8 @@ const RENDER_SWIMBOT_AS_DOT     = false;
 const SWIMBOT_DOT_RENDER_RADIUS = 20;
 
 // Line 348 of Genotype.js I've modified to:
-// let amplitude = Math.floor( Math.random() * Math.random() * Math.random() * BYTE_SIZE );
-// Math.random() is cubed instead of squared. This makes the mutation amplitude lower
+// let amplitude = Math.floor( gpRandom() * gpRandom() * gpRandom() * BYTE_SIZE );
+// gpRandom() is cubed instead of squared. This makes the mutation amplitude lower
 // so that mutations don't appear totally random.
 
 // Also changed line 726 of the saveload.js file to:

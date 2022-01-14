@@ -56,8 +56,8 @@ function FoodBit()
         _index      = f;
         _energy     = DEFAULT_FOOD_BIT_ENERGY;  
         _opacity    = ZERO;
-        _position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
-        _position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
+        _position.x = POOL_LEFT + gpRandom() * POOL_WIDTH;
+        _position.y = POOL_TOP  + gpRandom() * POOL_HEIGHT;
         _type       = 0;
     }
 
@@ -68,7 +68,7 @@ function FoodBit()
 	{
 	    //console.log( "randomizeType" ) ;
 	    
-	    _type = Math.floor( Math.random() * 2 );
+	    _type = Math.floor( gpRandom() * 2 );
 	    
         this.setColorAccordingToType();
 	}
@@ -222,11 +222,11 @@ function FoodBit()
         this.randomizeSpawnPosition( parentFoodBit );
 
         /*
-        let xx = Math.random() * Math.random();
-        let yy = Math.random() * Math.random();
+        let xx = gpRandom() * gpRandom();
+        let yy = gpRandom() * gpRandom();
 
-        if ( Math.random() < ONE_HALF ) { xx *= -ONE; }
-        if ( Math.random() < ONE_HALF ) { yy *= -ONE; }
+        if ( gpRandom() < ONE_HALF ) { xx *= -ONE; }
+        if ( gpRandom() < ONE_HALF ) { yy *= -ONE; }
 
         _position.x += xx *= _maxSpawnRadius;
         _position.y += yy *= _maxSpawnRadius;
@@ -250,8 +250,8 @@ function FoodBit()
         
         if ( SPAWN_FOOD_RANDOMLY_IN_POOL )
         {
-            _position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
-            _position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
+            _position.x = POOL_LEFT + gpRandom() * POOL_WIDTH;
+            _position.y = POOL_TOP  + gpRandom() * POOL_HEIGHT;
         }   
         
 
@@ -271,11 +271,11 @@ function FoodBit()
     {
         _position.set( parentFoodBit.getPosition() );
 
-        let xx = Math.random() * Math.random();
-        let yy = Math.random() * Math.random();
+        let xx = gpRandom() * gpRandom();
+        let yy = gpRandom() * gpRandom();
 
-        if ( Math.random() < ONE_HALF ) { xx *= -ONE; }
-        if ( Math.random() < ONE_HALF ) { yy *= -ONE; }
+        if ( gpRandom() < ONE_HALF ) { xx *= -ONE; }
+        if ( gpRandom() < ONE_HALF ) { yy *= -ONE; }
 
         _position.x += xx * _maxSpawnRadius;
         _position.y += yy * _maxSpawnRadius;
@@ -299,8 +299,8 @@ function FoodBit()
         
         if ( SPAWN_FOOD_RANDOMLY_IN_POOL )
         {
-            _position.x = POOL_LEFT + Math.random() * POOL_WIDTH;
-            _position.y = POOL_TOP  + Math.random() * POOL_HEIGHT;
+            _position.x = POOL_LEFT + gpRandom() * POOL_WIDTH;
+            _position.y = POOL_TOP  + gpRandom() * POOL_HEIGHT;
         }   
         
 

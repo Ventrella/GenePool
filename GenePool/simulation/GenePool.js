@@ -392,10 +392,10 @@ if ( mode === SimulationStartMode.SPECIES )
 {
     let s = POOL_WIDTH * 0.4;
 
-    let x = Math.random() * s;
-    let y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + Math.random() * s;
+    let x = gpRandom() * s;
+    let y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + gpRandom() * s;
     
-    if ( Math.random() < ONE_HALF )
+    if ( gpRandom() < ONE_HALF )
     {
         x = POOL_WIDTH - x;
     }
@@ -407,12 +407,12 @@ if ( mode === SimulationStartMode.SPECIES )
             //-----------------------------------------
             // yo, initial age is distributed
             //-----------------------------------------
-            let weightedRandomNormal = Math.random();
+            let weightedRandomNormal = gpRandom();
             
             //I'm running various tests - to understand why there's a sharp die-off when maximumLifeSpan is 15000. 
-            //let weightedRandomNormal = Math.random() * Math.random();
-            //let weightedRandomNormal = Math.random() * Math.random() * Math.random();
-            //let weightedRandomNormal = Math.sqrt( Math.random() );
+            //let weightedRandomNormal = gpRandom() * gpRandom();
+            //let weightedRandomNormal = gpRandom() * gpRandom() * gpRandom();
+            //let weightedRandomNormal = Math.sqrt( gpRandom() );
             
             
             let initialAge = YOUNG_AGE_DURATION + Math.floor( ( globalTweakers.maximumLifeSpan - YOUNG_AGE_DURATION ) * weightedRandomNormal );
@@ -420,7 +420,7 @@ if ( mode === SimulationStartMode.SPECIES )
             assert( ( initialAge >= YOUNG_AGE_DURATION ), "Genepool.js: startSimulation: ( initialAge >= YOUNG_AGE_DURATION )" );                        
             assert( ( initialAge <= globalTweakers.maximumLifeSpan ), "Genepool.js: startSimulation: ( initialAge <= globalTweakers.maximumLifeSpan )" );                        
             
-            let initialAngle    = getRandomAngleInDegrees(); //-180.0 + Math.random() * 360.0;
+            let initialAngle    = getRandomAngleInDegrees(); //-180.0 + gpRandom() * 360.0;
             let initialEnergy   = DEFAULT_SWIMBOT_HUNGER_THRESHOLD;
 
             //--------------------------------------------------
@@ -661,10 +661,10 @@ if ( mode === SimulationStartMode.SPECIES )
 	{
         for (let g=0; g<NUM_GENES; g++)
         {
-            _neighborhoodX[g] = -ONE + Math.random() * 2.0;
-            _neighborhoodY[g] = -ONE + Math.random() * 2.0;
+            _neighborhoodX[g] = -ONE + gpRandom() * 2.0;
+            _neighborhoodY[g] = -ONE + gpRandom() * 2.0;
             
-            if ( Math.random() < ONE_HALF )
+            if ( gpRandom() < ONE_HALF )
             {
                 _neighborhoodAxis[g] = false;
             }		    		
@@ -689,7 +689,7 @@ if ( mode === SimulationStartMode.SPECIES )
                       
             if ( globalTweakers.numFoodTypes === 2 )
             { 
-                n = Math.floor( Math.random() * 2 ); 
+                n = Math.floor( gpRandom() * 2 ); 
 
                 /*
                 //first half is one type, the other half is the other type...
@@ -719,10 +719,10 @@ if ( mode === SimulationStartMode.SPECIES )
 /*
 if ( mode === SimulationStartMode.SPECIES )
 {
-    lfoodBitPosition.x = Math.random() * POOL_WIDTH * 0.24;
-    foodBitPosition.y = Math.random() * POOL_HEIGHT;
+    lfoodBitPosition.x = gpRandom() * POOL_WIDTH * 0.24;
+    foodBitPosition.y = gpRandom() * POOL_HEIGHT;
     
-    if ( Math.random() < ONE_HALF )
+    if ( gpRandom() < ONE_HALF )
     {
         foodBitPosition.x = POOL_WIDTH - foodBitPosition.x;
     }
@@ -775,8 +775,8 @@ if ( mode === SimulationStartMode.SPECIES )
             _foodBits[f].initialize(f);
             p.setXY
             ( 
-                _poolCenter.x + ( -spread * ONE_HALF + Math.random() * spread ), 
-                _poolCenter.y + ( -spread * ONE_HALF + Math.random() * spread ) 
+                _poolCenter.x + ( -spread * ONE_HALF + gpRandom() * spread ), 
+                _poolCenter.y + ( -spread * ONE_HALF + gpRandom() * spread ) 
             );
              
             _foodBits[f].setPosition(p); 
@@ -811,9 +811,9 @@ if ( mode === SimulationStartMode.SPECIES )
         {
             let side = -range;
             
-            if ( Math.random() > ONE_HALF ) { side = range; }
-            let x = _poolCenter.x + side + Math.random() * spread;
-            let y = _poolCenter.y + Math.random() * spread;
+            if ( gpRandom() > ONE_HALF ) { side = range; }
+            let x = _poolCenter.x + side + gpRandom() * spread;
+            let y = _poolCenter.y + gpRandom() * spread;
             foodBitPosition.setXY( x, y ); 
         
             _foodBits[f].initialize(f);
@@ -886,12 +886,12 @@ if ( mode === SimulationStartMode.SPECIES )
         for (let f=0; f<_numFoodBits; f++)
         {            
             let s = POOL_WIDTH * 0.4;
-            p.x = Math.random() * s;
-            p.y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + Math.random() * s;
+            p.x = gpRandom() * s;
+            p.y = POOL_HEIGHT * ONE_HALF - s * ONE_HALF + + gpRandom() * s;
 
-            _foodBits[f].setType( Math.floor( Math.random() * 2 ) );
+            _foodBits[f].setType( Math.floor( gpRandom() * 2 ) );
     
-            if ( Math.random() < ONE_HALF )
+            if ( gpRandom() < ONE_HALF )
             {
                 p.x = POOL_WIDTH - p.x;
             }
@@ -1567,7 +1567,7 @@ if ( !this.getJunkDnaSimilarity( _myGenotype, _mateGenotype ) > NON_REPRODUCING_
                     // randomize the new food bit type, so that both
                     // food types have a chance to grow at the same rate.
                     //------------------------------------------------------
-                    newFoodType = Math.floor( Math.random() * 2 );
+                    newFoodType = Math.floor( gpRandom() * 2 );
 
                     //-------------------------------------------------------------------------------------
                     // make sure the number of food bits of both types do not exceed the maximum limit...
@@ -1681,8 +1681,8 @@ if ( !this.getJunkDnaSimilarity( _myGenotype, _mateGenotype ) > NON_REPRODUCING_
                 let f = this.findLowestDeadFoodBitInArray();
                 if ( f != NULL_INDEX )
                 {
-                    _vectorUtility.x = POOL_LEFT + POOL_WIDTH  * Math.random();
-                    _vectorUtility.y = POOL_TOP  + POOL_HEIGHT * Math.random();
+                    _vectorUtility.x = POOL_LEFT + POOL_WIDTH  * gpRandom();
+                    _vectorUtility.y = POOL_TOP  + POOL_HEIGHT * gpRandom();
                     _foodBits[f].initialize(f); 
                     _foodBits[f].setType(0); 
                     _foodBits[f].setPosition( _vectorUtility ); 
@@ -1696,8 +1696,8 @@ if ( !this.getJunkDnaSimilarity( _myGenotype, _mateGenotype ) > NON_REPRODUCING_
                 let f = this.findLowestDeadFoodBitInArray();
                 if ( f != NULL_INDEX )
                 {
-                    _vectorUtility.x = POOL_LEFT + POOL_WIDTH  * Math.random();
-                    _vectorUtility.y = POOL_TOP  + POOL_HEIGHT * Math.random();
+                    _vectorUtility.x = POOL_LEFT + POOL_WIDTH  * gpRandom();
+                    _vectorUtility.y = POOL_TOP  + POOL_HEIGHT * gpRandom();
                     _foodBits[f].initialize(f); 
                     _foodBits[f].setType(1); 
                     _foodBits[f].setPosition( _vectorUtility ); 
@@ -1739,7 +1739,7 @@ if ( globalTweakers.numFoodTypes === 2 )
     //-------------------------------------------------------
     // 50% chance of being born with the other food type...
     //-------------------------------------------------------
-    if ( Math.random() > ONE_HALF ) 
+    if ( gpRandom() > ONE_HALF ) 
     {
         childFoodType = 1;
         numFoodBitsOfChildType  = numType1FoodBits;
@@ -1899,7 +1899,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	this.findRandomLivingFoodBit = function( foodType )
 	{		
         /*
-	    let randomShift = Math.floor( Math.random() * MAX_FOODBITS );
+	    let randomShift = Math.floor( gpRandom() * MAX_FOODBITS );
 
         for (let i=0; i<MAX_FOODBITS; i++)
         {
@@ -1932,7 +1932,7 @@ if ( globalTweakers.numFoodTypes === 2 )
         
         while ( looking )
         {
-            let testIndex = Math.floor( Math.random() * ( MAX_FOODBITS - 1 ) );
+            let testIndex = Math.floor( gpRandom() * ( MAX_FOODBITS - 1 ) );
             
             //assert( testIndex < MAX_FOODBITS, "Genepool.js: testIndex < MAX_FOODBITS" );
             
@@ -2205,7 +2205,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	    if ( index != NULL_INDEX )
 	    {
             let initialAge      = YOUNG_AGE_DURATION;          
-            let initialAngle    = getRandomAngleInDegrees(); //-180.0 + Math.random() * 360.0;
+            let initialAngle    = getRandomAngleInDegrees(); //-180.0 + gpRandom() * 360.0;
             let initialEnergy   = DEFAULT_SWIMBOT_HUNGER_THRESHOLD;
         
             _myGenotype.randomize();
@@ -3315,7 +3315,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 /*
 for (let g=0; g<NUM_GENES; g++)
 {
-    swimbotDataArray[ numSwimbots ].genes[g] = Math.floor( Math.random() * 256.0 );               
+    swimbotDataArray[ numSwimbots ].genes[g] = Math.floor( gpRandom() * 256.0 );               
 }
 */
 //data.swimbotArray[s].genes = _myGenotype;

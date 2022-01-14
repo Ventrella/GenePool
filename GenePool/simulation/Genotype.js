@@ -72,7 +72,7 @@ function Genotype()
         //----------------------------------------------
 		for (let g=0; g<NUM_GENES; g++)
 		{
-			_genes[g] = Math.floor( Math.random() * BYTE_SIZE );
+			_genes[g] = Math.floor( gpRandom() * BYTE_SIZE );
             assert( _genes[g] < BYTE_SIZE, "Genotype: randomize: _genes[g] < BYTE_SIZE" );  
             assertInteger( _genes[g], "Genotype:randomize; assertInteger( _genes[g]" );	
 		}
@@ -164,7 +164,7 @@ function Genotype()
 	{ 
 	    let g = -1;
 	    
-//g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE ); // frequency
+//g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE ); // frequency
 g++; _genes[g] = 255;
         g++; _genes[g] =  70; //cutOff        
         
@@ -197,14 +197,14 @@ g++; _genes[g] = 255;
             g++; _genes[g] = 100;       //startLength     
             g++; _genes[g] = endLength; //endLength                 
             
-            g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE );  //amp             
-            g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE );  //phase      
-            g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE );  //turnAmp         
-            g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE );  //turnPhase       
-            g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE );  //branchAmp             
-            g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE );  //branchPhase      
-            g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE );  //branchTurnAmp         
-            g++; _genes[g] = Math.floor( Math.random() * BYTE_SIZE );  //branchTurnPhase       
+            g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE );  //amp             
+            g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE );  //phase      
+            g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE );  //turnAmp         
+            g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE );  //turnPhase       
+            g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE );  //branchAmp             
+            g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE );  //branchPhase      
+            g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE );  //branchTurnAmp         
+            g++; _genes[g] = Math.floor( gpRandom() * BYTE_SIZE );  //branchTurnPhase       
             
             g++; _genes[g] = 0;         //sequenceCount       
             g++; _genes[g] = 0;         //branchPeriod    
@@ -356,7 +356,7 @@ g++; _genes[g] = 255;
         // start with random parent either 1 or 2
         //-------------------------------------------
         let parent = 0;
-        if ( Math.random() < ONE_HALF )
+        if ( gpRandom() < ONE_HALF )
         {
             parent = 1;
         }
@@ -369,7 +369,7 @@ g++; _genes[g] = 255;
             //-----------------------------------
             // crossover - switch to other parent 
             //-----------------------------------
-            if ( Math.random() < CROSSOVER_RATE )
+            if ( gpRandom() < CROSSOVER_RATE )
             {
                 if ( parent === 0 )
                 {
@@ -406,7 +406,7 @@ g++; _genes[g] = 255;
             //-----------------------------------
             // mutation
             //-----------------------------------
-            if ( Math.random() < MUTATION_RATE ) 
+            if ( gpRandom() < MUTATION_RATE ) 
             {
                 this.mutateGene(g);
             }
@@ -430,7 +430,7 @@ g++; _genes[g] = 255;
 
 	    //console.log( "mutate gene " + g );
 	    
-        let amplitude = Math.floor( Math.random() * Math.random() * BYTE_SIZE );
+        let amplitude = Math.floor( gpRandom() * gpRandom() * BYTE_SIZE );
         //console.log( "amplitude = " + amplitude );
     
         //-------------------------------------
@@ -441,7 +441,7 @@ g++; _genes[g] = 255;
         assert( amplitude >= 0, "mutateGene:amplitude >= 0" );
         assert( amplitude < BYTE_SIZE, "mutateGene:amplitude < BYTE_SIZE" );
 
-        if ( Math.random() > ONE_HALF )
+        if ( gpRandom() > ONE_HALF )
         {
             let before = _genes[g];
             _genes[g] += amplitude;
@@ -477,7 +477,7 @@ g++; _genes[g] = 255;
 	{ 
         for (let g=0; g<NUM_GENES; g++ )
         {
-            if ( Math.random() < amount )
+            if ( gpRandom() < amount )
             {
                 this.mutateGene(g);
             }
