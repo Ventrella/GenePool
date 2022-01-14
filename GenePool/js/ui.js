@@ -522,7 +522,7 @@ function toggleSimulationRunning()
     else
     {
         genePool.setSimulationRunning( true ); 
-        document.getElementById( "freezeButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;
+        document.getElementById( "freezeButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR                
     }
 }
 
@@ -532,14 +532,14 @@ function toggleFastRendering()
     if ( _runningFast )
     {
         _runningFast = false;
-        genePool.setMillisecondsPerUpdate( 'default' );
-        document.getElementById( "fastButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;
+        genePool.setMillisecondsPerUpdate( 20 );
+        document.getElementById( "fastButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR                
     }
     else
     {
         _runningFast = true;
         genePool.setMillisecondsPerUpdate(0);
-        document.getElementById( "fastButton" ).style.borderColor = ACTIVE_BORDER_COLOR;             
+        document.getElementById( "fastButton" ).style.borderColor       = ACTIVE_BORDER_COLOR;             
         document.getElementById( "fastButton" ).style.borderWidth =  "3px";   
     }
 }

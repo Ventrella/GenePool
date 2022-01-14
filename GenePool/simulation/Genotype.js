@@ -17,6 +17,8 @@
 //const NUM_GENES = 100;
 const NUM_GENES = 256;
 
+const DONT_MUTATE_JUNK = true;
+
 //const MUTATION_RATE   = 0.0;
 //const MUTATION_RATE	= 0.01; // original
 //const MUTATION_RATE	= 0.05;
@@ -408,9 +410,15 @@ g++; _genes[g] = 255;
             //-----------------------------------
             if ( gpRandom() < MUTATION_RATE ) 
             {
-                this.mutateGene(g);
+                //if ( DONT_MUTATE_JUNK )
+                {
+                    //if ( g <= NUM_GENES_USED )
+                    {
+                        this.mutateGene(g);
+                    }
+                }
             }
-      
+            
             assert ( _genes[g] >= 0, "_genes[g] >=   0" );
             assert ( _genes[g] < BYTE_SIZE, "_genes[g] < BYTE_SIZE" );
             assertInteger( _genes[g], "Genotype: setAsOffspring: AFTER MUTATION...assertInteger: _genes[g]" );	
@@ -479,7 +487,13 @@ g++; _genes[g] = 255;
         {
             if ( gpRandom() < amount )
             {
-                this.mutateGene(g);
+                //if ( DONT_MUTATE_JUNK )
+                {
+                    //if ( g <= NUM_GENES_USED )
+                    {
+                        this.mutateGene(g);
+                    }
+                }
             }
         }
     }

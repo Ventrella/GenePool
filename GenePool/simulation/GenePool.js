@@ -2348,11 +2348,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	//-------------------------------------------
 	this.setMillisecondsPerUpdate = function(m)
 	{	
-        if (m == 'default') {
-            _millisecondsPerUpdate = DEFAULT_MILLISECONDS_PER_UPDATE;
-        } else {
-            _millisecondsPerUpdate = m;
-        }
+        _millisecondsPerUpdate = m;
     }
         
 
