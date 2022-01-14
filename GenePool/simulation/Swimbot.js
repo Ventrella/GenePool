@@ -1924,6 +1924,8 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
 	this.die = function()
 	{
         _alive = false;
+        
+        _numDeadSwimbots ++;
 	    
 	    //assert( _index != NULL_INDEX, "Swimbot.js: this.die: _index != NULL_INDEX" )
 	    if ( _index != NULL_INDEX )
