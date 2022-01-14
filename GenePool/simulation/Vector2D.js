@@ -167,8 +167,8 @@ function Vector2D()
 	//-----------------------------------------------------------
 	this.setToRandomLocationInDisk = function( position, radius )
 	{
-		let radian = PI2 * Math.random();
-		let magnitude = radius * Math.sqrt( Math.random() );
+		let radian = PI2 * gpRandom();
+		let magnitude = radius * Math.sqrt( gpRandom() );
 
         this.x = position.x + Math.sin( radian ) * magnitude;
         this.y = position.y + Math.cos( radian ) * magnitude;

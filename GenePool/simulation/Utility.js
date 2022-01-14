@@ -51,6 +51,6 @@
 	//-----------------------------------
 	function getRandomAngleInDegrees()
 	{
-		return -180.0 + Math.random() * 360.0;
+		return -180.0 + gpRandom() * 360.0;
 	}
 	

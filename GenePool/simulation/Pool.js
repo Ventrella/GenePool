@@ -227,8 +227,8 @@ const POOL_BOUNDARY_MARGIN      = 1200.0;
             _effectBlob[ _currentEffectBlob ].startTime = seconds;
             _effectBlob[ _currentEffectBlob ].radius = v;
             
-            //_effectBlob[ _currentEffectBlob ].xPosition = viewport.getPosition().x - v + v * 2 * Math.random(); 
-            //_effectBlob[ _currentEffectBlob ].yPosition = viewport.getPosition().y - v + v * 2 * Math.random();    
+            //_effectBlob[ _currentEffectBlob ].xPosition = viewport.getPosition().x - v + v * 2 * gpRandom(); 
+            //_effectBlob[ _currentEffectBlob ].yPosition = viewport.getPosition().y - v + v * 2 * gpRandom();    
 
             _effectBlob[ _currentEffectBlob ].xPosition = viewport.getPosition().x + v * Math.sin( _effectClock * 0.040 ); 
             _effectBlob[ _currentEffectBlob ].yPosition = viewport.getPosition().y + v * Math.sin( _effectClock * 0.080 ); 
