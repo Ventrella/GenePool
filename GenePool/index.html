@@ -10,7 +10,6 @@
 <!--    This software is intended for education, game design, and research. -->
 <!--                                                                        -->
 <!-- ---------------------------------------------------------------------- -->
-
 <html>
 	<head>
 		<title>
@@ -28,7 +27,9 @@
 		     genePool.initialize(); 
 		     genePool.setCanvas( canvas ); 
 		     genePool.setCanvasDimensions( canvasID.width, canvasID.height );
-		     genePool.setShowingViewTrackingMode( true );"  
+		     genePool.setShowingViewTrackingMode( true );
+		     genePool.setUsingPseudoRandom( false );
+		     genePool.setPseudoRandomSeed( 'OttoTheDog' );"  
 		     
 		onresize = "resize();"		
 	>
@@ -833,7 +834,6 @@
             -->
         </div>                  
         
-        
 		<!-- ------------------------------------------------------------ -->
 		<!-- prepare the UI...                                            -->
 		<!-- turn on the info panel and set it to the first page...       -->
@@ -845,24 +845,5 @@
 		    setInfoPage(2);
 		    initializeUI();
         </script>
-        
-		<!-- ---------------------------------------------- -->
-		<!-- This is where to use a custom random function  -->
-		<!-- if we want to override Math.random()...        -->
-		<!-- ---------------------------------------------- -->
-		<script type = "text/javascript"> 	
-		
-            function gpInitializeRandom( seed )
-            {
-                //add the random seed if needed...
-            }
-		
-            function gpRandom()
-            {
-                //return someCustomRandomfunction(); // must return value >= 0 and < 1
-                return Math.random();
-            }
-        </script>
-		
 	</body>
 </html>
