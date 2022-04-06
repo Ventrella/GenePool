@@ -1,4 +1,4 @@
-<!-- ---------------------------------------------------------------------- -->
+﻿<!-- ---------------------------------------------------------------------- -->
 <!--                                                                        -->
 <!--    This file is part of GenePool Swimbots.                             -->
 <!--    Copyright (c) 2021 by Jeffrey Ventrella - All Rights Reserved.      -->
@@ -22,12 +22,14 @@
         <meta property = "og:url"           content = "http://www.swimbots.com/genepool/"/>
 	</head>
 	<body 
-		onload = 
-		    "genePool = new GenePool(); 
-		     genePool.initialize(); 
-		     genePool.setCanvas( canvas ); 
+		onload = "
+		     // perform renderer specific system configuration
+		     configureRenderer();
+		     // fire up the pool
+		     genePool = new GenePool();
+		     genePool.initialize( canvas );
 		     genePool.setCanvasDimensions( canvasID.width, canvasID.height );
-		     genePool.setShowingViewTrackingMode( true );"  
+		     genePool.setShowingViewTrackingMode( true );"
 		     
 		onresize = "resize();"		
 	>
@@ -60,7 +62,6 @@
 		<script type = "text/javascript" src = "simulation/Genotype.js"  	    ></script>
 		<script type = "text/javascript" src = "simulation/Embryology.js"       ></script>
 		<script type = "text/javascript" src = "simulation/Brain.js"            ></script>
-		<script type = "text/javascript" src = "simulation/SwimbotRenderer.js"  ></script>
 		<script type = "text/javascript" src = "simulation/Swimbot.js"  	  	></script>
 		<script type = "text/javascript" src = "simulation/Touch.js"		    ></script>		
 		<script type = "text/javascript" src = "simulation/ViewTracking.js"     ></script>		
@@ -68,6 +69,26 @@
 		<script type = "text/javascript" src = "simulation/PhyloTree.js"        ></script>		
 		<script type = "text/javascript" src = "simulation/Obstacle.js"         ></script>		
 		<script type = "text/javascript" src = "simulation/GenePool.js"         ></script> 
+
+		<!-- -------------------------------------------------------------------------- -->
+		<!-- 2D render code																-->
+		<!-- -------------------------------------------------------------------------- -->
+		<script type="text/javascript" src="renderCanvas/SwimbotRenderer.js"></script>
+		<script type="text/javascript" src="renderCanvas/FoodBitRenderer.js"></script>
+		<script type="text/javascript" src="renderCanvas/PoolRenderer.js"></script>
+		<script type="text/javascript" src="renderCanvas/Renderer.js"></script>
+
+		<!-- -------------------------------------------------------------------------- -->
+		<!-- 3D render code																-->
+		<!-- -------------------------------------------------------------------------- -->
+		<!--
+		<script type="text/javascript" src="render3d/GenePool3d/ext/jquery-3.4.1.min.js"></script>
+		<script type='text/javascript' src='render3d/GenePool3d/genePool3D.js'></script>
+		<script type="text/javascript" src="render3d/SwimbotRenderer.js"></script>
+		<script type="text/javascript" src="render3d/FoodBitRenderer.js"></script>
+		<script type="text/javascript" src="render3d/PoolRenderer.js"></script>
+		<script type="text/javascript" src="render3d/Renderer.js"></script>
+		-->
 		
 		<!-- ------------------------------------------------------------------------- -->
 		<!-- all the javascript files (other than the simulation) are loaded here...   -->

@@ -29,8 +29,20 @@ function Obstacle()
         this.position   = new Vector2D();
         this.hovered    = false;
         this.moved      = false;
-        this.color      = "rgb( 100, 100, 100 )"
-        
+        this.color      = new Color( ONE, ONE, ONE, ONE );
+
+        //----------------------------
+        // getters
+        //----------------------------
+        this.getColor     = function() { return this.color; }
+        this.getPosition  = function() { return this.position; }
+        this.getHovered   = function() { return this.hovered; }
+        this.getEndRadius = function() { return END_RADIUS; }
+        this.getHoverRadius = function() {
+            if ( this.moved ) { return END_MOVE_RADIUS;  }
+            else              { return END_HOVER_RADIUS; }
+        }
+
         //----------------------------
         this.setColor = function(c)
         {
@@ -61,41 +73,7 @@ function Obstacle()
 
             return false;
         }
-        
-        //----------------------------
-        this.render = function( camera )
-        {
-            canvas.fillStyle = this.color;	    
-    
-            canvas.beginPath();
-            canvas.arc( this.position.x, this.position.y, END_RADIUS, 0, PI2, false );
-            canvas.fill();
-            canvas.closePath();	
 
-            canvas.lineWidth = 0.003 * camera.getScale(); 	
-
-            canvas.strokeStyle = "rgba( 0, 0, 0, 0.4 )";
-            canvas.beginPath();
-            canvas.arc( this.position.x, this.position.y, END_RADIUS, 0, PI2, false );
-            canvas.stroke();
-            canvas.closePath();	
-
-            if ( this.hovered )
-            {
-                let r = END_HOVER_RADIUS;
-                if ( this.moved )
-                {
-                    r = END_MOVE_RADIUS;
-                }
-            
-                canvas.strokeStyle = "rgba(255, 255, 255, 0.4 )";
-                canvas.beginPath();
-                canvas.arc( this.position.x, this.position.y, r, 0, PI2, false );
-                canvas.stroke();
-                canvas.closePath();	
-            }
-
-        }
     } // end of obstacle endpoint
     
 //const COLLISION_FORCE = 10;
@@ -114,10 +92,20 @@ function Obstacle()
     let _collisionForce = new Vector2D();
     let _length         = ZERO;
 
-    
+    let _wallColor      = new Color( 200/255, 200/255, 200/255, 1.0 );
+    let _end1Color      = new Color( 200/255, 150/255, 100/255, 1.0 );
+    let _end2Color      = new Color( 100/255, 150/255, 200/255, 1.0 );
+
     // set colors....
-    _end1.setColor( "rgb( 200, 150, 100 )" );
-    _end2.setColor( "rgb( 100, 150, 200 )" );
+    _end1.setColor( _end1Color );
+    _end2.setColor( _end2Color );
+
+    //-------------------------------------------------
+    // getters
+    //------------------------------------------------
+	this.getWallColor = function() { return _wallColor; }
+	this.getEnd1Color = function() { return _end1Color; }
+	this.getEnd2Color = function() { return _end2Color; }
 
     //-------------------------------------------------
     // set the endpoints of the obstacle
@@ -361,56 +349,14 @@ function Obstacle()
         else if ( _end2.position.x < left   ) { _end2.position.x = left;   }
              if ( _end2.position.y > bottom ) { _end2.position.y = bottom; }
         else if ( _end2.position.y < top    ) { _end2.position.y = top;    }
-	}
+    }
     
-	//--------------------------------
-	// render
-	//--------------------------------
-	this.render = function( camera )
-	{
-        //--------------------------------------------
-        // show main shaft
-        //--------------------------------------------
-        canvas.strokeStyle = "rgb( 200, 200, 200 )";	    
-        canvas.lineWidth = END_RADIUS;
-        canvas.beginPath();
-        canvas.moveTo( _end1.position.x, _end1.position.y );
-        canvas.lineTo( _end2.position.x, _end2.position.y );
-        canvas.closePath();
-        canvas.stroke();
-
-        /*
-        //--------------------------------------------
-        // show perpendicular
-        //--------------------------------------------
-        canvas.strokeStyle = "rgb( 255, 255, 100 )";	    
-        canvas.lineWidth = 2;
-        canvas.beginPath();
-        canvas.moveTo( _mid.x,  _mid.y  );
-        canvas.lineTo( _mid.x + _perp.x * 100, _mid.y + _perp.y * 100 );
-        canvas.closePath();
-        canvas.stroke();
-        
-        //--------------------------------------------
-        // show mid point
-        //--------------------------------------------
-        canvas.fillStyle = "rgb( 0, 0, 0 )";	    
-        canvas.beginPath();
-        canvas.arc( _mid.x, _mid.y, 5, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	
-        */
-        
-        //-----------------------
-        // show ends
-        //-----------------------
-        _end1.render( camera );
-        _end2.render( camera );
+    //--------------------------------
+    // render
+    //--------------------------------
+    this.render = function( camera )
+    {
+        globalRenderer.getPoolRenderer().renderObsticle( _end1, _end2, END_RADIUS, _wallColor, camera );
     }
 }
-
-
-
-
-
 

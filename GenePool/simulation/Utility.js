@@ -11,16 +11,42 @@
 //                                                                        
 // -------------------------------------------------------------------------- 
 
-
-
 	//-----------------------------------
 	// color
+    // all values should be 0.0 to 1.0
 	//-----------------------------------
-    function Color()
+    function Color( red, green, blue, opacity )
     {
-        this.red   = ZERO;
-        this.green = ZERO;
-        this.blue  = ZERO;
+		//	let color = new Color()  (defaults)
+        if (red === undefined) {
+            this.red     = 1.0;
+            this.green   = 1.0;
+            this.blue    = 1.0;
+            this.opacity = 1.0;
+        }
+		//	let color = new Color( r, g, b, a )
+		else {
+            this.red     = red;
+            this.green   = green;
+            this.blue    = blue;
+            this.opacity = opacity;
+        }
+
+		this.set = function( red, green, blue, opacity ) {
+			this.red     = red;
+			this.green   = green;
+			this.blue    = blue;
+			this.opacity = opacity;
+		}
+
+        // css style 'rgba' for HTML canvas rendering
+        this.rgba = function() {
+           return "rgba( " 
+            + Math.floor( this.red   * 255 ) + ", " 
+            + Math.floor( this.green * 255 ) + ", " 
+            + Math.floor( this.blue  * 255 ) + ", "
+            + this.opacity + ")";
+        }
     }
 
 	//-----------------------------------

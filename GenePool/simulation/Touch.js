@@ -83,19 +83,17 @@ function Touch()
 	}    
 	
     //------------------------------
-    // render
+    // render (optinal debug)
     //------------------------------
 	this.render = function() 
 	{ 
-		if ( _state === TouchState.BEEN_UP   ) { canvas.fillStyle = "rgb(   0,   0,   0 )"; }
-		if ( _state === TouchState.JUST_DOWN ) { canvas.fillStyle = "rgb( 244, 244, 244 )"; }
-		if ( _state === TouchState.BEEN_DOWN ) { canvas.fillStyle = "rgb(   0, 244,   0 )"; }
-		if ( _state === TouchState.JUST_UP   ) { canvas.fillStyle = "rgb( 244,   0,   0 )"; }
-		
-		canvas.beginPath();
-        canvas.arc( _x, _y, 10.0, 0, PI2, false );
-		canvas.fill();
-		canvas.closePath();
+		let lineWidth = 4;
+        let color = new Color(1,1,1,1);
+        if ( _state === TouchState.BEEN_UP   ) { color.set(  0, 0, 0, 1 ); }	// black
+        if ( _state === TouchState.JUST_DOWN ) { color.set(  1, 1, 1, 1 ); }	// white
+        if ( _state === TouchState.BEEN_DOWN ) { color.set(  0, 1, 0, 1 ); }	// green
+        if ( _state === TouchState.JUST_UP   ) { color.set(  1, 0, 0, 1 ); }	// red
+        globalRenderer.renderCircle( {x:_x, y:_y}, 10.0, color, lineWidth, 0, true );
 	}    
 	
     //-----------------------------------------------

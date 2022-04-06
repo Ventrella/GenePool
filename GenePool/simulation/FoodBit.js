@@ -24,9 +24,8 @@ const DEFAULT_FOOD_BIT_ENERGY           = 50.0;  //when eaten, swimbot gets this
 const FOOD_BIT_SIZE_VIEW_SCALE          = 0.03; //increase with view scale (a kind of LOD)
 const FOOD_BIT_GRAB_RADIUS              = 20.0;  // radius for grabbing food bit
 const FOOD_BIT_BOUNDARY_MARGIN          = POOL_WIDTH * 0.01; // important value - creates empty space from wall
-const FOOD_BIT_COLOR_COMPONENTS         = "100, 200, 100";	
-const FOOD_BIT_ROLLOVER_COLOR           = "rgba( 100, 200, 100, 0.5 )";	
-const FOOD_BIT_SELECT_COLOR             = "rgba( 200, 200, 200, 1.0 )";	
+const FOOD_BIT_ROLLOVER_COLOR           = new Color( 100/255, 200/255, 100/255, 0.05 );	
+const FOOD_BIT_SELECT_COLOR             = new Color( 140/255, 240/255, 140/255, 0.10 );
 const FOOD_OPACITY_INCREMENT            = 0.01;
 
 //const FOOD_TYPE_NULL   = -1;
@@ -45,8 +44,25 @@ function FoodBit()
     let _green          = ZERO;
     let _blue           = ZERO;
     let _opacity        = ZERO;
+	let _foodBitColor   = new Color( _red, _green, _blue, _opacity );
     let _index          = NULL_INDEX;
     let _maxSpawnRadius = DEFAULT_FOOD_BIT_MAX_SPAWN_RADIUS;
+
+	//----------------------------
+	// getters
+	//---------------------------
+	this.getPosition      = function() { return _position;    }
+	this.getEnergy        = function() { return _energy;      }
+	this.getType          = function() { return _type;   }
+	this.getIndex         = function() { return _index;       }
+    this.getAlive         = function() { return ( _index != NULL_INDEX ); }
+
+	this.getSize          = function() { return FOOD_BIT_SIZE;             }
+	this.getSizeViewScale = function() { return FOOD_BIT_SIZE_VIEW_SCALE;  }
+	this.getGrabRadius    = function() { return FOOD_BIT_GRAB_RADIUS;      }
+	this.getRolloverColor = function() { return FOOD_BIT_ROLLOVER_COLOR;   }
+	this.getSelectColor   = function() { return FOOD_BIT_SELECT_COLOR;     }
+	this.getColor         = function() { _foodBitColor.set( _red, _green, _blue, _opacity ); return _foodBitColor; }
 
     //--------------------------------------------------------
     // initialize
@@ -367,17 +383,11 @@ function FoodBit()
     this.kill = function()
     {	
         _index = NULL_INDEX;
+
+		//	dispose of the body
+		globalRenderer.getFoodBitRenderer().releaseRenderAssets( this );
     }
     
-	//----------------------------
-	// getters
-	//---------------------------
-	this.getPosition    = function() { return _position;    }
-	this.getEnergy      = function() { return _energy;      }
-	this.getType   = function() { return _type;   }
-	this.getIndex       = function() { return _index;       }
-    this.getAlive       = function() { return ( _index != NULL_INDEX ); }
-
 	//----------------------------
 	// update
 	//----------------------------
@@ -396,64 +406,5 @@ function FoodBit()
 	        }
         }	
     }
-    
-    
-	//--------------------------------
-	// render
-	//--------------------------------
-	this.render = function( vewScale )
-	{
-        //canvas.fillStyle = "rgba( " + FOOD_BIT_COLOR_COMPONENTS + ", " + _opacity + ")";	    
 
-        canvas.fillStyle 
-        = "rgba( " 
-        + Math.floor( _red   * 255 ) + ", " 
-        + Math.floor( _green * 255 ) + ", " 
-        + Math.floor( _blue  * 255 ) + ", "
-        + _opacity + ")";	    
-	    
-	    let radius = FOOD_BIT_SIZE + vewScale * FOOD_BIT_SIZE_VIEW_SCALE * FOOD_BIT_SIZE_VIEW_SCALE;
-	    
-        canvas.beginPath();
-        canvas.arc( _position.x, _position.y, radius, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	
-    }
-
-	//----------------------------
-	// render moused-over outline
-	//---------------------------
-	this.renderMousedOverOutline = function( viewScale )
-	{
-	    this.showSelectCircle( viewScale, FOOD_BIT_ROLLOVER_COLOR );
-    }
-
-	//----------------------------
-	// render select outline
-	//---------------------------
-	this.renderSelectOutline = function( viewScale )
-	{
-	    this.showSelectCircle( viewScale, FOOD_BIT_SELECT_COLOR );
-    }
-    
-	//-----------------------------------------------------
-	this.showSelectCircle = function( viewScale, color )
-    {
-	    let lineWidth = 1.0 + 0.005 * viewScale; 	
-        
-        canvas.lineWidth = lineWidth;
-        canvas.strokeStyle = "rgba( 100, 200, 100, 0.05 )";	
-        canvas.beginPath();
-        canvas.arc( _position.x, _position.y, FOOD_BIT_GRAB_RADIUS, 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();	
-
-        canvas.lineWidth = lineWidth * 0.3;
-        canvas.strokeStyle = "rgba( 100, 200, 100, 0.1 )";	
-        canvas.beginPath();
-        canvas.arc( _position.x, _position.y, FOOD_BIT_GRAB_RADIUS, 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();		    
-     }
-       
 }

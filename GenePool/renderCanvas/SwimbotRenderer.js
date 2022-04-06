@@ -15,6 +15,7 @@
 
 function SwimbotRenderer()
 {
+	let _canvas = null;		// set during initialization
 
 var    flopperX = 0;
 var    flopperY = 0;
@@ -42,33 +43,27 @@ var    flopperYV = 0;
     //---------------------------------
     const EGG_SIZE = 5.0;
 
+	//	for debug trails
+    const TRAIL_LENGTH = 100;
 
 	//--------------------------------
-	// variables
+	// variables from swimbot
 	//--------------------------------
-	let _colorUtility   = new Color();
 	let _phenotype      = new Phenotype(); 
 	let _growthScale    = ZERO;
 	let _focusDirection = new Vector2D();
 	let _brain          = new Brain();
 	let _age            = 1000;
 	let _energy         = ZERO;
+	let _parentPosition = new Vector2D();
+
+	//--------------------------------
+	// local variables
+	//--------------------------------
+	let _colorUtility   = new Color( ZERO, ZERO, ZERO, ONE );
 	let _splineFactor   = ZERO;
 	let _renderingGenitalsAndMouths = false;
-
-	//----------------------------------------------------
-	// get part parent position
-	//----------------------------------------------------
-	this.getPartParentPosition = function(p)
-	{
-		if ( _phenotype.parts[p].parent == NULL_PART )
-		{
-			return _phenotype.parts[0].position;
-		}
-
-		return _phenotype.parts[ _phenotype.parts[p].parent ].position;
-	}
-
+	let _debugTrail     = new Array( TRAIL_LENGTH ); 
 
 	//-------------------------------------------
 	// set rendering goals
@@ -78,70 +73,76 @@ var    flopperYV = 0;
 	    _renderingGenitalsAndMouths = r;
     }
 
+	//-------------------------------------
+	// initialize - one time setup
+	//-------------------------------------
+	this.initialize = function( canvas )
+	{
+		_canvas = canvas;
+
+		//-------------------------------------
+		// create trail array
+		//-------------------------------------
+		for (let t=0; t<TRAIL_LENGTH; t++)
+		{
+			_debugTrail[t] = new Vector2D(); 
+		}	
+	}
+
+	//------------------------------------------------
+	//	dispose of render assets for a given swimmer
+	//------------------------------------------------
+	this.releaseRenderAssets = function( swimmer ) {
+		//	2D renderer currently has no assets
+	}
 
 	//-----------------------
 	// render
 	//-----------------------
-	this.render = function
-	( 
-	    phenotype, 
-	    brain, 
-	    age,
-	    energy,
-	    growthScale, 
-	    focusDirection, 
-	    levelOfDetail 
-	)
+	this.render = function( swimbot, levelOfDetail )
 	{
-    	_phenotype      = phenotype;
-    	_brain          = brain;
-    	_age            = age;
-    	_energy         = energy;
-    	_growthScale    = growthScale;
-    	_focusDirection = focusDirection;
+    	_phenotype      = swimbot.getPhenotype();
+    	_brain          = swimbot.getBrain();
+    	_age            = swimbot.getAge();
+    	_energy         = swimbot.getEnergy();
+    	_growthScale    = swimbot.getGrowthScale();
+    	_focusDirection = swimbot.getFocusDirection();
         
 		if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_DOT )
 		{
 		    let p = 1;
 
             _colorUtility = this.calculatePartColor(p);  
-            
-            let red   = Math.floor( _colorUtility.red   * 255 );
-            let green = Math.floor( _colorUtility.green * 255 );
-            let blue  = Math.floor( _colorUtility.blue  * 255 );
-
-			canvas.fillStyle = "rgb( " + red + ", " + green + ", " + blue + " )";	
+			_canvas.fillStyle = _colorUtility.rgba();	
 		    
-            canvas.beginPath();
-            canvas.arc( _phenotype.parts[p].position.x, _phenotype.parts[p].position.y, SWIMBOT_DOT_RENDER_RADIUS, 0, PI2, false );
-            canvas.fill();
-            canvas.closePath();	    
+            _canvas.beginPath();
+            _canvas.arc( _phenotype.parts[p].position.x, _phenotype.parts[p].position.y, SWIMBOT_DOT_RENDER_RADIUS, 0, PI2, false );
+            _canvas.fill();
+            _canvas.closePath();	    
         }
 		else if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_LOW )
 		{
 			for (let p=1; p<_phenotype.numParts; p++)
 			{
-				let parentPosition = this.getPartParentPosition(p);
+				_parentPosition = swimbot.getPartParentPosition(p);
                 
-				_colorUtility = this.calculatePartColor(p);  
-                let red   = Math.floor( _colorUtility.red   * 255 );
-                let green = Math.floor( _colorUtility.green * 255 );
-                let blue  = Math.floor( _colorUtility.blue  * 255 );
+				_colorUtility = this.calculatePartColor(p);
+				_canvas.strokeStyle = _colorUtility.rgba();	
+				_canvas.lineWidth = _phenotype.parts[p].width * 2.0; 
 
-				canvas.strokeStyle = "rgb( " + red + ", " + green + ", " + blue + " )";	
-				canvas.lineWidth = _phenotype.parts[p].width * 2.0; 
-
-				canvas.beginPath();
-				canvas.moveTo( parentPosition.x, parentPosition.y );
-				canvas.lineTo( _phenotype.parts[p].position.x, _phenotype.parts[p].position.y );
-				canvas.closePath();
-				canvas.stroke();
+				_canvas.beginPath();
+				_canvas.moveTo( _parentPosition.x, _parentPosition.y );
+				_canvas.lineTo( _phenotype.parts[p].position.x, _phenotype.parts[p].position.y );
+				_canvas.closePath();
+				_canvas.stroke();
 			}	
 		}
 		else if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_HIGH )
 		{ 
 			for (let p=1; p<_phenotype.numParts; p++)
 			{
+				_parentPosition = swimbot.getPartParentPosition(p);
+
 				if ( _phenotype.parts[p].length > ZERO )
 				{
                     //--------------------------------------------
@@ -198,8 +199,8 @@ if ( _index === 0 )
 {
     if ( p === 4 )
     {
-        let xDiff = parentPosition.x - flopperX;
-        let yDiff = parentPosition.y - flopperY;
+        let xDiff = _parentPosition.x - flopperX;
+        let yDiff = _parentPosition.y - flopperY;
 
         let length = Math.sqrt( xDiff * xDiff + yDiff * yDiff );
         
@@ -224,13 +225,13 @@ if ( _index === 0 )
         flopperXV *= 0.99;
         flopperYV *= 0.99;
 
-        canvas.fillStyle = "rgb( 200, 100, 100 )";	
-        canvas.beginPath();
-        canvas.moveTo( parentPosition.x, parentPosition.y );
-        canvas.lineTo( flopperX, flopperY );
-        canvas.lineTo( position.x, position.y );
-        canvas.closePath();
-        canvas.fill();
+        _canvas.fillStyle = "rgb( 200, 100, 100 )";	
+        _canvas.beginPath();
+        _canvas.moveTo( _parentPosition.x, _parentPosition.y );
+        _canvas.lineTo( flopperX, flopperY );
+        _canvas.lineTo( position.x, position.y );
+        _canvas.closePath();
+        _canvas.fill();
     }					
 }					
 */
@@ -239,37 +240,37 @@ if ( _index === 0 )
 					//------------------------------------------
 					// show part mid position 
 					//------------------------------------------
-					canvas.fillStyle = "rgb( 244, 244, 244 )";	
-					canvas.beginPath();
-					canvas.arc( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y, 0.05, 0, PI2, false );
-					canvas.fill();
-					canvas.closePath();	
+					_canvas.fillStyle = "rgb( 244, 244, 244 )";	
+					_canvas.beginPath();
+					_canvas.arc( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y, 0.05, 0, PI2, false );
+					_canvas.fill();
+					_canvas.closePath();	
 					
 
 					//------------------------------------------
 					// show part velocity
 					//------------------------------------------
 					let scale = 12.0;
-					canvas.strokeStyle = "rgb( 255, 255, 0 )";	
-					canvas.beginPath();
-					canvas.moveTo( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y );
-                    canvas.lineTo( _phenotype.parts[p].midPosition.x - _phenotype.parts[p].velocity.x * scale, _phenotype.parts[p].midPosition.y - _phenotype.parts[p].velocity.y * scale );
+					_canvas.strokeStyle = "rgb( 255, 255, 0 )";	
+					_canvas.beginPath();
+					_canvas.moveTo( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y );
+                    _canvas.lineTo( _phenotype.parts[p].midPosition.x - _phenotype.parts[p].velocity.x * scale, _phenotype.parts[p].midPosition.y - _phenotype.parts[p].velocity.y * scale );
                     
                     // just show displacement of mid position
-                    //canvas.lineTo( _phenotype.parts[p].previousMid.x, _phenotype.parts[p].previousMid.y );
-					canvas.stroke();
-					canvas.closePath();	
+                    //_canvas.lineTo( _phenotype.parts[p].previousMid.x, _phenotype.parts[p].previousMid.y );
+					_canvas.stroke();
+					_canvas.closePath();	
 
 					//------------------------------------------
 					// show part perpendicular
 					//------------------------------------------
 					scale = 10.0;
-					canvas.strokeStyle = "rgb( 0, 255, 0 )";	
-					canvas.beginPath();
-					canvas.moveTo( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y );
-					canvas.lineTo( _phenotype.parts[p].midPosition.x + _phenotype.parts[p].perpendicular.x * scale, _phenotype.parts[p].midPosition.y + _phenotype.parts[p].perpendicular.y * scale );
-					canvas.stroke();
-					canvas.closePath();	
+					_canvas.strokeStyle = "rgb( 0, 255, 0 )";	
+					_canvas.beginPath();
+					_canvas.moveTo( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y );
+					_canvas.lineTo( _phenotype.parts[p].midPosition.x + _phenotype.parts[p].perpendicular.x * scale, _phenotype.parts[p].midPosition.y + _phenotype.parts[p].perpendicular.y * scale );
+					_canvas.stroke();
+					_canvas.closePath();	
 					*/
 				}
 			}
@@ -297,9 +298,8 @@ if ( _index === 0 )
 	//-----------------------------------
 	this.renderPartNormal = function(p)
 	{			
-        let width           = _phenotype.parts[p].width;
-        let position 		= _phenotype.parts[p].position;
-        let parentPosition  = this.getPartParentPosition(p);
+        let width     = _phenotype.parts[p].width;
+        let position  = _phenotype.parts[p].position;
         
         //---------------------------
         // baby growing...
@@ -315,11 +315,11 @@ if ( _index === 0 )
         let pp1x = _phenotype.parts[p].perpendicular.x * width;
         let pp1y = _phenotype.parts[p].perpendicular.y * width;
 
-        let x0 = parentPosition.x - pp1x;
-        let y0 = parentPosition.y - pp1y;
+        let x0 = _parentPosition.x - pp1x;
+        let y0 = _parentPosition.y - pp1y;
 
-        let x1 = parentPosition.x + pp1x;
-        let y1 = parentPosition.y + pp1y;
+        let x1 = _parentPosition.x + pp1x;
+        let y1 = _parentPosition.y + pp1y;
 
         let x2 = position.x + pp0x;
         let y2 = position.y + pp0y;
@@ -328,53 +328,49 @@ if ( _index === 0 )
         let y3 = position.y - pp0y;		
     
         _colorUtility = this.calculatePartColor(p);
-        let red   = Math.floor( _colorUtility.red   * 255 );
-        let green = Math.floor( _colorUtility.green * 255 );
-        let blue  = Math.floor( _colorUtility.blue  * 255 );
+		_canvas.fillStyle = _colorUtility.rgba();	
 
-        canvas.fillStyle = "rgb( " + red + ", " + green + ", " + blue + " )";	
-
-        canvas.beginPath();
-        canvas.moveTo( x0, y0 );
-        canvas.lineTo( x1, y1 );
-        canvas.lineTo( x2, y2 );
-        canvas.lineTo( x3, y3 );
-        canvas.closePath();
-        canvas.fill();
+        _canvas.beginPath();
+        _canvas.moveTo( x0, y0 );
+        _canvas.lineTo( x1, y1 );
+        _canvas.lineTo( x2, y2 );
+        _canvas.lineTo( x3, y3 );
+        _canvas.closePath();
+        _canvas.fill();
         
         let radius = width;
 
-        canvas.beginPath();
-        canvas.arc( position.x, position.y, radius, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	
+        _canvas.beginPath();
+        _canvas.arc( position.x, position.y, radius, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	
 
-        canvas.beginPath();
-        canvas.arc( parentPosition.x, parentPosition.y, radius, 0, PI2, false );								
-        canvas.fill();
-        canvas.closePath();	
+        _canvas.beginPath();
+        _canvas.arc( _parentPosition.x, _parentPosition.y, radius, 0, PI2, false );								
+        _canvas.fill();
+        _canvas.closePath();	
 
         //--------------------------------
         // outline
         //--------------------------------
-        canvas.lineWidth = 1.0; 
-        canvas.strokeStyle = OUTLINE_COLOR
+        _canvas.lineWidth = 1.0; 
+        _canvas.strokeStyle = OUTLINE_COLOR
 
         let radian = _phenotype.parts[p].currentAngle * PI_OVER_180;
 
-        canvas.beginPath();
-        canvas.arc( parentPosition.x, parentPosition.y, radius, Math.PI - radian, Math.PI - radian + Math.PI, false );
-        canvas.stroke();
-        canvas.closePath();	    
+        _canvas.beginPath();
+        _canvas.arc( _parentPosition.x, _parentPosition.y, radius, Math.PI - radian, Math.PI - radian + Math.PI, false );
+        _canvas.stroke();
+        _canvas.closePath();	    
 
-        canvas.beginPath();
-        canvas.moveTo( x1, y1 );
-        canvas.lineTo( x2, y2 );
-        canvas.arc( position.x, position.y, radius, -radian, -radian + Math.PI, false );
-        canvas.moveTo( x0, y0 );
-        canvas.lineTo( x3, y3 );
-        canvas.stroke();
-        canvas.closePath();	
+        _canvas.beginPath();
+        _canvas.moveTo( x1, y1 );
+        _canvas.lineTo( x2, y2 );
+        _canvas.arc( position.x, position.y, radius, -radian, -radian + Math.PI, false );
+        _canvas.moveTo( x0, y0 );
+        _canvas.lineTo( x3, y3 );
+        _canvas.stroke();
+        _canvas.closePath();	
     }
 
 
@@ -389,7 +385,6 @@ if ( _index === 0 )
 	{
 	    let parentIndex     = _phenotype.parts[p].parent;
         let position 		= _phenotype.parts[p].position;
-        let parentPosition  = this.getPartParentPosition(p);
         let width           = _phenotype.parts[p].width;
         let parentWidth     = _phenotype.parts[ parentIndex ].width;
 
@@ -468,16 +463,16 @@ if ( _index === 0 )
         //---------------------------------------------------------------------------------------
         // create the start and end points and the control points for the Bezier curve...
         //---------------------------------------------------------------------------------------
-        let startLeftX      = parentPosition.x  - perpStartX;
-        let startLeftY      = parentPosition.y  - perpStartY;
-        let startRightX     = parentPosition.x  + perpStartX;
-        let startRightY     = parentPosition.y  + perpStartY;
-        let control1X       = parentPosition.x                  + control1VectorX;
-        let control1Y       = parentPosition.y                  + control1VectorY;
-        let control1LeftX   = parentPosition.x  - perpStartX    + control1VectorX;
-        let control1LeftY   = parentPosition.y  - perpStartY    + control1VectorY;
-        let control1RightX  = parentPosition.x  + perpStartX    + control1VectorX;
-        let control1RightY  = parentPosition.y  + perpStartY    + control1VectorY;
+        let startLeftX      = _parentPosition.x  - perpStartX;
+        let startLeftY      = _parentPosition.y  - perpStartY;
+        let startRightX     = _parentPosition.x  + perpStartX;
+        let startRightY     = _parentPosition.y  + perpStartY;
+        let control1X       = _parentPosition.x                  + control1VectorX;
+        let control1Y       = _parentPosition.y                  + control1VectorY;
+        let control1LeftX   = _parentPosition.x  - perpStartX    + control1VectorX;
+        let control1LeftY   = _parentPosition.y  - perpStartY    + control1VectorY;
+        let control1RightX  = _parentPosition.x  + perpStartX    + control1VectorX;
+        let control1RightY  = _parentPosition.y  + perpStartY    + control1VectorY;
 
         let endLeftX        = position.x        - perpEndX;
         let endLeftY        = position.y        - perpEndY;
@@ -490,33 +485,27 @@ if ( _index === 0 )
         let control2RightX  = position.x        + perpEndX      + control2VectorX;
         let control2RightY  = position.y        + perpEndY      + control2VectorY;
 
-
         //---------------------------------------
         // get color
         //---------------------------------------
         _colorUtility = this.calculatePartColor(p);
-        let red   = Math.floor( _colorUtility.red   * 255 );
-        let green = Math.floor( _colorUtility.green * 255 );
-        let blue  = Math.floor( _colorUtility.blue  * 255 );
-
-        canvas.fillStyle = "rgb( " + red + ", " + green + ", " + blue + " )";	
-        canvas.strokeStyle = OUTLINE_COLOR;
-
+		_canvas.fillStyle = _colorUtility.rgba();	
+        _canvas.strokeStyle = OUTLINE_COLOR;
 
         //---------------------------------------
         // the beginning of a series of parts
         //---------------------------------------
         if ( p === 1 )
         {
-            canvas.beginPath();
-            canvas.arc( _phenotype.parts[ parentIndex ].position.x, _phenotype.parts[ parentIndex ].position.y, width, 0, PI2, false );
-            canvas.fill();
-            canvas.closePath();	
+            _canvas.beginPath();
+            _canvas.arc( _phenotype.parts[ parentIndex ].position.x, _phenotype.parts[ parentIndex ].position.y, width, 0, PI2, false );
+            _canvas.fill();
+            _canvas.closePath();	
             
             let radian = _phenotype.parts[ parentIndex ].currentAngle * PI_OVER_180;
             
-            canvas.beginPath();
-            canvas.arc
+            _canvas.beginPath();
+            _canvas.arc
             ( 
                 _phenotype.parts[ parentIndex ].position.x, 
                 _phenotype.parts[ parentIndex ].position.y, 
@@ -528,8 +517,8 @@ if ( _index === 0 )
                 false 
             );
             
-            canvas.stroke();
-            canvas.closePath();	    
+            _canvas.stroke();
+            _canvas.closePath();	    
         }
 
         //---------------------------------------
@@ -556,55 +545,55 @@ if ( _index === 0 )
             let c2x     = endRightX + axisNormalX * s;
             let c2y     = endRightY + axisNormalY * s;
 
-            canvas.beginPath();
-            canvas.moveTo( startx, starty );
-            canvas.bezierCurveTo( c1x, c1y, c2x, c2y, endx, endy );
-            canvas.closePath();	    
-            canvas.fill();
+            _canvas.beginPath();
+            _canvas.moveTo( startx, starty );
+            _canvas.bezierCurveTo( c1x, c1y, c2x, c2y, endx, endy );
+            _canvas.closePath();	    
+            _canvas.fill();
 
-            canvas.moveTo( startx, starty );
-            canvas.bezierCurveTo( c1x, c1y, c2x, c2y, endx, endy );
-            canvas.stroke();
+            _canvas.moveTo( startx, starty );
+            _canvas.bezierCurveTo( c1x, c1y, c2x, c2y, endx, endy );
+            _canvas.stroke();
 
             /*
-            canvas.fillStyle = "rgb( 255, 255, 0 )";
-            canvas.beginPath();
-            canvas.arc( startx, starty, 1.5, 0, PI2, false );
-            canvas.fill();
-            canvas.closePath();	    
+            _canvas.fillStyle = "rgb( 255, 255, 0 )";
+            _canvas.beginPath();
+            _canvas.arc( startx, starty, 1.5, 0, PI2, false );
+            _canvas.fill();
+            _canvas.closePath();	    
 
-            canvas.fillStyle = "rgb( 255, 255, 0 )";
-            canvas.beginPath();
-            canvas.arc( endx, endy, 1.5, 0, PI2, false );
-            canvas.fill();
-            canvas.closePath();	    
+            _canvas.fillStyle = "rgb( 255, 255, 0 )";
+            _canvas.beginPath();
+            _canvas.arc( endx, endy, 1.5, 0, PI2, false );
+            _canvas.fill();
+            _canvas.closePath();	    
 
-            canvas.fillStyle = "rgb( 255, 0, 0 )";
-            canvas.beginPath();
-            canvas.arc( c1x, c1y, 0.5, 0, PI2, false );
-            canvas.fill();
-            canvas.closePath();	    
+            _canvas.fillStyle = "rgb( 255, 0, 0 )";
+            _canvas.beginPath();
+            _canvas.arc( c1x, c1y, 0.5, 0, PI2, false );
+            _canvas.fill();
+            _canvas.closePath();	    
 
-            canvas.fillStyle = "rgb( 255, 0, 0 )";
-            canvas.beginPath();
-            canvas.arc( c2x, c2y, 0.5, 0, PI2, false );
-            canvas.fill();
-            canvas.closePath();	    
+            _canvas.fillStyle = "rgb( 255, 0, 0 )";
+            _canvas.beginPath();
+            _canvas.arc( c2x, c2y, 0.5, 0, PI2, false );
+            _canvas.fill();
+            _canvas.closePath();	    
             */
 
 
             /*
-            canvas.beginPath();
-            canvas.arc( position.x, position.y, width, 0, PI2, false );
-            canvas.fill();
-            canvas.closePath();	
+            _canvas.beginPath();
+            _canvas.arc( position.x, position.y, width, 0, PI2, false );
+            _canvas.fill();
+            _canvas.closePath();	
             
             let radian = ( _phenotype.parts[p].currentAngle + 180 ) * PI_OVER_180;
             
-            canvas.beginPath();
-            canvas.arc( position.x, position.y, width, Math.PI - radian, Math.PI - radian + Math.PI, false );
-            canvas.stroke();
-            canvas.closePath();	 
+            _canvas.beginPath();
+            _canvas.arc( position.x, position.y, width, Math.PI - radian, Math.PI - radian + Math.PI, false );
+            _canvas.stroke();
+            _canvas.closePath();	 
             */
              
         }
@@ -612,182 +601,182 @@ if ( _index === 0 )
         //---------------------------------------
         // fill interior
         //---------------------------------------
-        canvas.beginPath();
-        canvas.moveTo( startLeftX, startLeftY );
-        canvas.bezierCurveTo( control1LeftX, control1LeftY, control2LeftX, control2LeftY, endLeftX, endLeftY );
-        canvas.lineTo( endRightX, endRightY );
-        canvas.bezierCurveTo( control2RightX, control2RightY, control1RightX, control1RightY, startRightX, startRightY );
-        canvas.lineTo( startLeftX, startLeftY );
-        canvas.closePath();	    
-        canvas.fill();	
+        _canvas.beginPath();
+        _canvas.moveTo( startLeftX, startLeftY );
+        _canvas.bezierCurveTo( control1LeftX, control1LeftY, control2LeftX, control2LeftY, endLeftX, endLeftY );
+        _canvas.lineTo( endRightX, endRightY );
+        _canvas.bezierCurveTo( control2RightX, control2RightY, control1RightX, control1RightY, startRightX, startRightY );
+        _canvas.lineTo( startLeftX, startLeftY );
+        _canvas.closePath();	    
+        _canvas.fill();	
 
-        canvas.beginPath();
-        canvas.arc( parentPosition.x, parentPosition.y, parentWidth * 0.9, 0, PI2, false );								
-        canvas.fill();
-        canvas.closePath();	
+        _canvas.beginPath();
+        _canvas.arc( _parentPosition.x, _parentPosition.y, parentWidth * 0.9, 0, PI2, false );								
+        _canvas.fill();
+        _canvas.closePath();	
 
         //---------------------------------------
         // draw outline
         //---------------------------------------
-        canvas.lineWidth = 1.0;       	
-        canvas.beginPath();
-        canvas.moveTo( startLeftX, startLeftY );
-        canvas.bezierCurveTo( control1LeftX, control1LeftY, control2LeftX, control2LeftY, endLeftX, endLeftY );
-        canvas.moveTo( endRightX, endRightY );
-        canvas.bezierCurveTo( control2RightX, control2RightY, control1RightX, control1RightY, startRightX, startRightY );
-        canvas.stroke();								
-        canvas.closePath();	
+        _canvas.lineWidth = 1.0;       	
+        _canvas.beginPath();
+        _canvas.moveTo( startLeftX, startLeftY );
+        _canvas.bezierCurveTo( control1LeftX, control1LeftY, control2LeftX, control2LeftY, endLeftX, endLeftY );
+        _canvas.moveTo( endRightX, endRightY );
+        _canvas.bezierCurveTo( control2RightX, control2RightY, control1RightX, control1RightY, startRightX, startRightY );
+        _canvas.stroke();								
+        _canvas.closePath();	
 
 
 
         /*
-        canvas.fillStyle = "rgb( 0, 0, 0 )";
-        canvas.beginPath();
-        canvas.arc( position.x, position.y, 1.0, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	    
+        _canvas.fillStyle = "rgb( 0, 0, 0 )";
+        _canvas.beginPath();
+        _canvas.arc( position.x, position.y, 1.0, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	    
 
-        canvas.fillStyle = "rgb( 0, 0, 0 )";
-        canvas.beginPath();
-        canvas.arc( parentPosition.x, parentPosition.y, 1.0, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	    
+        _canvas.fillStyle = "rgb( 0, 0, 0 )";
+        _canvas.beginPath();
+        _canvas.arc( _parentPosition.x, _parentPosition.y, 1.0, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	    
         */
 
 
         /*
-        canvas.lineWidth = 0.5; 
+        _canvas.lineWidth = 0.5; 
 
-        canvas.strokeStyle = "rgb( 255, 255, 255 )";
-        canvas.beginPath();
-        canvas.arc( startLeftX, startLeftY, 1.0, 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();	   					
+        _canvas.strokeStyle = "rgb( 255, 255, 255 )";
+        _canvas.beginPath();
+        _canvas.arc( startLeftX, startLeftY, 1.0, 0, PI2, false );
+        _canvas.stroke();
+        _canvas.closePath();	   					
 
-        canvas.strokeStyle = "rgb( 255, 255, 255 )";
-        canvas.beginPath();
-        canvas.arc( startRightX, startRightY, 1.0, 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();	   					
+        _canvas.strokeStyle = "rgb( 255, 255, 255 )";
+        _canvas.beginPath();
+        _canvas.arc( startRightX, startRightY, 1.0, 0, PI2, false );
+        _canvas.stroke();
+        _canvas.closePath();	   					
 
-        canvas.strokeStyle = "rgb( 255, 255, 255 )";
-        canvas.beginPath();
-        canvas.arc( endLeftX, endLeftY, 1.0, 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();	   					
+        _canvas.strokeStyle = "rgb( 255, 255, 255 )";
+        _canvas.beginPath();
+        _canvas.arc( endLeftX, endLeftY, 1.0, 0, PI2, false );
+        _canvas.stroke();
+        _canvas.closePath();	   					
 
-        canvas.strokeStyle = "rgb( 255, 255, 255 )";
-        canvas.beginPath();
-        canvas.arc( endRightX, endRightY, 1.0, 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();	   					
+        _canvas.strokeStyle = "rgb( 255, 255, 255 )";
+        _canvas.beginPath();
+        _canvas.arc( endRightX, endRightY, 1.0, 0, PI2, false );
+        _canvas.stroke();
+        _canvas.closePath();	   					
         */
 
 
         /*
-        canvas.fillStyle = "rgb( 255, 0, 255 )";
-        canvas.beginPath();
-        canvas.arc( control1X, control1Y, 0.5, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	    
+        _canvas.fillStyle = "rgb( 255, 0, 255 )";
+        _canvas.beginPath();
+        _canvas.arc( control1X, control1Y, 0.5, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	    
 
-        canvas.fillStyle = "rgb( 255, 0, 255 )";
-        canvas.beginPath();
-        canvas.arc( control2X, control2Y, 0.5, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	    
+        _canvas.fillStyle = "rgb( 255, 0, 255 )";
+        _canvas.beginPath();
+        _canvas.arc( control2X, control2Y, 0.5, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	    
 
-        canvas.fillStyle = "rgb( 255, 255, 0 )";
-        canvas.beginPath();
-        canvas.arc( control1LeftX, control1LeftY, 0.5, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	    
+        _canvas.fillStyle = "rgb( 255, 255, 0 )";
+        _canvas.beginPath();
+        _canvas.arc( control1LeftX, control1LeftY, 0.5, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	    
 
-        canvas.fillStyle = "rgb( 255, 255, 255 )";
-        canvas.beginPath();
-        canvas.arc( control1RightX, control1RightY, 0.5, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	   					
+        _canvas.fillStyle = "rgb( 255, 255, 255 )";
+        _canvas.beginPath();
+        _canvas.arc( control1RightX, control1RightY, 0.5, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	   					
 
-        canvas.fillStyle = "rgb( 255, 255, 0 )";
-        canvas.beginPath();
-        canvas.arc( control2LeftX, control2LeftY, 0.5, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	    
+        _canvas.fillStyle = "rgb( 255, 255, 0 )";
+        _canvas.beginPath();
+        _canvas.arc( control2LeftX, control2LeftY, 0.5, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	    
 
-        canvas.fillStyle = "rgb( 255, 255, 255 )";
-        canvas.beginPath();
-        canvas.arc( control2RightX, control2RightY, 0.5, 0, PI2, false );
-        canvas.fill();
-        canvas.closePath();	   					
+        _canvas.fillStyle = "rgb( 255, 255, 255 )";
+        _canvas.beginPath();
+        _canvas.arc( control2RightX, control2RightY, 0.5, 0, PI2, false );
+        _canvas.fill();
+        _canvas.closePath();	   					
         */
 
 
 
         /*
-        canvas.lineWidth = 0.5; 
-        canvas.strokeStyle = "rgba( 100, 255, 100, 0.9 )";
-        canvas.beginPath();
-        canvas.moveTo( parentPosition.x, parentPosition.y );
-        canvas.bezierCurveTo( control1X, control1Y, control2X, control2Y, position.x, position.y );
-        canvas.stroke();								
+        _canvas.lineWidth = 0.5; 
+        _canvas.strokeStyle = "rgba( 100, 255, 100, 0.9 )";
+        _canvas.beginPath();
+        _canvas.moveTo( _parentPosition.x, _parentPosition.y );
+        _canvas.bezierCurveTo( control1X, control1Y, control2X, control2Y, position.x, position.y );
+        _canvas.stroke();								
 
 
-        canvas.lineWidth = 0.5; 
-        canvas.strokeStyle = "rgba( 100, 255, 100, 0.9 )";
-        canvas.beginPath();
-        canvas.moveTo( startLeftX, startLeftY );
-        canvas.bezierCurveTo( control1LeftX, control1LeftY, control2LeftX, control2LeftY, endLeftX, endLeftY );
-        canvas.stroke();								
+        _canvas.lineWidth = 0.5; 
+        _canvas.strokeStyle = "rgba( 100, 255, 100, 0.9 )";
+        _canvas.beginPath();
+        _canvas.moveTo( startLeftX, startLeftY );
+        _canvas.bezierCurveTo( control1LeftX, control1LeftY, control2LeftX, control2LeftY, endLeftX, endLeftY );
+        _canvas.stroke();								
 
-        canvas.lineWidth = 0.5; 
-        canvas.strokeStyle = "rgba( 100, 255, 100, 0.9 )";
-        canvas.beginPath();
-        canvas.moveTo( startRightX, startRightY );
-        canvas.bezierCurveTo( control1RightX, control1RightY, control2RightX, control2RightY, endRightX, endRightY );
-        canvas.stroke();								
+        _canvas.lineWidth = 0.5; 
+        _canvas.strokeStyle = "rgba( 100, 255, 100, 0.9 )";
+        _canvas.beginPath();
+        _canvas.moveTo( startRightX, startRightY );
+        _canvas.bezierCurveTo( control1RightX, control1RightY, control2RightX, control2RightY, endRightX, endRightY );
+        _canvas.stroke();								
         */
 
         // show main axis
         /*
-        canvas.lineWidth = 0.5; 
-        canvas.strokeStyle = "rgba( 100, 100, 200, 0.6 )";
-        canvas.beginPath();
-        canvas.moveTo( parentPosition.x, parentPosition.y );
-        canvas.lineTo( position.x, position.y );
-        canvas.stroke();								
+        _canvas.lineWidth = 0.5; 
+        _canvas.strokeStyle = "rgba( 100, 100, 200, 0.6 )";
+        _canvas.beginPath();
+        _canvas.moveTo( _parentPosition.x, _parentPosition.y );
+        _canvas.lineTo( position.x, position.y );
+        _canvas.stroke();								
         */
 
 
         // show block outline
         /*
-        canvas.lineWidth = 0.5; 
-        canvas.strokeStyle = "rgba( 100, 0, 0, 0.6 )";
-        canvas.beginPath();
-        canvas.moveTo( startLeftX, startLeftY );
-        canvas.lineTo( startRightX, startRightY );
-        canvas.stroke();								
+        _canvas.lineWidth = 0.5; 
+        _canvas.strokeStyle = "rgba( 100, 0, 0, 0.6 )";
+        _canvas.beginPath();
+        _canvas.moveTo( startLeftX, startLeftY );
+        _canvas.lineTo( startRightX, startRightY );
+        _canvas.stroke();								
 
-        canvas.lineWidth = 0.5; 
-        canvas.strokeStyle = "rgba( 100, 0, 0, 0.6 )";
-        canvas.beginPath();
-        canvas.moveTo( startRightX, startRightY );
-        canvas.lineTo( endRightX,   endRightY   );
-        canvas.stroke();								
+        _canvas.lineWidth = 0.5; 
+        _canvas.strokeStyle = "rgba( 100, 0, 0, 0.6 )";
+        _canvas.beginPath();
+        _canvas.moveTo( startRightX, startRightY );
+        _canvas.lineTo( endRightX,   endRightY   );
+        _canvas.stroke();								
 
-        canvas.lineWidth = 0.5; 
-        canvas.strokeStyle = "rgba( 100, 0, 0, 0.6 )";
-        canvas.beginPath();
-        canvas.moveTo( endRightX,   endRightY   );
-        canvas.lineTo( endLeftX,    endLeftY    );
-        canvas.stroke();								
+        _canvas.lineWidth = 0.5; 
+        _canvas.strokeStyle = "rgba( 100, 0, 0, 0.6 )";
+        _canvas.beginPath();
+        _canvas.moveTo( endRightX,   endRightY   );
+        _canvas.lineTo( endLeftX,    endLeftY    );
+        _canvas.stroke();								
 
-        canvas.lineWidth = 0.5; 
-        canvas.strokeStyle = "rgba( 100, 0, 0, 0.6 )";
-        canvas.beginPath();
-        canvas.moveTo( endLeftX,    endLeftY   );
-        canvas.lineTo( startLeftX,  startLeftY  );
-        canvas.stroke();								
+        _canvas.lineWidth = 0.5; 
+        _canvas.strokeStyle = "rgba( 100, 0, 0, 0.6 )";
+        _canvas.beginPath();
+        _canvas.moveTo( endLeftX,    endLeftY   );
+        _canvas.lineTo( startLeftX,  startLeftY  );
+        _canvas.stroke();								
         */
     }
 
@@ -875,13 +864,13 @@ if ( _index === 0 )
         let x = _phenotype.parts[ GENITAL_INDEX ].position.x + _focusDirection.x * genitalLength;
         let y = _phenotype.parts[ GENITAL_INDEX ].position.y + _focusDirection.y * genitalLength;
         
-		canvas.lineWidth = 1.0; 
-        canvas.strokeStyle = "rgba( 255, 255, 255, 0.7 )";	
-        canvas.beginPath();
-        canvas.moveTo( _phenotype.parts[ GENITAL_INDEX ].position.x, _phenotype.parts[ GENITAL_INDEX ].position.y );
-        canvas.lineTo( x, y );
-        canvas.stroke();
-        canvas.closePath();			
+		_canvas.lineWidth = 1.0; 
+        _canvas.strokeStyle = "rgba( 255, 255, 255, 0.7 )";	
+        _canvas.beginPath();
+        _canvas.moveTo( _phenotype.parts[ GENITAL_INDEX ].position.x, _phenotype.parts[ GENITAL_INDEX ].position.y );
+        _canvas.lineTo( x, y );
+        _canvas.stroke();
+        _canvas.closePath();			
         
         //--------------------------------------------------------
         // if pursuing a mate, show arrow head
@@ -896,12 +885,11 @@ if ( _index === 0 )
             let xRight = x + _focusDirection.y * arrowWidth - _focusDirection.x * arrowLength;
             let yRight = y - _focusDirection.x * arrowWidth - _focusDirection.y * arrowLength;
             
-            canvas.beginPath();
-            canvas.moveTo( xLeft, yLeft );
-            canvas.lineTo( x, y );
-            canvas.lineTo( xRight, yRight );
-            canvas.stroke();
-            canvas.closePath();			
+            _canvas.beginPath();
+            _canvas.lineTo( x, y );
+            _canvas.lineTo( xRight, yRight );
+            _canvas.stroke();
+            _canvas.closePath();			
         }
 	}
 
@@ -920,8 +908,8 @@ let mouthLength = SWIMBOT_MOUTH_LENGTH * _growthScale;
 let mouthEndX = _phenotype.parts[ MOUTH_INDEX ].position.x + _focusDirection.x * mouthLength;
 let mouthEndY = _phenotype.parts[ MOUTH_INDEX ].position.y + _focusDirection.y * mouthLength;
 
-canvas.lineWidth = SWIMBOT_MOUTH_WIDTH; 
-canvas.strokeStyle = "rgb( 50, 200, 50 )";	
+_canvas.lineWidth = SWIMBOT_MOUTH_WIDTH; 
+_canvas.strokeStyle = "rgb( 50, 200, 50 )";	
 
 //--------------------------------------------------------
 // if pursuing a food bit, show jaws
@@ -938,20 +926,20 @@ if ( _brain.getState() === BRAIN_STATE_PURSUING_FOOD )
     let rightJawX = mouthEndX + px + fx;
     let rightJawY = mouthEndY - py + fy;
 
-    canvas.beginPath();            
-    canvas.moveTo( leftJawX,  leftJawY  );
-    canvas.lineTo( _phenotype.parts[ MOUTH_INDEX ].position.x, _phenotype.parts[ MOUTH_INDEX ].position.y );
-    canvas.lineTo( rightJawX, rightJawY );
-    canvas.stroke();
-    canvas.closePath();		
+    _canvas.beginPath();            
+    _canvas.moveTo( leftJawX,  leftJawY  );
+    _canvas.lineTo( _phenotype.parts[ MOUTH_INDEX ].position.x, _phenotype.parts[ MOUTH_INDEX ].position.y );
+    _canvas.lineTo( rightJawX, rightJawY );
+    _canvas.stroke();
+    _canvas.closePath();		
 }
 else
 {
-    canvas.beginPath();
-    canvas.moveTo( _phenotype.parts[ MOUTH_INDEX ].position.x, _phenotype.parts[ MOUTH_INDEX ].position.y );
-    canvas.lineTo( mouthEndX, mouthEndY );
-    canvas.stroke();
-    canvas.closePath();						
+    _canvas.beginPath();
+    _canvas.moveTo( _phenotype.parts[ MOUTH_INDEX ].position.x, _phenotype.parts[ MOUTH_INDEX ].position.y );
+    _canvas.lineTo( mouthEndX, mouthEndY );
+    _canvas.stroke();
+    _canvas.closePath();						
 }	
 */        
         // new version
@@ -996,14 +984,10 @@ else
         let rightEndX = mouthEndX;
         let rightEndY = mouthEndY;
             
-		canvas.lineWidth = SWIMBOT_MOUTH_WIDTH; 
+		_canvas.lineWidth = SWIMBOT_MOUTH_WIDTH; 
         
         _colorUtility = this.calculatePartColor(1);  
-        let red   = Math.floor( _colorUtility.red   * 255 );
-        let green = Math.floor( _colorUtility.green * 255 );
-        let blue  = Math.floor( _colorUtility.blue  * 255 );
-        
-        canvas.fillStyle = "rgb( " + red + ", " + green + ", " + blue + " )";	
+		_canvas.fillStyle = _colorUtility.rgba();	
         
         //--------------------------------------------------------
         // open jaws
@@ -1016,43 +1000,83 @@ else
             rightEndY += endPerpY;
         }        
 
-        canvas.beginPath();
-        canvas.moveTo( mouthStartX, mouthStartY );
-        canvas.lineTo( leftJawX,    leftJawY    );
-        canvas.lineTo( leftEndX,    leftEndY    );
-        canvas.lineTo( mouthStartX, mouthStartY );
-        canvas.lineTo( rightEndX,   rightEndY   );
-        canvas.lineTo( rightJawX,   rightJawY   );
-        canvas.lineTo( leftJawX,    leftJawY    );
-        canvas.fill();
-        canvas.closePath();	
+        _canvas.beginPath();
+        _canvas.moveTo( mouthStartX, mouthStartY );
+        _canvas.lineTo( leftJawX,    leftJawY    );
+        _canvas.lineTo( leftEndX,    leftEndY    );
+        _canvas.lineTo( mouthStartX, mouthStartY );
+        _canvas.lineTo( rightEndX,   rightEndY   );
+        _canvas.lineTo( rightJawX,   rightJawY   );
+        _canvas.lineTo( leftJawX,    leftJawY    );
+        _canvas.fill();
+        _canvas.closePath();	
         
-        canvas.strokeStyle = "rgba( 255, 255, 255, 0.7 )";	
-        canvas.beginPath();
-        canvas.moveTo( rightEndX,   rightEndY  );
-        canvas.lineTo( mouthStartX, mouthStartY );
-        canvas.lineTo( leftEndX,    leftEndY );
-        canvas.stroke();
-        canvas.closePath();	     
+        _canvas.strokeStyle = "rgba( 255, 255, 255, 0.7 )";	
+        _canvas.beginPath();
+        _canvas.moveTo( rightEndX,   rightEndY  );
+        _canvas.lineTo( mouthStartX, mouthStartY );
+        _canvas.lineTo( leftEndX,    leftEndY );
+        _canvas.stroke();
+        _canvas.closePath();	     
                					
-        canvas.strokeStyle = OUTLINE_COLOR; 
-        canvas.beginPath();
-        canvas.moveTo( leftJawX, leftJawY );
-        canvas.lineTo( leftEndX, leftEndY );
-        canvas.stroke();
-        canvas.closePath();	            					
+        _canvas.strokeStyle = OUTLINE_COLOR; 
+        _canvas.beginPath();
+        _canvas.moveTo( leftJawX, leftJawY );
+        _canvas.lineTo( leftEndX, leftEndY );
+        _canvas.stroke();
+        _canvas.closePath();	            					
 
-        canvas.beginPath();
-        canvas.moveTo( rightJawX, rightJawY );
-        canvas.lineTo( rightEndX, rightEndY );
-        canvas.stroke();
-        canvas.closePath();	 
+        _canvas.beginPath();
+        _canvas.moveTo( rightJawX, rightJawY );
+        _canvas.lineTo( rightEndX, rightEndY );
+        _canvas.stroke();
+        _canvas.closePath();	 
                    					
     }
     
+
+	//--------------------------------------
+	//	Trails!
+	//--------------------------------------
+	this.initializeDebugTrail = function( position )
+	{
+        for (let t=0; t<TRAIL_LENGTH; t++)
+        {
+            _debugTrail[t].set( position );
+        }	
+    }
+
+	//-----------------------------------
+	this.showSwimbotTrail = function( position, clock )
+	{
+        //------------------------------------
+        // update trail
+        //------------------------------------
+        if ( clock % 5 == 0 )
+        {
+            for (let t=TRAIL_LENGTH-1; t>0; t--)
+            {
+                _debugTrail[t].set( _debugTrail[t-1] ); 
+            }	
+
+           _debugTrail[0].set( position ); 
+        }
+
+        //------------------------------------
+        // render trail
+        //------------------------------------
+        _canvas.lineWidth = 2; 
+        _canvas.strokeStyle = "rgb( 255, 255, 255 )";
+
+        for (let t=1; t<TRAIL_LENGTH; t++)
+        {
+            _canvas.beginPath();
+            _canvas.moveTo( _debugTrail[t-1].x, _debugTrail[t-1].y );
+            _canvas.lineTo( _debugTrail[t].x, _debugTrail[t].y );
+            _canvas.closePath();
+            _canvas.stroke();
+        }	
+	}
+
 }//end of entire Swimbots function -------------------------
-
-
-
-
 

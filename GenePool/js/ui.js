@@ -522,7 +522,7 @@ function toggleSimulationRunning()
     else
     {
         genePool.setSimulationRunning( true ); 
-        document.getElementById( "freezeButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;          
+        document.getElementById( "freezeButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;                
     }
 }
 
@@ -532,14 +532,14 @@ function toggleFastRendering()
     if ( _runningFast )
     {
         _runningFast = false;
-        genePool.setMillisecondsPerUpdateToDefault();
-        document.getElementById( "fastButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;       
+        genePool.setMillisecondsToDefault();
+        document.getElementById( "fastButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;                
     }
     else
     {
         _runningFast = true;
         genePool.setMillisecondsPerUpdate(0);
-        document.getElementById( "fastButton" ).style.borderColor = ACTIVE_BORDER_COLOR;             
+        document.getElementById( "fastButton" ).style.borderColor       = ACTIVE_BORDER_COLOR;             
         document.getElementById( "fastButton" ).style.borderWidth =  "3px";   
     }
 }
@@ -1208,7 +1208,12 @@ document.onkeydown = function(e)
             clearViewMode(); 
         }
     }
-    
+
+    //--------------------------------------------------------------------
+	//	allow currently implemented renderer to do it's thang
+    //--------------------------------------------------------------------
+	globalRenderer.handleRenderSpecificKeyDown( e.keyCode );
+
     //-----------------------------
     // other key pres events
     //-----------------------------
@@ -1254,5 +1259,8 @@ document.onkeyup = function(e)
 }
 */
 
-    
-};      
+    //--------------------------------------------------------------------
+	//	allow currently implemented renderer to do it's thang
+    //--------------------------------------------------------------------
+	globalRenderer.handleRenderSpecificKeyUp( e.keyCode );
+};

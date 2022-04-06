@@ -41,7 +41,6 @@ const CameraNavigationAction =
 
 
 
-
 //---------------------------------------------------------------
 // The following code is incomplete - it's purpose is to allow 
 // pseudorandom number generation with seeds. 
@@ -96,17 +95,18 @@ const NUM_GENES_USED = 112;
 var globalTweakers = new GlobalTweakers();
 var _numDeadSwimbots = 0;
 
+//---------------------------------------------------------------
+// globalRenderer coordinates all rendering
+//---------------------------------------------------------------
+var globalRenderer = null;
+
+
 //------------------
 function GenePool() 
 {	
 	//-----------------------------------
 	// count-related constants
 	//-----------------------------------
-//const MAX_FOODBITS          = 2000;
-//const INITIAL_NUM_SWIMBOTS  = 200;
-//const INITIAL_NUM_FOODBITS  = 800;    
-    const TRAIL_LENGTH = 100;
-    
     const NUM_NEIGHBORHOOD_SWIMBOTS = 14 * 14;
     const NUM_NEIGHBORHOOD_FOODBITS = 28 * 28;
     
@@ -143,8 +143,8 @@ function GenePool()
     let _potentialMate          = new Swimbot();
 	let _chosenFoodBit          = new FoodBit();
 	let _camera  		        = new Camera();
-	let _obstacle               = new Obstacle();
-	let _pool			        = new Pool();
+	var _obstacle               = new Obstacle();
+	var _pool			        = new Pool();
 	let _embryology		        = new Embryology();
 	let _vectorUtility          = new Vector2D();
 	let _myGenotype             = new Genotype();
@@ -158,7 +158,6 @@ function GenePool()
 	let _swimbotBeingDragged    = false;
 	let _foodBitBeingDragged    = false;
 	let _poolCenter             = new Vector2D();   
-	let _canvas                 = null;  
 	let _clock                  = 0;
 	let _numSwimbots 	        = 0;
     let _numNearbySwimbots      = 0;
@@ -175,7 +174,6 @@ function GenePool()
 	let _levelOfDetail	        = SWIMBOT_LEVEL_OF_DETAIL_LOW;
 	let _previousTime           = ZERO;
 	let _frameRate              = ZERO;
-	let _debugTrail 		    = new Array( TRAIL_LENGTH ); 
 	let _familyTree             = new FamilyTree();
 	let _phyloTree              = new PhyloTree();
 	let _panningLeft            = false;
@@ -191,6 +189,22 @@ function GenePool()
     
     let hhh = 0;	
 	
+	//-------------------------------------------
+	// globalRenderer coordinates all rendering
+	//-------------------------------------------
+	globalRenderer = new Renderer();
+
+	//	The 3d renderer provides it's own update and will be responsible for calling genePool.update().
+	this.timerFunc = function() {}	// dummy function for 3d render
+
+	//	Else, on original 2d renderer, use a timer function to trigger our updates.
+	if (globalRenderer.useExternalUpdate() == false)
+	{
+		this.timerFunc = function() {
+			this.timer = setTimeout( "genePool.update()", _millisecondsPerUpdate );
+		}
+	}
+
 	//-------------------------------------
 	// create fixed-sized swimbot array
 	//-------------------------------------
@@ -215,39 +229,28 @@ function GenePool()
 	{
 		_foodBits[f] = new FoodBit(); 
 	}	
-    
-	//-------------------------------------
-	// create trail array
-	//-------------------------------------
-	for (let t=0; t<TRAIL_LENGTH; t++)
-	{
-		_debugTrail[t] = new Vector2D(); 
-	}	
-	
-	//-------------------------------
-	// This is an important call!
-	//-------------------------------
-	this.setCanvas = function(c)
-    {
-        _canvas = c;        
-        //console.log( canvas );
-    }
-    
+    	
 	//-------------------------------------------
 	this.setCanvasDimensions = function( w, h )
     {
         //console.log( "setCanvasDimensions: " + w + ", " + h );
         
+        // cache the dimensions here...
         _canvasWidth  = w;
         _canvasHeight = h;
-
         _camera.setAspectRatio( _canvasWidth / _canvasHeight );
+
+        // but also pass on to the renderer
+        globalRenderer.setCanvasDimensions( w, h );
     }
     
     
 	//---------------------------
-	this.initialize = function()
-	{	
+	this.initialize = function( canvas )
+	{
+		//	renderer maintains the canvas
+		globalRenderer.initialize( canvas );
+
 		//----------------------------------
 		// get pool center
 		//----------------------------------
@@ -270,7 +273,8 @@ function GenePool()
 		//------------------------------------------------------------
 		// start up the timer
 		//------------------------------------------------------------
-		this.timer = setTimeout( "genePool.update()", _millisecondsPerUpdate );	
+		//this.timer = setTimeout( "genePool.update()", _millisecondsPerUpdate );	
+		this.timerFunc();
 	}
 	
 	
@@ -1109,7 +1113,8 @@ if ( mode === SimulationStartMode.SPECIES )
 		//---------------------------
 		// trigger next update...
 		//---------------------------
-        this.timer = setTimeout( "genePool.update()", _millisecondsPerUpdate );
+        //this.timer = setTimeout( "genePool.update()", _millisecondsPerUpdate );
+		this.timerFunc();
 	}
 
 
@@ -2237,6 +2242,10 @@ if ( globalTweakers.numFoodTypes === 2 )
     function setSelectedSwimbot( index )
     {
         _selectedSwimbot = index;
+
+        if ( _selectedSwimbot != NULL_INDEX ) {
+            globalRenderer.getSwimbotRenderer().initializeDebugTrail( _swimbots[ _selectedSwimbot ].getPosition() );
+        }
         
 // hey...maybe I need to turn off any other things that assume there is a selected swimbot...here        
         
@@ -2356,8 +2365,9 @@ if ( globalTweakers.numFoodTypes === 2 )
         //------------------------------
         // kill that mofo....
         //------------------------------
-        _swimbots[ ID ].die();
-        
+		globalRenderer.getSwimbotRenderer().releaseRenderAssets( _swimbots[ID] );
+		_swimbots[ ID ].die();
+
         //------------------------------
         // add a pool effect....
         //------------------------------
@@ -2387,13 +2397,13 @@ if ( globalTweakers.numFoodTypes === 2 )
 	{	
         _rendering = r;
     }
-    
+
 	//-------------------------------------------
 	this.setMillisecondsPerUpdate = function(m)
 	{	
         _millisecondsPerUpdate = m;
     }
-    
+        
 	//--------------------------------------------------
 	this.setMillisecondsPerUpdateToDefault = function()
 	{	
@@ -2447,20 +2457,10 @@ if ( globalTweakers.numFoodTypes === 2 )
 	//-------------------------
 	this.render = function()
 	{
-		//----------------------------------------------------------
-		// set transform according to camera
-		//----------------------------------------------------------
-        let nx = _camera.getPosition().x / _camera.getXDimension();
-        let ny = _camera.getPosition().y / _camera.getYDimension();
-
-		let xTranslation = ( ONE_HALF - nx ) * _canvasWidth;
-		let yTranslation = ( ONE_HALF - ny ) * _canvasHeight;
-
-        let xScale = _canvasWidth  / _camera.getXDimension();
-        let yScale = _canvasHeight / _camera.getYDimension();
-
-		_canvas.translate( xTranslation, yTranslation );
-        _canvas.scale( xScale, yScale ); 
+		//---------------------
+		// start a new frame
+		//---------------------
+        globalRenderer.beginFrame( _camera );
 
 		//----------------------------------
 		// render the pool
@@ -2491,20 +2491,20 @@ if ( globalTweakers.numFoodTypes === 2 )
                     if (( s === _mousedOverSwimbot )
                     ||  ( s === _selectedSwimbot   ))
                     {
-                        if ( s === _selectedSwimbot )
-                        {
-                            renderSelectCircle( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, _swimbots[s].getSelectRadius(), false );
-                        }
-                        else
-                        {
-                            renderSelectCircle( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, _swimbots[s].getSelectRadius(), true );
-                        }
+                        let color = new Color( 1.0, 1.0, 1.0, 0.03 );
+                        let lineWidth = 1.6 + 0.005 * _camera.getScale();
+						let style = 0;
+                        if ( s === _selectedSwimbot ) {
+							color.opacity = 0.07;
+							style = 1;
+						}
+                        globalRenderer.renderCircle( _swimbots[s].getPosition(), _swimbots[s].getSelectRadius(), color, lineWidth, style, false );
 
                         _swimbots[s].setRenderingGoals( true );
 
-                        if ( DEBUG_SHOW_SWIMBOT_TRAIL )
+                        if ( (s === _selectedSwimbot) && DEBUG_SHOW_SWIMBOT_TRAIL )
                         {
-                            this.showSwimbotTrail(s);
+                            globalRenderer.getSwimbotRenderer().showSwimbotTrail( _swimbots[s].getPosition(), _clock );
                         }
                     }
                     else
@@ -2517,7 +2517,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 				}
 			}
 		}
-		
+
 		//-----------------------------------------------------------------------
 		// when view is in mutual love mode, show a line between the lovers...
 		//-----------------------------------------------------------------------
@@ -2528,39 +2528,30 @@ if ( globalTweakers.numFoodTypes === 2 )
             if (( _viewTracking.getLover1Index() != NULL_INDEX )
             &&  ( _viewTracking.getLover2Index() != NULL_INDEX ))
             {
-                _canvas.lineCap = "round";
-                _canvas.lineWidth = 5; 
-                _canvas.strokeStyle = "rgba( 200, 200, 200, 0.06 )";   
-                _canvas.moveTo( _swimbots[ _viewTracking.getLover1Index() ].getGenitalPosition().x, _swimbots[ _viewTracking.getLover1Index() ].getGenitalPosition().y );
-                _canvas.lineTo( _swimbots[ _viewTracking.getLover2Index() ].getGenitalPosition().x, _swimbots[ _viewTracking.getLover2Index() ].getGenitalPosition().y );
-                _canvas.stroke();
-
-                _canvas.lineWidth = 2; 
-                _canvas.strokeStyle = "rgba( 255, 255, 200, 0.06 )";   
-                _canvas.moveTo( _swimbots[ _viewTracking.getLover1Index() ].getGenitalPosition().x, _swimbots[ _viewTracking.getLover1Index() ].getGenitalPosition().y );
-                _canvas.lineTo( _swimbots[ _viewTracking.getLover2Index() ].getGenitalPosition().x, _swimbots[ _viewTracking.getLover2Index() ].getGenitalPosition().y );
-                _canvas.stroke();
+                let p1 = _swimbots[ _viewTracking.getLover1Index() ].getGenitalPosition();
+                let p2 = _swimbots[ _viewTracking.getLover2Index() ].getGenitalPosition();
+                globalRenderer.renderLine( p1, p2, new Color( 0.8, 0.8, 0.8, 0.06 ), 5, true );
+                globalRenderer.renderLine( p1, p2, new Color( 1.0, 1.0, 0.8, 0.06 ), 2, true );
             }		
         }
 
 		//---------------------
 		// render camera
 		//---------------------
-		//renderCamera();
+		//globalRenderer.renderCamera( _camera );		
 
-		//---------------------
-		// reset transform
-		//---------------------
-        _canvas.resetTransform();
-		
-        /*
+
+		//-------------------------------------------------
+		// switch back to absolute coordinates
+		//-------------------------------------------------
+		globalRenderer.resetCoordSystem();
+
+
 		//----------------------------------
 		// render framerate
 		//----------------------------------
-        _canvas.font = "14px Arial";
-		_canvas.fillStyle = "rgba( 255, 255, 255, 0.5 )";		
-        _canvas.fillText( "framerate = " + _frameRate.toString(), _canvasWidth - 200, 20 ); 
-        */       
+		let textColor = new Color( 1, 1, 1, 0.5 );
+        globalRenderer.renderText( "framerate = " + _frameRate.toString(), _canvasWidth - 200, 20, textColor, "14px Arial" ); 
         
 		//----------------------------------
 		// render view tracking info
@@ -2581,11 +2572,11 @@ if ( globalTweakers.numFoodTypes === 2 )
                 else if ( viewTrackingMode === ViewTrackingMode.EFFICIENT  ) { modeString = "viewing most efficient"     }
                 else if ( viewTrackingMode === ViewTrackingMode.VIRGIN     ) { modeString = "viewing oldest virgin"      }
                 else if ( viewTrackingMode === ViewTrackingMode.HUNGRY     ) { modeString = "viewing glutton"            }
-            
-                _canvas.font = "14px Arial";
-                _canvas.fillStyle = "rgba( 255, 255, 255, 0.5 )";		
-                _canvas.fillText( modeString, _canvasWidth - 170, _canvasHeight - 30 );        
-            }        
+
+                let font  = "14px Arial";
+                let color = new Color( 1, 1, 1, 0.5 );
+                globalRenderer.renderText( modeString, _canvasWidth - 170, _canvasHeight - 30, color, font );
+            }
         }
         
 		//---------------------------
@@ -2596,190 +2587,52 @@ if ( globalTweakers.numFoodTypes === 2 )
 		//---------------------------
 		// render border
 		//---------------------------
-        _canvas.lineWidth = 1; 
-        _canvas.strokeStyle = "rgb( 0, 0, 0 )";   
-		_canvas.strokeRect( 0, 0, _canvasWidth, _canvasHeight );
-		/*     
-        //_canvas.strokeStyle = "rgb( 220, 230, 240 )";
-        _canvas.beginPath();
-        _canvas.moveTo( 0, _canvasHeight );
-        _canvas.lineTo( _canvasWidth, _canvasHeight );
-        _canvas.closePath();
-        _canvas.stroke();
-        
-        _canvas.beginPath();
-        _canvas.moveTo( _canvasWidth, _canvasHeight );
-        _canvas.lineTo( _canvasWidth, 0 );
-        _canvas.closePath();
-        _canvas.stroke();
+        //let borderColor = new Color( 0, 0, 0, 1.0 );
+		//globalRenderer.renderRect( 0, 0, _canvasWidth, _canvasHeight, borderColor, 1 );
 
-        
-        _canvas.beginPath();
-        _canvas.moveTo( 0, 0 );
-        _canvas.lineTo( 0, _canvasHeight );
-        _canvas.closePath();
-        _canvas.stroke();
-        
-        _canvas.beginPath();
-        _canvas.moveTo( 0, 0 );
-        _canvas.lineTo( _canvasWidth, 0 );
-        _canvas.closePath();
-        _canvas.stroke();
-        */
+		//---------------------
+		// end of frame
+		//---------------------
+        globalRenderer.endFrame();
 	}
 	
-	
-	/*
-	//----------------------------------------
-	function renderSwimbotSelectCircle( s, m )
-	{
-	    let lineWidth = 1.6 + 0.005 * _camera.getScale(); 	
-	    let alpha = 0.07;	
-	    	    
-        if ( m )
-        {
-    	    alpha = 0.03;	
-        }
-        
-        canvas.lineWidth = lineWidth;
-        canvas.strokeStyle = "rgba( 255, 255, 255, " + alpha + " )";	
-        canvas.beginPath();
-        canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, _swimbots[s].getSelectRadius(), 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();	
-
-        canvas.lineWidth = lineWidth * 0.4;
-        canvas.strokeStyle = "rgba( 255, 255, 255, " + alpha + " )";
-        canvas.beginPath();
-        canvas.arc( _swimbots[s].getPosition().x, _swimbots[s].getPosition().y, _swimbots[s].getSelectRadius(), 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();		    
-	}
-	*/
-
-
-	//----------------------------------------
-	function renderSelectCircle( x, y, r, m )
-	{
-	    let lineWidth = 1.6 + 0.005 * _camera.getScale(); 	
-	    let alpha = 0.07;	
-	    	    
-        if ( m )
-        {
-    	    alpha = 0.03;	
-        }
-        
-        canvas.lineWidth = lineWidth;
-        canvas.strokeStyle = "rgba( 255, 255, 255, " + alpha + " )";	
-        canvas.beginPath();
-        canvas.arc( x, y, r, 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();	
-
-        canvas.lineWidth = lineWidth * 0.4;
-        canvas.strokeStyle = "rgba( 255, 255, 255, " + alpha + " )";
-        canvas.beginPath();
-        canvas.arc( x, y, r, 0, PI2, false );
-        canvas.stroke();
-        canvas.closePath();		    
-	}
-
-	
-	
-	//-------------------------------
-	function renderCamera()
-	{
-		_canvas.strokeStyle = "rgb( 255, 255, 255 )";		
-		_canvas.lineWidth = _camera.getScale() * 0.007; 
-		
-		let spacing = 15;
-		
-		let x = _camera.getPosition().x - _camera.getXDimension() * ONE_HALF;
-		let y = _camera.getPosition().y - _camera.getYDimension() * ONE_HALF;
-		let w = _camera.getXDimension();
-		let h = _camera.getYDimension();
-		
-		_canvas.strokeRect( x + spacing * ONE_HALF, y + spacing * ONE_HALF, w - spacing, h - spacing );
-
-		_canvas.fillStyle = "rgb( 255, 255, 255 )";		
-		_canvas.strokeRect
-		( 
-			_camera.getPosition().x - _camera.getXDimension() * 0.01, 
-			_camera.getPosition().y - _camera.getYDimension() * 0.01, 0.01, 0.01
-		);
-    }
-            		
-
-
 
 	
 	//-------------------------------
 	this.renderFoodBits = function()
 	{
+		let foodBitRenderer = globalRenderer.getFoodBitRenderer();
         for (let f=0; f<MAX_FOODBITS; f++)
         {
             if ( _foodBits[f].getAlive() )
             {
                 if ( _camera.getWithinView( _foodBits[f].getPosition(), FOOD_BIT_GRAB_RADIUS ) )
                 {
-                    _foodBits[f].render( _camera.getScale() );
-                    
-                    if ( f === _selectedFoodBit )
-                    {
-                        _foodBits[f].renderSelectOutline( _camera.getScale() );
-                    }
-                    
-                    if ( f === _mousedOverFoodBit )
-                    {
-                        _foodBits[f].renderMousedOverOutline( _camera.getScale() );
-                    }
+					let isSelected  = ( f === _selectedFoodBit );
+					let isMouseOver = ( f === _mousedOverFoodBit );
+					foodBitRenderer.render( _foodBits[f], isSelected, isMouseOver, _camera );
+
+                    if ( f === _selectedFoodBit || f === _mousedOverFoodBit )
+					{
+						let position  = _foodBits[f].getPosition();
+						let radius    = _foodBits[f].getGrabRadius();
+						let lineWidth = 1.0 + 0.005 * _camera.getScale();
+						if ( f === _selectedFoodBit ) {
+							var fbcolor = _foodBits[f].getSelectColor();
+							var fbstyle = 1;
+						}
+						else if ( f === _mousedOverFoodBit ) {
+							var fbcolor = _foodBits[f].getRolloverColor();
+							var fbstyle = 0;
+						}
+
+						globalRenderer.renderCircle( position, radius, fbcolor, lineWidth, fbstyle, false );
+					}
                 }
             }
         }
     }
  
-	//--------------------------------------
-	this.initializeDebugTrail = function(s)
-	{
-        for (let t=0; t<TRAIL_LENGTH; t++)
-        {
-            _debugTrail[t].set( _swimbots[s].getPosition() );
-        }	
-    }
- 
-
-	//-----------------------------------
-	this.showSwimbotTrail = function(s)
-	{
-        //------------------------------------
-        // update trail
-        //------------------------------------
-        if ( _clock % 20 == 0 )
-        {
-            for (let t=TRAIL_LENGTH-1; t>0; t--)
-            {
-                _debugTrail[t].set( _debugTrail[t-1] ); 
-            }	
-
-           _debugTrail[0].set( _swimbots[s].getPosition() ); 
-        }
-
-        //------------------------------------
-        // render trail
-        //------------------------------------
-        _canvas.lineWidth = 2; 
-        _canvas.strokeStyle = "rgb( 255, 255, 255 )";
-
-        for (let t=1; t<TRAIL_LENGTH; t++)
-        {
-            _canvas.beginPath();
-            _canvas.moveTo( _debugTrail[t-1].x, _debugTrail[t-1].y );
-            _canvas.lineTo( _debugTrail[t].x, _debugTrail[t].y );
-            _canvas.closePath();
-            _canvas.stroke();
-        }	
-	}
-	
 	
 	//----------------------------------------------------
 	this.setGeneTweakCategory = function( swimbotIndex )
@@ -3021,7 +2874,7 @@ if ( globalTweakers.numFoodTypes === 2 )
             if ( _selectedSwimbot != NULL_INDEX )
             {
                 _swimbotBeingDragged = true;
-                this.initializeDebugTrail( _selectedSwimbot );
+				globalRenderer.getSwimbotRenderer().initializeDebugTrail( _swimbots[ _selectedSwimbot ].getPosition() );
             }
 
             //--------------------------------------
@@ -3137,7 +2990,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	//----------------------------------------------------------------------------
 	// various quickie getters...
 	//----------------------------------------------------------------------------
-	this.getFoodGrowthDelay     = function() { return globalTweakers.foodRegenerationPeriod; }
+	this.getFoodGrowthDelay     = function() { return globalTweakers.foodRegenerationPeriod;          }
 	this.getFoodSpread          = function() { return globalTweakers.foodSpread;        }
     this.getFoodBitEnergy       = function() { return globalTweakers.foodBitEnergy;     }
     this.getHungerThreshold     = function() { return globalTweakers.hungerThreshold;   }
@@ -3149,7 +3002,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	this.getRendering           = function() { return _rendering;               }
 	this.getSelectedSwimbotID   = function() { return _selectedSwimbot;         }
 	this.getViewMode            = function() { return _viewTracking.getMode();  }
-    this.getNumDeadSwimbots     = function() { return _numDeadSwimbots;         }   
+    this.getNumDeadSwimbots     = function() { return _numDeadSwimbots;         }
     
 	//--------------------------------------------------
 	// check to see if the camera navigation is active

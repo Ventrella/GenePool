@@ -31,23 +31,13 @@ const POOL_Y_CENTER = POOL_TOP  + POOL_HEIGHT   * ONE_HALF;
 // pool
 //--------------------------------------------------
 function Pool()
-{    
-//const POOL_COLOR                = "rgba( 60, 73, 80, 0.8 )";
-const POOL_COLOR                = "rgba( 50, 63, 80, 1.0 )";
+{
+	const POOL_COLOR              = new Color( 50/255, 63/255, 80/255, 1.0 );
+    const BOUNDARY_MARGIN_COLOR   = new Color( 0,  0,  0, 1 );
+    const EFFECT_COLOR 	          = new Color( 220/255, 240/255, 255/255, 1.0 );
 
-    const BOUNDARY_MARGIN_COLOR     = "rgb(  0,  0,  0 )";
-    const EFFECT_COLOR 	            = "220, 240, 255";
-
-//const POOL_BOUNDARY_MARGIN      = 300.0;
-const POOL_BOUNDARY_MARGIN      = 1200.0;
-
-    const TOUCH_RIPPLE_DURATION	    = 0.3;
-    const MAX_TOUCH_RIPPLE_RADIUS   = 0.04;
-    const NUM_EFFECT_BLOBS          = 20;
-    const EFFECT_BLOB_COLOR         = "70, 80, 90";
-    const EFFECT_BLOB_DURATION      = 8.0;
-    const EFFECT_BLOB_PERIOD        = 20;
-    const EFFECT_BLOB_ALPHA         = 0.5;
+	//const POOL_BOUNDARY_MARGIN      = 300.0;
+	const POOL_BOUNDARY_MARGIN      = 1200.0;
 
 	function Touch()
 	{	
@@ -68,29 +58,32 @@ const POOL_BOUNDARY_MARGIN      = 1200.0;
 
 	let _touch = new Touch();
 	let _center = new Vector2D();
-	let _currentEffectBlob = 0;
-	let _effectClock = 0;
-	let _effectBlob = new Array( NUM_EFFECT_BLOBS );
 	
 	//----------------------------------
 	// do this now
 	//----------------------------------
     _center.x = POOL_LEFT + POOL_WIDTH  * ONE_HALF;
     _center.y = POOL_TOP  + POOL_HEIGHT * ONE_HALF;
-        
+
+	//----------------------------------
+	// getters
+	//----------------------------------
+	this.getTouch  = function() { return _touch; }
+	this.getCenter = function() { return _center; }
+	this.getColor  = function() { return POOL_COLOR; }
+	this.getEffectColor = function() { return EFFECT_COLOR; }
+
+	this.getBoundaries = function() { return [ POOL_LEFT, POOL_RIGHT, POOL_TOP, POOL_BOTTOM ] }
+	this.getDimensions = function() { return [ POOL_WIDTH, POOL_HEIGHT ] }
+	this.getBoundaryMarginColor = function() { return BOUNDARY_MARGIN_COLOR; }
+	this.getBoundaryMargin = function() { return POOL_BOUNDARY_MARGIN; }
+
 	//----------------------------------
 	// initialize
 	//----------------------------------
 	this.initialize = function( t )
 	{
     	_touch.time = t;
-    	
-    	for (let b=0; b<NUM_EFFECT_BLOBS; b++)
-    	{
-    	    _effectBlob[b] = new EffectBlob();
-    	}
-
-        //console.log( "pool initialize: " + _center.x + ", " + _center.y );            
     }
     
 	//----------------------------------------
@@ -127,142 +120,17 @@ const POOL_BOUNDARY_MARGIN      = 1200.0;
 		_touch.time 		= time;
 	}
 
-	//---------------------------
-	// get center
-	//---------------------------
-	this.getCenter = function()
-	{
-        //console.log( "getCenter: " + _center.x + ", " + _center.y );            
-	
-		return _center;
-	}
-
 	//------------------------------------------------
 	// render
 	//------------------------------------------------
-	this.render = function( _seconds, viewport )
+	this.render = function( seconds, viewport )
 	{
-		//------------------------------
-		// show pool background
-		//------------------------------
-        let lineWidth = 0.005 + 0.001 * viewport.getScale(); 	
-
-        canvas.fillStyle = POOL_COLOR;		
-        canvas.fillRect( POOL_LEFT, POOL_TOP, POOL_WIDTH, POOL_HEIGHT );
-
-        // use this instead of the above to include an image as the background...
-        //canvas.clearRect( POOL_LEFT, POOL_TOP, POOL_WIDTH, POOL_HEIGHT );
-
-		//------------------------------------------------------------
-		// show touch
-		//------------------------------------------------------------
-		if ( ( _seconds - _touch.time ) < TOUCH_RIPPLE_DURATION )
-		{
-			let f = ( _seconds - _touch.time ) / TOUCH_RIPPLE_DURATION;
-
-			if ( _touch.down )
-			{
-				_touch.radius = MAX_TOUCH_RIPPLE_RADIUS * ( ONE - f );
-			}
-			else
-			{
-				_touch.radius = MAX_TOUCH_RIPPLE_RADIUS * f;
-			}
-
-            let radius = _touch.radius * viewport.getScale();
-            //assert( radius >= ZERO, "Pool.js: render: radius >= ZERO" );
-
-            if ( radius > ZERO )
-            {
-                let alpha = ONE - _touch.radius / MAX_TOUCH_RIPPLE_RADIUS;
-            
-                canvas.lineWidth = lineWidth;
-                canvas.strokeStyle = "rgba( " + EFFECT_COLOR + ", " + alpha + " )";	
-                canvas.beginPath();
-                canvas.arc( _touch.position.x, _touch.position.y, radius, 0, PI2, false );
-                canvas.stroke();
-                canvas.closePath();	
-			}
-		}
+		globalRenderer.getPoolRenderer().render( this, seconds, viewport );
 
 		//----------------
 		// reset this!
 		//----------------
 		_touch.moving = false;
-		
-		//------------------------------------------
-		// show watery effects
-		//------------------------------------------
-		//showWateryEffects( _seconds, viewport );
-		
-		//------------------
-		// show boundary
-		//------------------
-		canvas.fillStyle = BOUNDARY_MARGIN_COLOR;	
-		canvas.fillRect( POOL_LEFT,                         POOL_TOP - POOL_BOUNDARY_MARGIN,    POOL_WIDTH,             POOL_BOUNDARY_MARGIN    );
-		canvas.fillRect( POOL_LEFT,                         POOL_BOTTOM,                        POOL_WIDTH,             POOL_BOUNDARY_MARGIN    );
-		canvas.fillRect( POOL_LEFT - POOL_BOUNDARY_MARGIN,  POOL_TOP,                           POOL_BOUNDARY_MARGIN,   POOL_HEIGHT             );
-		canvas.fillRect( POOL_RIGHT,                        POOL_TOP,                           POOL_BOUNDARY_MARGIN,   POOL_HEIGHT             );
 	}
-	
 
-
-	//---------------------------------------------
-    function showWateryEffects( seconds, viewport )
-    {        
-        let v = viewport.getScale() * 0.3;
-        _effectClock ++;
-
-        let viewCenterX = 4000;
-        let viewCenterY = 4000;
-    
-        if ( _effectClock % EFFECT_BLOB_PERIOD === 0 )
-        {
-            _currentEffectBlob ++;
-            if ( _currentEffectBlob >= NUM_EFFECT_BLOBS )
-            {
-                _currentEffectBlob = 0;
-            }
-            
-            _effectBlob[ _currentEffectBlob ].startTime = seconds;
-            _effectBlob[ _currentEffectBlob ].radius = v;
-            
-            //_effectBlob[ _currentEffectBlob ].xPosition = viewport.getPosition().x - v + v * 2 * gpRandom(); 
-            //_effectBlob[ _currentEffectBlob ].yPosition = viewport.getPosition().y - v + v * 2 * gpRandom();    
-
-            _effectBlob[ _currentEffectBlob ].xPosition = viewport.getPosition().x + v * Math.sin( _effectClock * 0.040 ); 
-            _effectBlob[ _currentEffectBlob ].yPosition = viewport.getPosition().y + v * Math.sin( _effectClock * 0.080 ); 
-        }
-
-        canvas.lineWidth = 3;
-        
-    	for (let b=0; b<NUM_EFFECT_BLOBS; b++)
-    	{
-    	    let timePassed = seconds - _effectBlob[b].startTime;
-    	    
-    	    if ( timePassed < EFFECT_BLOB_DURATION )
-    	    {    	
-    	        let fraction = timePassed / EFFECT_BLOB_DURATION;
-    	        let wave = ONE_HALF - ONE_HALF * Math.cos( fraction * PI2 );
-    	        //let radius   = _effectBlob[b].radius * 0.3 + wave * _effectBlob[b].radius;
-    	        let radius   = _effectBlob[b].radius * 0.3 + fraction * _effectBlob[b].radius;
-    	        let alpha    = wave * EFFECT_BLOB_ALPHA;    	        
-    	        
-                canvas.strokeStyle = "rgba( " + EFFECT_BLOB_COLOR + ", " + alpha + " )";	
-                canvas.fillStyle   = "rgba( " + EFFECT_BLOB_COLOR + ", " + alpha + " )";	
-                canvas.beginPath();
-//canvas.arc( _effectBlob[b].xPosition, _effectBlob[b].yPosition, radius, 0, PI2, false );
-canvas.ellipse( _effectBlob[b].xPosition, _effectBlob[b].yPosition, radius, radius * 0.5, 0.0, 0, PI2, false );                
-                
-                //canvas.stroke();
-                canvas.fill();
-                canvas.closePath();	 
-            }
-    	}
-    }
 }
-
-
-
-
-

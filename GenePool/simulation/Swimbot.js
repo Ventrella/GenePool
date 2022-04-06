@@ -26,22 +26,7 @@ var    flopperYV = 0;
     //  attraction 
     //---------------------------------
     const TOO_UGLY_TO_CHOOSE = ZERO;
-    
-    //---------------------------------
-    //  colors 
-    //---------------------------------
-    
-    // I believe all of these have been moved over to swimbot renderer...
-    /*
-    const COLOR_WHITENESS   = 0.4; // 0.0 = normal-saturated color; 0.5 = white-washed; 1.0 = pure white
-    const DEAD_COLOR_RED    = 0.2;
-    const DEAD_COLOR_GREEN  = 0.25;
-    const DEAD_COLOR_BLUE   = 0.3;
-    const ROLLOVER_COLOR    = "rgba( 180, 190, 200, 0.7 )";	
-    const SELECT_COLOR      = "rgba( 255, 255, 255, 0.8 )";	
-    const OUTLINE_COLOR     = "rgba( 0, 0, 0, 0.4 )";	
-    */
-    
+     
 	//-----------------------------------------
 	// variables
 	//-----------------------------------------
@@ -57,7 +42,6 @@ var    flopperYV = 0;
 	let _centerOfMass	    = new Vector2D();
 	let _vectorUtility      = new Vector2D();
 	let _chosenFoodBit      = new FoodBit();
-	let _swimbotRenderer  	= new SwimbotRenderer(); 
 	let _chosenMate         = null; // must start as null!
 	let _age 	  		    = 0;
 	let _numOffspring       = 0;
@@ -85,14 +69,22 @@ var    flopperYV = 0;
     let _lastEnergyForEfficiencyMeasurement = ZERO;
 	let _readyforSensoryInputToBrain = false;
 
+	//------------------------------------------------
+	//	Internal variables exposed to the renderer
+	//------------------------------------------------
+	this.getPhenotype      = function() { return _phenotype; }
+	this.getBrain          = function() { return _brain; }
+	this.getAge            = function() { return _age; }
+	this.getEnergy         = function() { return _energy; }
+	this.getGrowthScale    = function() { return _growthScale; }
+	this.getFocusDirection = function() { return _focusDirection; }
 
-let _parent = null;	
-
-//----------------------------------
-this.setParent = function( parent )
-{
-    _parent = parent;
-}
+	let _parent = null;	
+	//----------------------------------
+	this.setParent = function( parent )
+	{
+	    _parent = parent;
+	}
     
     //------------------------------------
     this.computeMomentFactors = function()
@@ -1908,12 +1900,14 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
         assert( g <= ONE, "getAverageColor: g <= ONE" );
         assert( b <= ONE, "getAverageColor: b <= ONE" );
     
-        let c = new Color();
-        c.red   = r;
-        c.green = g;
-        c.blue  = b;
-        
-        return c;
+        //let c = new Color();
+        //c.red   = r;
+        //c.green = g;
+        //c.blue  = b;
+		//let c = Color( r, g, b, ONE );
+        //return c;
+		let c = new Color( r, g, b, ONE );
+		return c;
     }
 
 
@@ -2067,7 +2061,7 @@ console.log( "contributeToOffspring: _childEnergyRatio = " + _childEnergyRatio )
 	//-------------------------------------------
 	this.setRenderingGoals = function(r)
 	{	
-	    _swimbotRenderer.setRenderingGoals(r);
+	    globalRenderer.getSwimbotRenderer().setRenderingGoals(r);
     }
     
 	//-------------------------------------
@@ -2075,83 +2069,36 @@ console.log( "contributeToOffspring: _childEnergyRatio = " + _childEnergyRatio )
 	//-------------------------------------
 	this.render = function( levelOfDetail )
 	{
-	    _swimbotRenderer.render
-	    ( 
-	        _phenotype, 
-	        _brain, 
-	        _age,
-	        _energy,
-	        _growthScale, 
-	        _focusDirection,
-	        levelOfDetail
-	    );
+	    globalRenderer.getSwimbotRenderer().render( this, levelOfDetail );
 
-              
+        /// debug test!!!!! 
+        // I'm adding these colored circles to visualize food preferences...  
+        /*
+        if ( _phenotype.preferredFoodType == 0 ) { _colorUtility.set( 100/255, 255/255, 100/255, 1.0 ); }
+        else                                     { _colorUtility.set( 100/255, 150/255, 255/255, 1.0 ); }
+        globalRenderer.renderCircle( _position, 60, _colorUtility, 2, 0, false )
 
+        if ( _phenotype.digestibleFoodType == 0 ) { _colorUtility.set( 100/255, 255/255, 100/255, 1.0 ); }
+        else                                      { _colorUtility.set( 100/255, 150/255, 255/255, 1.0 ); }
+        globalRenderer.renderCircle( _position, 45, _colorUtility, 2, 0, false )
+        */
 
-/// debug test!!!!! 
-// I'm adding these colored circles to visualize food preferences...  
-/*       
-canvas.lineWidth = 2;
-
-if ( _phenotype.preferredFoodType == 0 )
-{
-    canvas.strokeStyle = "rgb( 100, 255, 100 )";	
-    canvas.beginPath();
-    canvas.arc( _position.x, _position.y, 60, 0, PI2, false );
-    canvas.stroke();
-    canvas.closePath();	
-}
-else
-{
-    canvas.strokeStyle = "rgb( 100, 150, 255 )";	
-    canvas.beginPath();
-    canvas.arc( _position.x, _position.y, 60, 0, PI2, false );
-    canvas.stroke();
-    canvas.closePath();	
-}
-
-if (_phenotype.digestibleFoodType == 0 )
-{
-    canvas.strokeStyle = "rgb( 100, 255, 100 )";	
-    canvas.beginPath();
-    canvas.arc( _position.x, _position.y, 45, 0, PI2, false );
-    canvas.stroke();
-    canvas.closePath();	
-}
-else
-{
-    canvas.strokeStyle = "rgb( 100, 150, 255 )";	
-    canvas.beginPath();
-    canvas.arc( _position.x, _position.y, 45, 0, PI2, false );
-    canvas.stroke();
-    canvas.closePath();	
-}
-*/
-
-
-	    /*
-		//-------------------------------------
-		// show position
-		//-------------------------------------
-		canvas.fillStyle = "rgb( 244, 244, 244 )";	
-		canvas.beginPath();
-		canvas.arc( _position.x, _position.y, 2.0, 0, PI2, false );
-		canvas.fill();
-		canvas.closePath();	
+		/*
+        //-------------------------------------
+        // show position
+        //-------------------------------------
+        _colorUtility.set( 244/255, 244/255, 244/255, 1.0 );
+        globalRenderer.renderCircle( _position, 2.0, _colorUtility, 2, 0, true )
         
 		//-----------------------------------------
 		// show heading
 		//-----------------------------------------
-        canvas.strokeStyle = "rgb( 233, 233, 233 )";	
-
-        canvas.lineWidth = 1; 
-        canvas.beginPath();
-        canvas.moveTo( _position.x, _position.y );
-        canvas.lineTo( _position.x + _heading.x * 40.0, _position.y + _heading.y * 40.0 );
-        canvas.closePath();
-        canvas.stroke();
-	    */	    
+        _colorUtility.set( 233/255, 233/255, 233/255, 1.0 );
+		let p2 = new Vector2D();
+		p2.set( _position );
+        p2.addScaled( _heading, 40.0 ) 
+        globalRenderer.renderLine( _position, p2, _colorUtility, 2, true )
+		*/
 	}
     
 }//end of entire Swimbots function -------------------------
