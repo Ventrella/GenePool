@@ -27,6 +27,13 @@ var    flopperYV = 0;
     //---------------------------------
     const TOO_UGLY_TO_CHOOSE = ZERO;
      
+    //---------------------------------
+    //  common colors
+    //---------------------------------
+    const DEAD_COLOR_RED    = 0.2;
+    const DEAD_COLOR_GREEN  = 0.25;
+    const DEAD_COLOR_BLUE   = 0.3;
+
 	//-----------------------------------------
 	// variables
 	//-----------------------------------------
@@ -1580,13 +1587,13 @@ let partAccelerationY = -strokeForceY;
         
         for (let p=1; p<_phenotype.numParts; p++)
         {
-            //console.log( _phenotype.parts[p].red + ", " + _phenotype.parts[p].green + ", " + _phenotype.parts[p].blue );
+            //console.log( 'part ' + p + ', color=' + _phenotype.parts[p].baseColor.rgba() );
             
             accumulatedMass += _phenotype.parts[p].mass;
             
-            let rgDiff = Math.abs( _phenotype.parts[p].red     - _phenotype.parts[p].green  );
-            let rbDiff = Math.abs( _phenotype.parts[p].red     - _phenotype.parts[p].blue   );
-            let gbDiff = Math.abs( _phenotype.parts[p].green   - _phenotype.parts[p].blue   );
+            let rgDiff = Math.abs( _phenotype.parts[p].baseColor.red     - _phenotype.parts[p].baseColor.green  );
+            let rbDiff = Math.abs( _phenotype.parts[p].baseColor.red     - _phenotype.parts[p].baseColor.blue   );
+            let gbDiff = Math.abs( _phenotype.parts[p].baseColor.green   - _phenotype.parts[p].baseColor.blue   );
 
             //console.log( rgDiff + ", " + rbDiff + ", " + gbDiff );
             
@@ -1669,8 +1676,8 @@ let partAccelerationY = -strokeForceY;
 	    let c1 = judge.getAverageColor();
 	    let c2 = this.getAverageColor();
 	    
-	    //console.log( "judge color = " + c1.red + ", " + c1.green + ", " + c1.blue );
-	    //console.log( "my color    = " + c2.red + ", " + c2.green + ", " + c2.blue );
+	    //console.log( "judge color = " + c1.rgba() );
+	    //console.log( "my color    = " + c2.rgba() );
             
         let rDiff = Math.abs( c2.red    - c1.red    );
         let gDiff = Math.abs( c2.green  - c1.green  );
@@ -1885,9 +1892,9 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
         {
             accumulatedMass += _phenotype.parts[p].mass;
         
-            r += _phenotype.parts[p].red    * _phenotype.parts[p].mass;
-            g += _phenotype.parts[p].green  * _phenotype.parts[p].mass;
-            b += _phenotype.parts[p].blue   * _phenotype.parts[p].mass;
+            r += _phenotype.parts[p].baseColor.red    * _phenotype.parts[p].mass;
+            g += _phenotype.parts[p].baseColor.green  * _phenotype.parts[p].mass;
+            b += _phenotype.parts[p].baseColor.blue   * _phenotype.parts[p].mass;
         }
         
         assert( accumulatedMass > ZERO, "getAverageColor: accumulatedMass > ZERO" );
@@ -1900,12 +1907,6 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
         assert( g <= ONE, "getAverageColor: g <= ONE" );
         assert( b <= ONE, "getAverageColor: b <= ONE" );
     
-        //let c = new Color();
-        //c.red   = r;
-        //c.green = g;
-        //c.blue  = b;
-		//let c = Color( r, g, b, ONE );
-        //return c;
 		let c = new Color( r, g, b, ONE );
 		return c;
     }
@@ -2055,7 +2056,6 @@ console.log( "contributeToOffspring: _childEnergyRatio = " + _childEnergyRatio )
     }
 
 
-
 	//-------------------------------------------
 	// set rendering goals
 	//-------------------------------------------
@@ -2063,6 +2063,52 @@ console.log( "contributeToOffspring: _childEnergyRatio = " + _childEnergyRatio )
 	{	
 	    globalRenderer.getSwimbotRenderer().setRenderingGoals(r);
     }
+
+	//------------------------------------------------------
+	// calculate color blending
+	//------------------------------------------------------
+	this.calculatePartColor = function( partNumber )
+	{
+        let blendColor = new Color();
+        let blendPct   = 0;
+        
+        if ( _age < globalTweakers.maximumLifeSpan - OLD_AGE_DURATION )
+        {
+            if ( _age < YOUNG_AGE_DURATION )
+            {
+                //------------------------------
+                // newborns start white...
+                //------------------------------
+                blendColor = new Color( ONE, ONE, ONE );
+                blendPct   = ( ONE - _growthScale );
+            }
+            else
+            {
+                if ( _energy < STARVING )
+                {
+                    assert( _energy >= ZERO, "_energy >= ZERO" );
+                    blendColor = new Color( DEAD_COLOR_RED, DEAD_COLOR_GREEN, DEAD_COLOR_BLUE );
+                    blendPct   = ( _energy / STARVING );
+                 }
+            }
+        }
+        else
+        {
+            let oldAgeThreshold = globalTweakers.maximumLifeSpan - OLD_AGE_DURATION;
+            blendColor = new Color( DEAD_COLOR_RED, DEAD_COLOR_GREEN, DEAD_COLOR_BLUE );
+            blendPct   = ( _age - oldAgeThreshold ) / OLD_AGE_DURATION;
+        }
+
+        //	save back in the part for renderer reference
+        _phenotype.parts[partNumber].blendColor = blendColor;
+        _phenotype.parts[partNumber].blendPct   = blendPct;
+
+        //	and also pass result to caller
+        _colorUtility.blend( _phenotype.parts[partNumber].baseColor, blendColor, blendPct );
+        _colorUtility.assertValid();
+        return _colorUtility;
+    }
+
     
 	//-------------------------------------
 	// render

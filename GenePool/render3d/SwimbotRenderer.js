@@ -20,13 +20,7 @@ function SwimbotRenderer()
 	//---------------------------------
 	//  colors 
 	//---------------------------------
-	const COLOR_WHITENESS   = 0.4; // 0.0 = normal-saturated color; 0.5 = white-washed; 1.0 = pure white
-	const DEAD_COLOR_RED    = 0.2;
-	const DEAD_COLOR_GREEN  = 0.25;
-	const DEAD_COLOR_BLUE   = 0.3;
-	const ROLLOVER_COLOR    = "rgba( 180, 190, 200, 0.7 )";	
-	const SELECT_COLOR      = "rgba( 255, 255, 255, 0.8 )";	
-	const OUTLINE_COLOR     = "rgba( 0, 0, 0, 0.4 )";	
+	const OUTLINE_COLOR = "rgba( 0, 0, 0, 0.4 )";	// for 2d comparison code
  
 	//---------------------------------
 	//  spline 
@@ -145,7 +139,7 @@ function SwimbotRenderer()
         
 		if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_DOT )
 		{
-			this.render2d_lod_dot( _phenotype.parts[1].position, SWIMBOT_DOT_RENDER_RADIUS );
+			this.render2d_lod_dot( swimbot, SWIMBOT_DOT_RENDER_RADIUS );
 		}
 		else if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_LOW )
 		{
@@ -163,14 +157,15 @@ function SwimbotRenderer()
 	//	Original 2D rendering code from GenePool - 4/2/22
 	//
 	//-----------------------------------
-	this.render2d_lod_dot = function( position, radius )
+	this.render2d_lod_dot = function( swimbot, radius )
 	{
 		if (_renderModeNormal == 1 || _renderModeNormal == 2)	// use for both 2 & 3d for now
 		{
-			let p = 1;
-			_colorUtility = this.calculatePartColor(p);  
+			let partNum = 1;
+			let position = swimbot._phenotype.parts[ partNum ].position;
+			_colorUtility = swimbot.calculatePartColor( partNum );
+
 			_canvas.fillStyle = _colorUtility.rgba();	
-		    
 			_canvas.beginPath();
 			_canvas.arc( position.x, position.y, radius, 0, PI2, false );
 			_canvas.fill();
@@ -189,7 +184,7 @@ function SwimbotRenderer()
 			{
 				_parentPosition = swimbot.getPartParentPosition(p);
 
-				_colorUtility = this.calculatePartColor(p);
+				_colorUtility = swimbot.calculatePartColor(p);
 				_canvas.strokeStyle = _colorUtility.rgba();	
 				_canvas.lineWidth = _phenotype.parts[p].width * 2.0; 
 
@@ -206,7 +201,9 @@ function SwimbotRenderer()
 	{ 
 		for (let p=1; p<_phenotype.numParts; p++)
 		{
-			_parentPosition = swimbot.getPartParentPosition(p);
+			_parentPosition = swimbot.getPartParentPosition( p );
+			_colorUtility   = swimbot.calculatePartColor( p );
+
 			if ( _phenotype.parts[p].length > ZERO )
 			{
 				//--------------------------------------------
@@ -226,7 +223,8 @@ function SwimbotRenderer()
 					switch (_renderModeNormal) {
 						case 0 : break;
 						case 1 : this.renderPartNormal2d(p); break;
-						case 2 : break;
+						case 2 : this.renderPartNormal3d(p); break;
+						}
 					}
 				}
 
@@ -240,6 +238,7 @@ function SwimbotRenderer()
 						if (( _brain.getState() == BRAIN_STATE_LOOKING_FOR_FOOD	)
 						||  ( _brain.getState() == BRAIN_STATE_PURSUING_FOOD ))
 						{	
+							_colorUtility = swimbot.calculatePartColor(1);  
 							this.renderMouth2d();
 						}
 					}
@@ -263,71 +262,38 @@ function SwimbotRenderer()
 		}
 	}
 
-	//------------------------------------------------------
-	// calculate part color 
-	//------------------------------------------------------
-	this.calculatePartColor = function(p)
+
+	//=======================================================================================================
+	//
+	//	3D rendering
+	//
+	//=======================================================================================================
+	this.renderPartNormal3d = function(p)
 	{
-	    _colorUtility.red   = _phenotype.parts[p].red;
-	    _colorUtility.green = _phenotype.parts[p].green;
-	    _colorUtility.blue  = _phenotype.parts[p].blue;
-        
-        if ( _age < globalTweakers.maximumLifeSpan - OLD_AGE_DURATION )
-        {
-            if ( _age < YOUNG_AGE_DURATION )
-            {
-                //------------------------------
-                // newborns start white...
-                //------------------------------
-                _colorUtility.red   = ( ONE - _growthScale ) + ( _colorUtility.red	 * _growthScale );
-                _colorUtility.green = ( ONE - _growthScale ) + ( _colorUtility.green * _growthScale );
-                _colorUtility.blue  = ( ONE - _growthScale ) + ( _colorUtility.blue	 * _growthScale );
-            }
-            else
-            {
-                if ( _energy < STARVING )
-                {
-                    assert( _energy >= ZERO, "_energy >= ZERO" );
+		//let width     = p.width;
+		//let position  = p.position;
+		//genePool3D.renderNormal3d( _phenotype.parts[p], p, _parentPosition, _growthScale, baseColor, blendColor, blendPct );
 
-                    let f = ONE - ( _energy / STARVING );
-            
-                    _colorUtility.red   = DEAD_COLOR_RED    * f + _phenotype.parts[p].red   * ( ONE - f );
-                    _colorUtility.green = DEAD_COLOR_GREEN  * f + _phenotype.parts[p].green * ( ONE - f );
-                    _colorUtility.blue  = DEAD_COLOR_BLUE   * f + _phenotype.parts[p].blue  * ( ONE - f );
-                 }
-            }
-        }
-        else
-        {
-            let oldAgeThreshold = globalTweakers.maximumLifeSpan - OLD_AGE_DURATION;
-        
-            let f = ( _age - oldAgeThreshold ) / OLD_AGE_DURATION;
-            
-            assert( f >= ZERO, "SwibotRenderer:renderPartSplined: f >= ZERO" );
-            assert( f <= ONE,  "SwibotRenderer:renderPartSplined: f <= ONE"  );
-        
-            // I had an assert before, but this is just graphics, and 
-            // I assume if it is above 1, it's only by a tiny amount.
-            if ( f > ONE )
-            {
-                f = ONE;
-            }
-        
-            _colorUtility.red   = DEAD_COLOR_RED    * f + _phenotype.parts[p].red   * ( ONE - f );
-            _colorUtility.green = DEAD_COLOR_GREEN  * f + _phenotype.parts[p].green * ( ONE - f );
-            _colorUtility.blue  = DEAD_COLOR_BLUE   * f + _phenotype.parts[p].blue  * ( ONE - f );
-        }
-        
-        assert( _colorUtility.red   >= ZERO, "_colorUtility.red   >= ZERO" );
-        assert( _colorUtility.red   <= ONE,  "_colorUtility.red   <= ONE"  );
+		let part = _phenotype.parts[p];
+		//let dxp  = part.position.x - this.prevCamPosX;
+		//let dyp  = part.position.y - this.prevCamPosY;
+		//let offp = Math.sqrt( dxp * dxp + dyp * dyp );
 
-        assert( _colorUtility.green >= ZERO, "_colorUtility.green >= ZERO" );
-        assert( _colorUtility.green <= ONE,  "_colorUtility.green <= ONE"  );
+		let width		= part.width;
+		let position 	= part.position;
+		let length		= part.length;
+		let angle		= part.currentAngle;
+		let depth		= width;
+		let scale		= _growthScale;
 
-        assert( _colorUtility.blue  >= ZERO, "_colorUtility.blue  >= ZERO" );
-        assert( _colorUtility.blue  <= ONE,  "_colorUtility.blue  <= ONE"  );
-        
-	    return _colorUtility;
+		if ( !("meshId" in part) ) {
+			//part.prevScale = scale;
+			part.meshId = this.genepool3Dcpp.createNormalSwimmer( width, depth, length, part.baseColor.red, part.baseColor.green, part.baseColor.blue, scale );
+		}
+
+		this.genepool3Dcpp.renderNormalSwimmer( part.meshId, position.x, position.y, index, angle, scale, part.blendColor.red, part.blendColor.green, part.blendColor.blue, part.blendPct );
+		//part.prevScale = scale;
+
 	}
 
 
@@ -374,7 +340,6 @@ function SwimbotRenderer()
         let x3 = position.x - pp0x;
         let y3 = position.y - pp0y;		
     
-        _colorUtility = this.calculatePartColor(p);
 		_canvas.fillStyle = _colorUtility.rgba();	
 
         _canvas.beginPath();
@@ -533,7 +498,6 @@ function SwimbotRenderer()
         //---------------------------------------
         // get color
         //---------------------------------------
-        _colorUtility = this.calculatePartColor(p);
 		_canvas.fillStyle = _colorUtility.rgba();	
         _canvas.strokeStyle = OUTLINE_COLOR;
 
@@ -1001,9 +965,7 @@ else
         let rightEndY = mouthEndY;
             
 		_canvas.lineWidth = SWIMBOT_MOUTH_WIDTH; 
-        
-        _colorUtility = this.calculatePartColor(1);  
-		_canvas.fillStyle = _colorUtility.rgba();	
+        _canvas.fillStyle = _colorUtility.rgba();	
         
         //--------------------------------------------------------
         // open jaws

@@ -1172,6 +1172,8 @@ window.onwheel = function(e)
 //--------------------------------
 document.onkeydown = function(e) 
 {
+	if ( typeof genePool == "undefined" ) return;
+
     e = e || window.event;
     
     //-----------------------------
@@ -1243,6 +1245,7 @@ document.onkeydown = function(e)
 //------------------------------
 document.onkeyup = function(e) 
 {
+	if ( typeof genePool == "undefined" ) return;
     genePool.stopCameraNavigation( CameraNavigationAction.LEFT  );
     genePool.stopCameraNavigation( CameraNavigationAction.RIGHT );
     genePool.stopCameraNavigation( CameraNavigationAction.UP    );

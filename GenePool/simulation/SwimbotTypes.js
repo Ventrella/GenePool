@@ -161,9 +161,9 @@ function Part()
 	this.turnAmp		    = ZERO;
 	this.turnPhase	        = ZERO;
 	this.momentFactor		= ZERO;
-	this.red				= ZERO;
-	this.green				= ZERO;
-	this.blue				= ZERO;
+	this.baseColor			= new Color();
+	this.blendColor			= new Color();
+	this.blendPct			= ZERO;
     this.endCapSpline       = ZERO;     // how pointy the splined end-cap is for parts that terminate body sequence
 	this.branch             = false;    // set to true if this part branches off (not a continuation of a category)
     this.splined		    = false;

@@ -273,7 +273,6 @@ function GenePool()
 		//------------------------------------------------------------
 		// start up the timer
 		//------------------------------------------------------------
-		//this.timer = setTimeout( "genePool.update()", _millisecondsPerUpdate );	
 		this.timerFunc();
 	}
 	

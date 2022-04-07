@@ -29,7 +29,7 @@
             this.red     = red;
             this.green   = green;
             this.blue    = blue;
-            this.opacity = opacity;
+            this.opacity = (opacity === undefined)? ONE : opacity;
         }
 
 		this.set = function( red, green, blue, opacity ) {
@@ -37,6 +37,24 @@
 			this.green   = green;
 			this.blue    = blue;
 			this.opacity = opacity;
+		}
+
+		this.blend = function( base, blend, pct ) {
+			if (pct > ONE ) pct = ONE;
+			if (pct < ZERO) pct = ZERO;
+			this.red     = (base.red   * (ONE - pct)) + (blend.red   * pct);
+			this.green   = (base.green * (ONE - pct)) + (blend.green * pct);
+			this.blue    = (base.blue  * (ONE - pct)) + (blend.blue  * pct);
+			this.opacity = base.opacity;	// tbd - blend opacity???
+		}
+
+		this.assertValid = function() {
+			assert( this.red   >= ZERO, "Color.red   >= ZERO" );
+			assert( this.red   <= ONE,  "Color.red   <= ONE"  );
+			assert( this.green >= ZERO, "Color.green >= ZERO" );
+			assert( this.green <= ONE,  "Color.green <= ONE"  );
+			assert( this.blue  >= ZERO, "Color.blue  >= ZERO" );
+			assert( this.blue  <= ONE,  "Color.blue  <= ONE"  );
 		}
 
         // css style 'rgba' for HTML canvas rendering

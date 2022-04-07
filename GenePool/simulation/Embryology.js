@@ -399,9 +399,9 @@ testNoEel = false;
 	    let testParts = new Array();
 	    
 	    
-	    phenotype.parts[2].red   = 1.0;
-	    phenotype.parts[2].green = 1.0;
-	    phenotype.parts[2].blue  = 0.5;
+	    phenotype.parts[2].baseColor.red   = 1.0;
+	    phenotype.parts[2].baseColor.green = 1.0;
+	    phenotype.parts[2].baseColor.blue  = 0.5;
 
         for (let p=1; p<phenotype.numParts; p++)
 		{
@@ -487,9 +487,11 @@ copyPart( testParts[p], phenotype.parts[p] );
         to.turnAmp		    = from.turnAmp;
         to.turnPhase	    = from.turnPhase;
         to.momentFactor		= from.momentFactor;
-        to.red				= from.red;
-        to.green			= from.green;
-        to.blue				= from.blue;
+
+        to.baseColor		= from.baseColor;
+        to.blendColor		= from.blendColor;
+        to.blendPct			= from.blendPct;
+
         to.splined          = from.splined;
         to.endCapSpline     = from.endCapSpline;
         to.numDecendents	= from.numDecendents;
@@ -577,11 +579,11 @@ if ( testNoEel )
                     fraction = i / ( _categoryValues[c].sequenceCount - 1 );     
                 }
                         
-                phenotype.parts[ _partIndex ].width  = _categoryValues[c].startWidth  + fraction * ( _categoryValues[c].endWidth  - _categoryValues[c].startWidth   );
-                phenotype.parts[ _partIndex ].length = _categoryValues[c].startLength + fraction * ( _categoryValues[c].endLength - _categoryValues[c].startLength  );   
-                phenotype.parts[ _partIndex ].red    = _categoryValues[c].startRed    + fraction * ( _categoryValues[c].endRed    - _categoryValues[c].startRed     );
-                phenotype.parts[ _partIndex ].green  = _categoryValues[c].startGreen  + fraction * ( _categoryValues[c].endGreen  - _categoryValues[c].startGreen   );
-                phenotype.parts[ _partIndex ].blue   = _categoryValues[c].startBlue   + fraction * ( _categoryValues[c].endBlue   - _categoryValues[c].startBlue    );
+                phenotype.parts[ _partIndex ].width           = _categoryValues[c].startWidth  + fraction * ( _categoryValues[c].endWidth  - _categoryValues[c].startWidth   );
+                phenotype.parts[ _partIndex ].length          = _categoryValues[c].startLength + fraction * ( _categoryValues[c].endLength - _categoryValues[c].startLength  );   
+                phenotype.parts[ _partIndex ].baseColor.red   = _categoryValues[c].startRed    + fraction * ( _categoryValues[c].endRed    - _categoryValues[c].startRed     );
+                phenotype.parts[ _partIndex ].baseColor.green = _categoryValues[c].startGreen  + fraction * ( _categoryValues[c].endGreen  - _categoryValues[c].startGreen   );
+                phenotype.parts[ _partIndex ].baseColor.blue  = _categoryValues[c].startBlue   + fraction * ( _categoryValues[c].endBlue   - _categoryValues[c].startBlue    );
                 
 			    assert( phenotype.parts[ _partIndex ].length > ZERO, "In Embryology: phenotype.parts[ _partIndex ].length > ZERO" );
 			    assert( phenotype.parts[ _partIndex ].width  > ZERO, "In Embryology: phenotype.parts[ _partIndex ].width  > ZERO" );              

@@ -25,12 +25,6 @@ var    flopperYV = 0;
     //---------------------------------
     //  colors 
     //---------------------------------
-    const COLOR_WHITENESS   = 0.4; // 0.0 = normal-saturated color; 0.5 = white-washed; 1.0 = pure white
-    const DEAD_COLOR_RED    = 0.2;
-    const DEAD_COLOR_GREEN  = 0.25;
-    const DEAD_COLOR_BLUE   = 0.3;
-    const ROLLOVER_COLOR    = "rgba( 180, 190, 200, 0.7 )";	
-    const SELECT_COLOR      = "rgba( 255, 255, 255, 0.8 )";	
     const OUTLINE_COLOR     = "rgba( 0, 0, 0, 0.4 )";	
     
     //---------------------------------
@@ -111,8 +105,7 @@ var    flopperYV = 0;
 		if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_DOT )
 		{
 		    let p = 1;
-
-            _colorUtility = this.calculatePartColor(p);  
+            _colorUtility = swimbot.calculatePartColor( p );
 			_canvas.fillStyle = _colorUtility.rgba();	
 		    
             _canvas.beginPath();
@@ -126,7 +119,7 @@ var    flopperYV = 0;
 			{
 				_parentPosition = swimbot.getPartParentPosition(p);
                 
-				_colorUtility = this.calculatePartColor(p);
+				_colorUtility = swimbot.calculatePartColor( p );
 				_canvas.strokeStyle = _colorUtility.rgba();	
 				_canvas.lineWidth = _phenotype.parts[p].width * 2.0; 
 
@@ -142,6 +135,7 @@ var    flopperYV = 0;
 			for (let p=1; p<_phenotype.numParts; p++)
 			{
 				_parentPosition = swimbot.getPartParentPosition(p);
+				_colorUtility = swimbot.calculatePartColor( p );
 
 				if ( _phenotype.parts[p].length > ZERO )
 				{
@@ -186,6 +180,7 @@ var    flopperYV = 0;
                             if (( _brain.getState() == BRAIN_STATE_LOOKING_FOR_FOOD	)
                             ||  ( _brain.getState() == BRAIN_STATE_PURSUING_FOOD ))
                             {	
+								_colorUtility = swimbot.calculatePartColor(1);  
                                 this.renderMouth();
                             }		
                         }
@@ -327,7 +322,6 @@ if ( _index === 0 )
         let x3 = position.x - pp0x;
         let y3 = position.y - pp0y;		
     
-        _colorUtility = this.calculatePartColor(p);
 		_canvas.fillStyle = _colorUtility.rgba();	
 
         _canvas.beginPath();
@@ -488,7 +482,6 @@ if ( _index === 0 )
         //---------------------------------------
         // get color
         //---------------------------------------
-        _colorUtility = this.calculatePartColor(p);
 		_canvas.fillStyle = _colorUtility.rgba();	
         _canvas.strokeStyle = OUTLINE_COLOR;
 
@@ -780,79 +773,6 @@ if ( _index === 0 )
         */
     }
 
-
-
-
-	//------------------------------------------------------
-	// calculate part color 
-	//------------------------------------------------------
-	this.calculatePartColor = function(p)
-	{
-	    _colorUtility.red   = _phenotype.parts[p].red;
-	    _colorUtility.green = _phenotype.parts[p].green;
-	    _colorUtility.blue  = _phenotype.parts[p].blue;
-        
-        if ( _age < globalTweakers.maximumLifeSpan - OLD_AGE_DURATION )
-        {
-            if ( _age < YOUNG_AGE_DURATION )
-            {
-                //------------------------------
-                // newborns start white...
-                //------------------------------
-                _colorUtility.red   = ( ONE - _growthScale ) + ( _colorUtility.red	 * _growthScale );
-                _colorUtility.green = ( ONE - _growthScale ) + ( _colorUtility.green * _growthScale );
-                _colorUtility.blue  = ( ONE - _growthScale ) + ( _colorUtility.blue	 * _growthScale );
-            }
-            else
-            {
-                if ( _energy < STARVING )
-                {
-                    assert( _energy >= ZERO, "_energy >= ZERO" );
-
-                    let f = ONE - ( _energy / STARVING );
-            
-                    _colorUtility.red   = DEAD_COLOR_RED    * f + _phenotype.parts[p].red   * ( ONE - f );
-                    _colorUtility.green = DEAD_COLOR_GREEN  * f + _phenotype.parts[p].green * ( ONE - f );
-                    _colorUtility.blue  = DEAD_COLOR_BLUE   * f + _phenotype.parts[p].blue  * ( ONE - f );
-                 }
-            }
-        }
-        else
-        {
-            let oldAgeThreshold = globalTweakers.maximumLifeSpan - OLD_AGE_DURATION;
-        
-            let f = ( _age - oldAgeThreshold ) / OLD_AGE_DURATION;
-            
-            assert( f >= ZERO, "SwibotRenderer:renderPartSplined: f >= ZERO" );
-            assert( f <= ONE,  "SwibotRenderer:renderPartSplined: f <= ONE"  );
-        
-            // I had an assert before, but this is just graphics, and 
-            // I assume if it is above 1, it's only by a tiny amount.
-            if ( f > ONE )
-            {
-                f = ONE;
-            }
-        
-            _colorUtility.red   = DEAD_COLOR_RED    * f + _phenotype.parts[p].red   * ( ONE - f );
-            _colorUtility.green = DEAD_COLOR_GREEN  * f + _phenotype.parts[p].green * ( ONE - f );
-            _colorUtility.blue  = DEAD_COLOR_BLUE   * f + _phenotype.parts[p].blue  * ( ONE - f );
-        }
-        
-        assert( _colorUtility.red   >= ZERO, "_colorUtility.red   >= ZERO" );
-        assert( _colorUtility.red   <= ONE,  "_colorUtility.red   <= ONE"  );
-
-        assert( _colorUtility.green >= ZERO, "_colorUtility.green >= ZERO" );
-        assert( _colorUtility.green <= ONE,  "_colorUtility.green <= ONE"  );
-
-        assert( _colorUtility.blue  >= ZERO, "_colorUtility.blue  >= ZERO" );
-        assert( _colorUtility.blue  <= ONE,  "_colorUtility.blue  <= ONE"  );
-        
-	    return _colorUtility;
-	}
-
-
-
-
     
 	//--------------------------------
 	// render genital
@@ -985,9 +905,7 @@ else
         let rightEndY = mouthEndY;
             
 		_canvas.lineWidth = SWIMBOT_MOUTH_WIDTH; 
-        
-        _colorUtility = this.calculatePartColor(1);  
-		_canvas.fillStyle = _colorUtility.rgba();	
+        _canvas.fillStyle = _colorUtility.rgba();	
         
         //--------------------------------------------------------
         // open jaws
