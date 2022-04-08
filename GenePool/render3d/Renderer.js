@@ -71,6 +71,17 @@ configureRenderer = function ()
 	textOverlay.style  = "position: fixed; left: 10px; bottom: 20px; background-color: rgba(90, 90, 90, 0.8); display: none";
 	canvasContainer.appendChild(textOverlay);
 
+	//	help dialog overlay
+	var helpOverlay = document.createElement('canvas');
+	helpOverlay.id     = "helpOverlay";
+	helpOverlay.style  = "position: absolute; background-color: rgba(90, 90, 90, 0.9); display: none";
+	canvasContainer.appendChild(helpOverlay);
+
+	var popupMsg = document.createElement('div');
+	popupMsg.id  = "popupMsg";
+	popupMsg.style  = "position: absolute; background-color: rgba(90, 90, 90, 0.9); display: none";
+	canvasContainer.appendChild(popupMsg);
+
 	//	webGl output (3D)
 	var glDiv = document.createElement('div');
 	glDiv.id    = 'glDiv';
@@ -86,6 +97,7 @@ configureRenderer = function ()
 	genePoolCanvas.style.zIndex = "2";
 	glDiv.style.zIndex          = "3";
 	textOverlay.style.zIndex    = "7";
+	helpOverlay.style.zIndex    = "8";
 
 	// engineInputDiv / d3uiDiv (nested for proper input event handling)
 	var engineInputDiv   = document.createElement('div');

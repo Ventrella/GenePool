@@ -75,7 +75,8 @@ function SwimbotRenderer()
 	{
 		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
 		if (_renderModeNormal == 2) {
-			genePool3D.setAllNormalSwimmerVisibility( false );
+			//genePool3D.setAllNormalSwimmerVisibility( false );
+			globalGenepool3Dcpp.setAllNormalSwimmerVisibility( false );
 		}
 
 		_renderModeNormal++;
@@ -83,14 +84,23 @@ function SwimbotRenderer()
 			_renderModeNormal = 0;
 		}
 
-		console.log( "###### SwimbotRenderer::cycleNormalRenderMode: " + _renderModeNormal );
+		let state = 'foo';
+		switch (_renderModeNormal) {
+			case 0 : state = 'OFF'; break;
+			case 1 : state = '2D'; break;
+			case 2 : state = '3D'; break;
+		}
+
+		let msg = "<span style=\"color: #d0d0d0\">Normal Swimmer part render : </span><span style=\"color: #e0e020\">" + state + "</span>";
+		genePool3D.displayPopupMsg( msg, 800 );
 	}
 
 	this.cycleSplinedRenderMode = function()
 	{
 		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
 		if (_renderModeSplined == 2) {
-			genePool3D.setAllSplinedSwimmerVisibility( false );
+			//genePool3D.setAllSplinedSwimmerVisibility( false );
+			globalGenepool3Dcpp.setAllSplinedSwimmerVisibility( false );
 		}
 
 		_renderModeSplined++;
@@ -98,7 +108,15 @@ function SwimbotRenderer()
 			_renderModeSplined = 0;
 		}
 
-		console.log( "###### SwimbotRenderer::cycleSplinedRenderMode: " + _renderModeSplined );
+		let state = 'foo';
+		switch (_renderModeSplined) {
+			case 0 : state = 'OFF'; break;
+			case 1 : state = '2D'; break;
+			case 2 : state = '3D'; break;
+		}
+
+		let msg = "<span style=\"color: #d0d0d0\">Splined Swimmer part render : </span><span style=\"color: #e0e020\">" + state + "</span>";
+		genePool3D.displayPopupMsg( msg, 800 );
 	}
 
 
@@ -122,7 +140,12 @@ function SwimbotRenderer()
 	//	dispose of render assets for a given swimmer
 	//------------------------------------------------
 	this.releaseRenderAssets = function( swimmer ) {
-		genePool3D.deleteSwimmer( swimmer );
+		//genePool3D.deleteSwimmer( swimmer );
+		if ( "meshId" in swimmer )
+		{
+			globalGenepool3Dcpp.deleteSwimmer( swimmer.meshId );	// kill the 3D assets
+			delete swimmer.meshId;									// remove the ID key from the js object
+		}
 	}
 
 	//-----------------------
@@ -197,13 +220,13 @@ function SwimbotRenderer()
 		}
 	}
 
+	//
 	this.render_lod_high = function( swimbot )
 	{ 
 		for (let p=1; p<_phenotype.numParts; p++)
 		{
 			_parentPosition = swimbot.getPartParentPosition( p );
 			_colorUtility   = swimbot.calculatePartColor( p );
-
 			if ( _phenotype.parts[p].length > ZERO )
 			{
 				//--------------------------------------------
@@ -224,7 +247,6 @@ function SwimbotRenderer()
 						case 0 : break;
 						case 1 : this.renderPartNormal2d(p); break;
 						case 2 : this.renderPartNormal3d(p); break;
-						}
 					}
 				}
 
@@ -268,13 +290,13 @@ function SwimbotRenderer()
 	//	3D rendering
 	//
 	//=======================================================================================================
-	this.renderPartNormal3d = function(p)
+	this.renderPartNormal3d = function( partNum )
 	{
 		//let width     = p.width;
 		//let position  = p.position;
 		//genePool3D.renderNormal3d( _phenotype.parts[p], p, _parentPosition, _growthScale, baseColor, blendColor, blendPct );
 
-		let part = _phenotype.parts[p];
+		let part = _phenotype.parts[ partNum ];
 		//let dxp  = part.position.x - this.prevCamPosX;
 		//let dyp  = part.position.y - this.prevCamPosY;
 		//let offp = Math.sqrt( dxp * dxp + dyp * dyp );
@@ -286,14 +308,13 @@ function SwimbotRenderer()
 		let depth		= width;
 		let scale		= _growthScale;
 
+		//	create the mesh if it doesn't already exist
 		if ( !("meshId" in part) ) {
-			//part.prevScale = scale;
-			part.meshId = this.genepool3Dcpp.createNormalSwimmer( width, depth, length, part.baseColor.red, part.baseColor.green, part.baseColor.blue, scale );
+			part.meshId = globalGenepool3Dcpp.createNormalSwimmer( width, depth, length, part.baseColor.red, part.baseColor.green, part.baseColor.blue, scale );
 		}
 
-		this.genepool3Dcpp.renderNormalSwimmer( part.meshId, position.x, position.y, index, angle, scale, part.blendColor.red, part.blendColor.green, part.blendColor.blue, part.blendPct );
-		//part.prevScale = scale;
-
+		//	render existing mesh
+		globalGenepool3Dcpp.renderNormalSwimmer( part.meshId, position.x, position.y, partNum, angle, scale, part.blendColor.red, part.blendColor.green, part.blendColor.blue, part.blendPct );
 	}
 
 
@@ -1056,4 +1077,3 @@ else
         }	
 	}
 }
-

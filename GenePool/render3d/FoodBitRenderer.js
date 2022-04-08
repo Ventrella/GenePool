@@ -38,7 +38,12 @@ function FoodBitRenderer()
 	//	dispose of render assets for a given foodbit
 	this.releaseRenderAssets = function( foodBit )
 	{
-		genePool3D.deleteFoodBit( this );
+		//genePool3D.deleteFoodBit( this );
+		if ( "meshId" in foodBit )
+		{
+			globalGenepool3Dcpp.deleteFoodBit( foodBit.meshId );	// kill the 3D assets
+			delete foodBit.meshId;								// remove the ID key from the js object
+		}
 	}
 
 	//-----------------------------------------
@@ -50,7 +55,8 @@ function FoodBitRenderer()
 	{
 		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
 		if (_renderModeFoodBits == 2) {
-			genePool3D.setAllFoodBitVisibility( false );
+			//genePool3D.setAllFoodBitVisibility( false );
+			globalGenepool3Dcpp.setAllFoodBitVisibility( false );
 		}
 
 		_renderModeFoodBits++;
@@ -58,7 +64,15 @@ function FoodBitRenderer()
 			_renderModeFoodBits = 0;
 		}
 
-		console.log( "###### foodBitRenderer changeRenderMode: " + _renderModeFoodBits );
+		let state = 'foo';
+		switch (_renderModeFoodBits) {
+			case 0 : state = 'OFF'; break;
+			case 1 : state = '2D'; break;
+			case 2 : state = '3D'; break;
+		}
+
+		let msg = "<span style=\"color: #d0d0d0\">Foodbit render : </span><span style=\"color: #e0e020\">" + state + "</span>";
+		genePool3D.displayPopupMsg( msg, 800 );
 	}
 
 	this.render = function( foodBit, isSelected, isMouseOver, camera )
