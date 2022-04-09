@@ -171,13 +171,13 @@ function Renderer()
 	//
 	//	Renderers can support their own set of debug modes tied to key events.
 	//
-	this.handleRenderSpecificKeyDown = function( keyCode )
+	this.handleRenderSpecificKeyDown = function( keyCode, isShiftKey, isCtrlKey, isAltKey )
 	{
-		genePool3D.onKeyDown( keyCode );
+		genePool3D.onKeyDown( keyCode, isShiftKey, isCtrlKey, isAltKey );
 	}
-	this.handleRenderSpecificKeyUp = function( keyCode )
+	this.handleRenderSpecificKeyUp = function( keyCode, isShiftKey, isCtrlKey, isAltKey )
 	{
-		genePool3D.onKeyUp( keyCode );
+		genePool3D.onKeyUp( keyCode, isShiftKey, isCtrlKey, isAltKey );
 	}
 
 	//-------------------------------------------------

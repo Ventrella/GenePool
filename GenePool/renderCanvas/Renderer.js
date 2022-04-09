@@ -38,8 +38,8 @@ function Renderer()
 	//	Renderers can support their own set of debug modes tied to key events.
 	//	Currently, 2D canvas renderer has none.
 	//
-	this.handleRenderSpecificKeyDown = function( keyCode ) {}
-	this.handleRenderSpecificKeyUp = function( keyCode ) {}
+	this.handleRenderSpecificKeyDown = function( keyCode, isShiftKey, isCtrlKey, isAltKey ) {}
+	this.handleRenderSpecificKeyUp = function( keyCode, isShiftKey, isCtrlKey, isAltKey ) {}
 
 	//-------------------------------------------------
 	// called once during setup

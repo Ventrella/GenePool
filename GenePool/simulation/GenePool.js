@@ -2996,6 +2996,7 @@ if ( globalTweakers.numFoodTypes === 2 )
     this.getEnergyToOffspring   = function() { return globalTweakers.childEnergyRatio;  }
     this.getMaximumSwimbotAge   = function() { return globalTweakers.maximumLifeSpan;   }
     this.getTimeStep            = function() { return _clock;                   }    
+    this.getCamera              = function() { return _camera;                  }
 	this.getRenderingGoals      = function() { return _renderingGoals;          }
 	this.getSimulationRunning   = function() { return _simulationRunning;       }
 	this.getRendering           = function() { return _rendering;               }

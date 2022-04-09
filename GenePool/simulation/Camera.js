@@ -39,6 +39,7 @@ function Camera()
 	let _bottom	    	    = ZERO;
 	let _seconds		    = ZERO;
 	let _secondsDelta	    = ZERO;
+	let _minimumScale	    = MINIMUM_SCALE;
 	
 	//--------------------------------
 	this.update = function( seconds )
@@ -123,7 +124,23 @@ function Camera()
 	}
 
 
-	//--------------------------
+	//-------------------------------
+	//	temp override for close zooms
+	//-------------------------------
+	this.setMinZoomScale = function (scale) {
+		if ( _minimumScale == MINIMUM_SCALE ) {
+			console.log("[Camera::setMinZoomScale] : " + scale );
+			_minimumScale = scale;
+		}
+	}
+	this.restoreDefaultZoomScale = function () {
+		if ( _minimumScale != MINIMUM_SCALE ) {
+			console.log("[Camera::restoreDefaultZoomScale]" );
+			_minimumScale = MINIMUM_SCALE;
+		}
+	}
+
+	//-------------------------------
 	function applyConstraints()
 	{	
         let scaleOvershoot = _scale - ( POOL_RIGHT - POOL_LEFT );
@@ -132,7 +149,7 @@ function Camera()
             _scale -= scaleOvershoot * SCALE_OVERSHOOT_PUSH;
         }
 
-        let scaleUndershoot = _scale - MINIMUM_SCALE;
+        let scaleUndershoot = _scale - _minimumScale;
         if ( scaleUndershoot < ZERO )
         {
             _scale -= scaleUndershoot * SCALE_OVERSHOOT_PUSH;

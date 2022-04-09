@@ -200,12 +200,14 @@ var genePool3D;
 
 		//----------------------------------------------------------
 		//----------------------------------------------------------
-		weInterface.prototype.onKeyDown = function ( keyCode )
+		weInterface.prototype.onKeyDown = function ( keyCode, isShiftKey, isCtrlKey, isAltKey )
 		{
 			//	JV GenePool ui.js is currently using the following keyCodes...
 			//		37/38/39/40  : Left/Right/Up/Down
 			//		61/187       : plus
 			//		173/189      : minus
+
+			//console.log("onKeyDown: code = " + keyCode + ", isShift = " + isShiftKey + ", isCtrl = " + isCtrlKey + ", isAlt = " + isAltKey );
 
 			//	toggle pause
 			//if ( keyCode === 80 ) {	// 'p' key
@@ -249,11 +251,23 @@ var genePool3D;
 			if ( keyCode === 72) {
 				this.cycleHelpDisplay();
 			}
+
+			//	SHIFT to override the camera zoom minimum
+			if ( isShiftKey == true ) {
+				genePool.getCamera().setMinZoomScale( 100.0 );
+			}
 		}
 
-		weInterface.prototype.onKeyUp = function ( keyCode )
+		weInterface.prototype.onKeyUp = function ( keyCode, isShiftKey, isCtrlKey, isAltKey )
 		{
+			//console.log("onKeyUp  : code = " + keyCode + ", isShift = " + isShiftKey + ", isCtrl = " + isCtrlKey + ", isAlt = " + isAltKey );
+
+			//	SHIFT to override the camera zoom minimum
+			if ( isShiftKey == false ) {
+				genePool.getCamera().restoreDefaultZoomScale();
+			}
 		}
+
 
 		weInterface.prototype.cycleDebugDisplay = function ()
 		{
@@ -280,10 +294,15 @@ var genePool3D;
 			if (this.helpDisplayMode == 0) {
 				overlay.style.display = 'none';		// hide
 			} else {
-				overlay.style.width = this.glCanvas.width / 2;
-				overlay.style.height = this.glCanvas.height / 2;
-				overlay.style.left = this.glCanvas.width / 4;
-				overlay.style.top = this.glCanvas.height / 4;
+				//	center over pool
+				let w = ( this.glCanvas.width / 2 ) + 60;
+				let h =  (this.glCanvas.height / 2 );
+				let l = ( this.glCanvas.width - w ) / 2;
+				let t = ( this.glCanvas.height - h ) / 2;
+				overlay.style.width  = w;
+				overlay.style.height = h;
+				overlay.style.left   = l;
+				overlay.style.top    = t;
 				overlay.style.display = 'block';	// show
 			}
 		}
@@ -297,20 +316,24 @@ var genePool3D;
 			var texty = lineSpace;
 			var textx = 12;
 
+			//	arrgh - text is fuzzy. Need to figure out why...
+			//this.helpContext.scale( 0.5, 0.5 );
+
 			this.helpContext.font = 'bold ' + fontsize.toFixed(0) + 'px Courier';
 			this.helpContext.fillStyle = '#cfcf00';		// text color
 
 			this.helpContext.fillText( "GenePool Controls", textx, texty );
 			texty += lineSpace + 2;
 
-			fontsize = 12;
+			fontsize = 10;
 			lineSpace = fontsize + 1;
 			this.helpContext.font = 'bold ' + fontsize.toFixed(0) + 'px Courier';
 			this.helpContext.fillStyle = '#afaf00';		// text color
 
 			this.helpContext.fillText( "Left/Right : pan horizontal", textx, texty );						texty += lineSpace;
 			this.helpContext.fillText( "Up/Down    : pan vertical", textx, texty );							texty += lineSpace;
-			this.helpContext.fillText( "+ / -      : zoom", textx, texty );									texty += lineSpace;
+			this.helpContext.fillText( "+          : zoom in (hold SHIFT for close zoom)", textx, texty );	texty += lineSpace;
+			this.helpContext.fillText( "-          : zoom out", textx, texty );									texty += lineSpace;
 			this.helpContext.fillText( "f          : cycle foodbit render mode", textx, texty );			texty += lineSpace;
 			this.helpContext.fillText( "n          : cycle normal swimmer render mode", textx, texty );		texty += lineSpace;
 			this.helpContext.fillText( "s          : cycle splined swimmer render mode", textx, texty );	texty += lineSpace;

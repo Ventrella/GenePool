@@ -1081,6 +1081,12 @@ function resize()
     let masterPanelStyle = window.getComputedStyle( masterPanel, null );
     console.log( masterPanelStyle.width.toString() )      
     let rightMargin = masterPanelStyle.width;
+	//
+	//	JV - Try this:
+	//
+	//		let width = parseFloat(masterPanelStyle.width);
+	//
+	//	to convert width to a usable number (BPD)
     */
 
     let width  = window.innerWidth  - rightMargin;
@@ -1214,7 +1220,7 @@ document.onkeydown = function(e)
     //--------------------------------------------------------------------
 	//	allow currently implemented renderer to do it's thang
     //--------------------------------------------------------------------
-	globalRenderer.handleRenderSpecificKeyDown( e.keyCode );
+	globalRenderer.handleRenderSpecificKeyDown( e.keyCode, e.shiftKey, e.ctrlKey, e.altKey );
 
     //-----------------------------
     // other key pres events
@@ -1265,5 +1271,5 @@ document.onkeyup = function(e)
     //--------------------------------------------------------------------
 	//	allow currently implemented renderer to do it's thang
     //--------------------------------------------------------------------
-	globalRenderer.handleRenderSpecificKeyUp( e.keyCode );
+	globalRenderer.handleRenderSpecificKeyUp( e.keyCode, e.shiftKey, e.ctrlKey, e.altKey );
 };
