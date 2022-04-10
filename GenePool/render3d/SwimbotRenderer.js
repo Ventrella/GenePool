@@ -54,10 +54,6 @@ function SwimbotRenderer()
 	let _renderingGenitalsAndMouths = false;
 	let _debugTrail     = new Array( TRAIL_LENGTH ); 
 
-	//	renderMode - 0: dont't render, 1: render 2d (canvas), 2: render 3d (AlfEngine)
-	var _renderModeNormal = 1;
-	var _renderModeSplined = 1;
-
 	//-------------------------------------------
 	// set rendering goals
 	//-------------------------------------------
@@ -71,6 +67,20 @@ function SwimbotRenderer()
 	//               1: render 2d (canvas)
 	//               2: render 3d (AlfEngine)
 	//-----------------------------------------
+	//	function pointers for 2D/3D render cycling (debug)
+	this.renderPartNormalOFF   = function(p) {}
+	this.renderPartSplinedOFF  = function(p) {}
+	this.renderSwimmerDebugOFF = function(p) {}
+	this.renderGenitalOFF      = function(p) {}
+	this.renderMouthOFF        = function(p) {}
+	this.renderPartNormalFunc;
+	this.renderPartSplinedFunc;
+	this.renderSwimmerDebugFunc;
+	this.renderGenitalFunc;
+	this.renderMouthFunc;
+	var _renderModeNormal;
+	var _renderModeSplined;
+
 	this.cycleNormalRenderMode = function()
 	{
 		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
@@ -86,13 +96,13 @@ function SwimbotRenderer()
 
 		let state = 'foo';
 		switch (_renderModeNormal) {
-			case 0 : state = 'OFF'; break;
-			case 1 : state = '2D'; break;
-			case 2 : state = '3D'; break;
+			case 0 : state = 'OFF'; this.renderPartNormalFunc = this.renderPartNormalOFF; break;
+			case 1 : state = '2D' ; this.renderPartNormalFunc = this.renderPartNormal2d; break;
+			case 2 : state = '3D' ; this.renderPartNormalFunc = this.renderPartNormal3d; break;
 		}
 
 		let msg = "<span style=\"color: #d0d0d0\">Normal Swimmer part render : </span><span style=\"color: #e0e020\">" + state + "</span>";
-		genePool3D.displayPopupMsg( msg, 800 );
+		genePool3D.displayPopupMsg( msg, 500 );
 	}
 
 	this.cycleSplinedRenderMode = function()
@@ -110,13 +120,13 @@ function SwimbotRenderer()
 
 		let state = 'foo';
 		switch (_renderModeSplined) {
-			case 0 : state = 'OFF'; break;
-			case 1 : state = '2D'; break;
-			case 2 : state = '3D'; break;
+			case 0 : state = 'OFF'; this.renderPartSplinedFunc = this.renderPartSplinedOFF; break;
+			case 1 : state = '2D' ; this.renderPartSplinedFunc = this.renderPartSplined2d;  break;
+			case 2 : state = '3D' ; this.renderPartSplinedFunc = this.renderPartSplined3d;  break;
 		}
 
 		let msg = "<span style=\"color: #d0d0d0\">Splined Swimmer part render : </span><span style=\"color: #e0e020\">" + state + "</span>";
-		genePool3D.displayPopupMsg( msg, 800 );
+		genePool3D.displayPopupMsg( msg, 500 );
 	}
 
 
@@ -134,6 +144,16 @@ function SwimbotRenderer()
 		{
 			_debugTrail[t] = new Vector2D(); 
 		}	
+
+		//	function pointers for 2D/3D render cycling (debug)
+		//	renderMode - 0: dont't render, 1: render 2d (canvas), 2: render 3d (AlfEngine)
+		_renderModeNormal = 1;
+		_renderModeSplined = 1;
+		this.renderPartNormalFunc    = this.renderPartNormal2d;
+		this.renderPartSplinedFunc   = this.renderPartSplined2d;
+		this.renderSwimmerDebugFunc  = this.renderSwimmerDebug2d;
+		this.renderGenitalFunc       = this.renderGenital2d;
+		this.renderMouthFunc         = this.renderMouth2d;
 	}
 
 	//------------------------------------------------
@@ -235,19 +255,11 @@ function SwimbotRenderer()
 				_splineFactor = DEFAULT_SPLINE_FACTOR; 	
 				if ( _phenotype.parts[p].splined )
 				{
-					switch (_renderModeSplined) {
-						case 0 : break;
-						case 1 : this.renderPartSplined2d(p); break;
-						case 2 : break;
-					}
+					this.renderPartSplinedFunc(p);
 				}
 				else
 				{
-					switch (_renderModeNormal) {
-						case 0 : break;
-						case 1 : this.renderPartNormal2d(p); break;
-						case 2 : this.renderPartNormal3d(p); break;
-					}
+					this.renderPartNormalFunc(p);
 				}
 
 				//--------------------------------------------
@@ -261,13 +273,13 @@ function SwimbotRenderer()
 						||  ( _brain.getState() == BRAIN_STATE_PURSUING_FOOD ))
 						{	
 							_colorUtility = swimbot.calculatePartColor(1);  
-							this.renderMouth2d();
+							this.renderMouthFunc();
 						}
 					}
 				}
 
 				//	misc debug
-				this.renderSwimmerDebug2d();
+				this.renderSwimmerDebugFunc();
 			}
 		}
 
@@ -279,7 +291,7 @@ function SwimbotRenderer()
 			if (( _brain.getState() == BRAIN_STATE_LOOKING_FOR_MATE	)
 			||  ( _brain.getState() == BRAIN_STATE_PURSUING_MATE ))
 			{
-				this.renderGenital2d();
+				this.renderGenitalFunc();
 			}
 		}
 	}
@@ -292,15 +304,7 @@ function SwimbotRenderer()
 	//=======================================================================================================
 	this.renderPartNormal3d = function( partNum )
 	{
-		//let width     = p.width;
-		//let position  = p.position;
-		//genePool3D.renderNormal3d( _phenotype.parts[p], p, _parentPosition, _growthScale, baseColor, blendColor, blendPct );
-
 		let part = _phenotype.parts[ partNum ];
-		//let dxp  = part.position.x - this.prevCamPosX;
-		//let dyp  = part.position.y - this.prevCamPosY;
-		//let offp = Math.sqrt( dxp * dxp + dyp * dyp );
-
 		let width		= part.width;
 		let position 	= part.position;
 		let length		= part.length;
@@ -318,12 +322,214 @@ function SwimbotRenderer()
 	}
 
 
-	//=======================================================================================================
+	this.renderPartSplined3d = function( partNum )
+	{
+		/*
+		let part = _phenotype.parts[ partNum ];
+		let width		= part.width;
+		let position 	= part.position;
+		let length		= part.length;
+		let angle		= part.currentAngle;
+		let depth		= width;
+		let scale		= _growthScale;
+
+		//	create the mesh if it doesn't already exist
+		if ( !("meshId" in part) ) {
+			part.meshId = globalGenepool3Dcpp.createNormalSwimmer( width, depth, length, part.baseColor.red, part.baseColor.green, part.baseColor.blue, scale );
+		}
+
+		//	render existing mesh
+		globalGenepool3Dcpp.renderNormalSwimmer( part.meshId, position.x, position.y, partNum, angle, scale, part.blendColor.red, part.blendColor.green, part.blendColor.blue, part.blendPct );
+		*/
+	}
+
+
+	this.renderSwimmerDebug3d = function()
+	{
+		/*
+		//------------------------------------------
+		// show part mid position 
+		//------------------------------------------
+		_canvas.fillStyle = "rgb( 244, 244, 244 )";	
+		_canvas.beginPath();
+		_canvas.arc( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y, 0.05, 0, PI2, false );
+		_canvas.fill();
+		_canvas.closePath();	
+					
+
+		//------------------------------------------
+		// show part velocity
+		//------------------------------------------
+		let scale = 12.0;
+		_canvas.strokeStyle = "rgb( 255, 255, 0 )";	
+		_canvas.beginPath();
+		_canvas.moveTo( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y );
+		_canvas.lineTo( _phenotype.parts[p].midPosition.x - _phenotype.parts[p].velocity.x * scale, _phenotype.parts[p].midPosition.y - _phenotype.parts[p].velocity.y * scale );
+                    
+		// just show displacement of mid position
+		//_canvas.lineTo( _phenotype.parts[p].previousMid.x, _phenotype.parts[p].previousMid.y );
+		_canvas.stroke();
+		_canvas.closePath();	
+
+		//------------------------------------------
+		// show part perpendicular
+		//------------------------------------------
+		scale = 10.0;
+		_canvas.strokeStyle = "rgb( 0, 255, 0 )";	
+		_canvas.beginPath();
+		_canvas.moveTo( _phenotype.parts[p].midPosition.x, _phenotype.parts[p].midPosition.y );
+		_canvas.lineTo( _phenotype.parts[p].midPosition.x + _phenotype.parts[p].perpendicular.x * scale, _phenotype.parts[p].midPosition.y + _phenotype.parts[p].perpendicular.y * scale );
+		_canvas.stroke();
+		_canvas.closePath();	
+		*/
+	}
+
+
+
+
+    
+	//--------------------------------
+	// render genital
+	//--------------------------------
+	this.renderGenital3d = function()
+	{	
+	/*
+        let genitalLength = SWIMBOT_GENITAL_LENGTH * _growthScale;
+        let x = _phenotype.parts[ GENITAL_INDEX ].position.x + _focusDirection.x * genitalLength;
+        let y = _phenotype.parts[ GENITAL_INDEX ].position.y + _focusDirection.y * genitalLength;
+        
+		_canvas.lineWidth = 1.0; 
+        _canvas.strokeStyle = "rgba( 255, 255, 255, 0.7 )";	
+        _canvas.beginPath();
+        _canvas.moveTo( _phenotype.parts[ GENITAL_INDEX ].position.x, _phenotype.parts[ GENITAL_INDEX ].position.y );
+        _canvas.lineTo( x, y );
+        _canvas.stroke();
+        _canvas.closePath();			
+        
+        //--------------------------------------------------------
+        // if pursuing a mate, show arrow head
+        //--------------------------------------------------------
+        if ( _brain.getState() === BRAIN_STATE_PURSUING_MATE )
+        {
+            let arrowLength = genitalLength * 0.4;
+            let arrowWidth  = genitalLength * 0.25;
+            let xLeft  = x - _focusDirection.y * arrowWidth - _focusDirection.x * arrowLength;
+            let yLeft  = y + _focusDirection.x * arrowWidth - _focusDirection.y * arrowLength;
+
+            let xRight = x + _focusDirection.y * arrowWidth - _focusDirection.x * arrowLength;
+            let yRight = y - _focusDirection.x * arrowWidth - _focusDirection.y * arrowLength;
+            
+            _canvas.beginPath();
+            _canvas.lineTo( x, y );
+            _canvas.lineTo( xRight, yRight );
+            _canvas.stroke();
+            _canvas.closePath();			
+        }
+	*/
+	}
+
+
+	//--------------------------------
+	// render mouth
+	//--------------------------------
+	this.renderMouth3d = function()
+	{
+	/*
+		let mouthLength = _phenotype.parts[1].width * 2.5;
+	    if ( mouthLength < SWIMBOT_MIN_MOUTH_LENGTH )
+	    {
+	        mouthLength = SWIMBOT_MIN_MOUTH_LENGTH;
+	    }
+	    	    
+	    let mouthWidth = _phenotype.parts[1].width;
+	    if ( mouthWidth < SWIMBOT_MIN_MOUTH_WIDTH )
+	    {
+	        mouthWidth = SWIMBOT_MIN_MOUTH_WIDTH;
+	    }
+	    
+	    mouthLength *= _growthScale;
+	    mouthWidth  *= _growthScale;
+	    
+	    let baseX = _phenotype.parts[ MOUTH_INDEX ].position.x;
+	    let baseY = _phenotype.parts[ MOUTH_INDEX ].position.y;
+
+        let mouthStartX = baseX + _focusDirection.x * mouthLength * 0.3;
+        let mouthStartY = baseY + _focusDirection.y * mouthLength * 0.3;
+
+        let mouthEndX = baseX + _focusDirection.x * mouthLength;
+        let mouthEndY = baseY + _focusDirection.y * mouthLength;
+        
+        let basePerpX =  _focusDirection.y * _phenotype.parts[1].width * 0.5;
+        let basePerpY = -_focusDirection.x * _phenotype.parts[1].width * 0.5;
+
+        let endPerpX  =  _focusDirection.y * mouthWidth;
+        let endPerpY  = -_focusDirection.x * mouthWidth;
+        
+        let leftJawX  = baseX - basePerpX;
+        let leftJawY  = baseY - basePerpY;
+        let rightJawX = baseX + basePerpX;
+        let rightJawY = baseY + basePerpY;
+        
+        let leftEndX  = mouthEndX;
+        let leftEndY  = mouthEndY;
+        let rightEndX = mouthEndX;
+        let rightEndY = mouthEndY;
+            
+		_canvas.lineWidth = SWIMBOT_MOUTH_WIDTH; 
+        _canvas.fillStyle = _colorUtility.rgba();	
+        
+        //--------------------------------------------------------
+        // open jaws
+        //--------------------------------------------------------
+        if ( _brain.getState() === BRAIN_STATE_PURSUING_FOOD )
+        {
+            leftEndX  -= endPerpX;
+            leftEndY  -= endPerpY;
+            rightEndX += endPerpX;
+            rightEndY += endPerpY;
+        }        
+
+        _canvas.beginPath();
+        _canvas.moveTo( mouthStartX, mouthStartY );
+        _canvas.lineTo( leftJawX,    leftJawY    );
+        _canvas.lineTo( leftEndX,    leftEndY    );
+        _canvas.lineTo( mouthStartX, mouthStartY );
+        _canvas.lineTo( rightEndX,   rightEndY   );
+        _canvas.lineTo( rightJawX,   rightJawY   );
+        _canvas.lineTo( leftJawX,    leftJawY    );
+        _canvas.fill();
+        _canvas.closePath();	
+        
+        _canvas.strokeStyle = "rgba( 255, 255, 255, 0.7 )";	
+        _canvas.beginPath();
+        _canvas.moveTo( rightEndX,   rightEndY  );
+        _canvas.lineTo( mouthStartX, mouthStartY );
+        _canvas.lineTo( leftEndX,    leftEndY );
+        _canvas.stroke();
+        _canvas.closePath();	     
+               					
+        _canvas.strokeStyle = OUTLINE_COLOR; 
+        _canvas.beginPath();
+        _canvas.moveTo( leftJawX, leftJawY );
+        _canvas.lineTo( leftEndX, leftEndY );
+        _canvas.stroke();
+        _canvas.closePath();	            					
+
+        _canvas.beginPath();
+        _canvas.moveTo( rightJawX, rightJawY );
+        _canvas.lineTo( rightEndX, rightEndY );
+        _canvas.stroke();
+        _canvas.closePath();	 
+	*/
+    }
+
+
+	//===============================================================================================================================================
 	//
 	//	2D rendering (copied from Canvas renderer 4/2/22) is order to support 2D/3D render toggle 
 	//	for side by side comparison
 	//
-	//=======================================================================================================
+	//===============================================================================================================================================
 
 	//-----------------------------------
 	// render part normal (not splined)

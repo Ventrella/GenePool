@@ -26,19 +26,27 @@ function FoodBitRenderer()
 	var _position;
 	var _color;
 
-	var _renderModeFoodBits = 1;
+
+	//	renderMode - 0: dont't render
+	//               1: render 2d (canvas)
+	//               2: render 3d (AlfEngine)
+	var _renderFoodBitOFF = function(p) {}
+	var _renderFoodBitFunc;
+	var _renderModeFoodBits;
 
 	//-------------------------------------
 	// initialize - one time setup
 	//-------------------------------------
 	this.initialize = function ( canvas ) {
 		_canvas = canvas;
+
+		_renderFoodBitFunc = _renderFoodBit2d;
+		_renderModeFoodBits = 1
 	}
 
 	//	dispose of render assets for a given foodbit
 	this.releaseRenderAssets = function( foodBit )
 	{
-		//genePool3D.deleteFoodBit( this );
 		if ( "meshId" in foodBit )
 		{
 			globalGenepool3Dcpp.deleteFoodBit( foodBit.meshId );	// kill the 3D assets
@@ -66,13 +74,13 @@ function FoodBitRenderer()
 
 		let state = 'foo';
 		switch (_renderModeFoodBits) {
-			case 0 : state = 'OFF'; break;
-			case 1 : state = '2D'; break;
-			case 2 : state = '3D'; break;
+			case 0 : state = 'OFF'; _renderFoodBitFunc = _renderFoodBitOFF; break;
+			case 1 : state = '2D' ; _renderFoodBitFunc = _renderFoodBit2d;  break;
+			case 2 : state = '3D' ; _renderFoodBitFunc = _renderFoodBit3d;  break;
 		}
 
 		let msg = "<span style=\"color: #d0d0d0\">Foodbit render : </span><span style=\"color: #e0e020\">" + state + "</span>";
-		genePool3D.displayPopupMsg( msg, 800 );
+		genePool3D.displayPopupMsg( msg, 500 );
 	}
 
 	this.render = function( foodBit, isSelected, isMouseOver, camera )
@@ -82,21 +90,26 @@ function FoodBitRenderer()
 	    _radius    = foodBit.getSize() + _viewScale * _bitScale * _bitScale;
 		_position  = foodBit.getPosition();
 		_color     = foodBit.getColor();
+		_renderFoodBitFunc( foodBit );
+	}
 
-		switch ( _renderModeFoodBits )
-		{
-			case 0 : break;
-			case 1 : this.render2d();	break;
-			case 2 : genePool3D.renderFoodBit( foodBit, _viewScale );	break;
+	//
+	//
+	//
+	var _renderFoodBit3d = function( foodBit )
+	{
+		if (!("meshId" in foodBit)) {
+			foodBit.meshId = globalGenepool3Dcpp.createFoodBit( _radius );
 		}
+
+		globalGenepool3Dcpp.renderFoodBit( foodBit.meshId, _position.x, _position.y, _color.red, _color.green, _color.blue );
 	}
 
 	//
 	//	Original 2D rendering code from GenePool - 4/2/22
 	//
-	this.render2d = function()
+	var _renderFoodBit2d = function()
 	{
-        //_canvas.fillStyle = "rgba( " + FOOD_BIT_COLOR_COMPONENTS + ", " + _opacity + ")";	    
         _canvas.fillStyle = _color.rgba();
         _canvas.beginPath();
         _canvas.arc( _position.x, _position.y, _radius, 0, PI2, false );

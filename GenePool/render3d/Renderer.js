@@ -72,11 +72,11 @@ configureRenderer = function ()
 	canvasContainer.appendChild(textOverlay);
 
 	//	help dialog overlay
-	var helpOverlay = document.createElement('canvas');
-	helpOverlay.id     = "helpOverlay";
-	helpOverlay.style  = "position: absolute; background-color: rgba(90, 90, 90, 0.9); display: none";
+	var helpOverlay = document.createElement('div');
+	helpOverlay.id = "helpOverlay";
 	canvasContainer.appendChild(helpOverlay);
 
+	//	transitory status popup
 	var popupMsg = document.createElement('div');
 	popupMsg.id  = "popupMsg";
 	popupMsg.style  = "position: absolute; background-color: rgba(90, 90, 90, 0.9); display: none";

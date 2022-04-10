@@ -44,7 +44,8 @@ var genePool3D;
 			this.buildVer = '';
 			this.frameTally = 0;
 
-			this._globalSwimmerMeshId =   100;
+			this._updateSimulation    = true;
+			this._globalSwimmerMeshId =  100;
 
 			this.testFuncCnt = 100;
 			this.renderNormalCnt = 0;
@@ -61,11 +62,8 @@ var genePool3D;
 			this.canvasLeftOffset = rect.left;
 			this.canvasTopOffset = rect.top;
 
-			this._updateSimulation         = true;
-
 			// setup the gui overlay
 			this.engineInputDiv.style.display = 'block';	// show by default
-			//this.guiContext = this.guiCanvas.getContext('2d');
 
 			//
 			this.prevCamPosX = 999999;
@@ -82,9 +80,6 @@ var genePool3D;
 			this.textDisplayMode = 0;
 
 			// setup a help dialog for controls
-			this.helpCanvas = document.getElementById('helpOverlay');
-			this.helpCanvas.style.display = 'none';	// hide by default
-			this.helpContext = this.helpCanvas.getContext('2d');
 			this.composeHelpDisplay();
 			this.helpDisplayMode = 0;
 
@@ -190,11 +185,32 @@ var genePool3D;
 			this.setupUpdate();
 		};
 
-
-
 		//
 		weInterface.prototype.update = function () {
 			genePool.update();
+		}
+
+		//----------------------------------------------------------
+		// set transform according to camera
+		//----------------------------------------------------------
+		weInterface.prototype.updateCamera = function( camera )
+		{
+			let camPosX = camera.getPosition().x;
+			let camPosY = camera.getPosition().y;
+			let camDimX = camera.getXDimension();
+			let camDimY = camera.getYDimension();
+
+			if ( (camPosX!=this.prevCamPosX) || (camPosY!=this.prevCamPosY) || (camDimX!=this.prevCamDimX) || (camDimY!=this.prevCamDimY) )
+			{
+				this.prevCamPosX = camPosX;
+				this.prevCamPosY = camPosY;
+				this.prevCamDimX = camDimX;
+				this.prevCamDimY = camDimY;
+				//console.log("[updateCamera] pos=(" + camPosX.toFixed(2) + "," + camPosY.toFixed(2) +
+				//	"), dim=(" + camDimX.toFixed(2) + "," + camDimY.toFixed(2) + ")" );
+
+				globalGenepool3Dcpp.updateOrthoCamera( camPosX, camPosY, camDimX, camDimY );
+			}
 		}
 
 
@@ -213,11 +229,6 @@ var genePool3D;
 			//if ( keyCode === 80 ) {	// 'p' key
 			//	globalGenepool3Dcpp.togglePause();
 			//}
-
-
-			//let pc = genePool.getPoolCenter();	//!!
-			//console.log("POOL CENTER = ")			//!!
-
 
 			//	toggle render
 			if ( keyCode === 82 ) {	// 'r' key
@@ -239,8 +250,8 @@ var genePool3D;
 
 			//	toggle lighting
 			if ( keyCode === 76 ) {	// 'l' key
-				globalGenepool3Dcpp.toggleLighting();
-				console.log("### toggle lighting ");
+				//globalGenepool3Dcpp.toggleLighting();
+				//console.log("### toggle lighting ");
 			}
 
 			// 'o' for debug Overlay
@@ -295,8 +306,8 @@ var genePool3D;
 				overlay.style.display = 'none';		// hide
 			} else {
 				//	center over pool
-				let w = ( this.glCanvas.width / 2 ) + 60;
-				let h =  (this.glCanvas.height / 2 );
+				let w = ( this.glCanvas.width / 2 );
+				let h = 300;
 				let l = ( this.glCanvas.width - w ) / 2;
 				let t = ( this.glCanvas.height - h ) / 2;
 				overlay.style.width  = w;
@@ -309,35 +320,25 @@ var genePool3D;
 
 		weInterface.prototype.composeHelpDisplay = function ()
 		{
-			this.helpCanvas.style.background = 'rgba(90, 90, 140, 0.9)';
+			var helpOverlay = document.getElementById('helpOverlay');
+			helpOverlay.style  = "position: fixed; left: 200px; bottom: 300px; width: 500px; height: 400px; z-Index: 9; background-color: rgba(20, 20, 20, 0.9); display: none";
+			$('#helpOverlay').css   ( {"font-family": "'Lucida Console', 'Courier New', monospace", "font-size": "20px", "color": "#e0e0e0", "text-align": "left"} );
+		
+			let style1 = "<h1 style='color: #c0c020; font-size: 24px; text-align: center'>";
+			let s1Eol  = "</h1>";
+			let style2 = "<h2 style='color: #c0c0c0; font-size: 18px; text-align: left; margin-left: 30px; margin-bottom: 8px; margin-top: 8px'>";
+			let s2Eol  = "</h2>";
 
-			let fontsize = 16;
-			var lineSpace = fontsize + 2;
-			var texty = lineSpace;
-			var textx = 12;
-
-			//	arrgh - text is fuzzy. Need to figure out why...
-			//this.helpContext.scale( 0.5, 0.5 );
-
-			this.helpContext.font = 'bold ' + fontsize.toFixed(0) + 'px Courier';
-			this.helpContext.fillStyle = '#cfcf00';		// text color
-
-			this.helpContext.fillText( "GenePool Controls", textx, texty );
-			texty += lineSpace + 2;
-
-			fontsize = 10;
-			lineSpace = fontsize + 1;
-			this.helpContext.font = 'bold ' + fontsize.toFixed(0) + 'px Courier';
-			this.helpContext.fillStyle = '#afaf00';		// text color
-
-			this.helpContext.fillText( "Left/Right : pan horizontal", textx, texty );						texty += lineSpace;
-			this.helpContext.fillText( "Up/Down    : pan vertical", textx, texty );							texty += lineSpace;
-			this.helpContext.fillText( "+          : zoom in (hold SHIFT for close zoom)", textx, texty );	texty += lineSpace;
-			this.helpContext.fillText( "-          : zoom out", textx, texty );									texty += lineSpace;
-			this.helpContext.fillText( "f          : cycle foodbit render mode", textx, texty );			texty += lineSpace;
-			this.helpContext.fillText( "n          : cycle normal swimmer render mode", textx, texty );		texty += lineSpace;
-			this.helpContext.fillText( "s          : cycle splined swimmer render mode", textx, texty );	texty += lineSpace;
-			this.helpContext.fillText( "o          : cycle stats overlay", textx, texty );					texty += lineSpace;
+			//	fuck whitespace collapse
+			$('#helpOverlay').append( style1 + "GenePool3d Debug Controls" + s1Eol );
+			$('#helpOverlay').append( style2 + "Left / Right : pan horizontal" + s2Eol );
+			$('#helpOverlay').append( style2 + "Up / Down&nbsp&nbsp&nbsp&nbsp: pan vertical" + s2Eol );
+			$('#helpOverlay').append( style2 + "+ &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: zoom in (hold SHIFT for closeup)" + s2Eol );
+			$('#helpOverlay').append( style2 + "- &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: zoom out" + s2Eol );
+			$('#helpOverlay').append( style2 + "f &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle foodbit render mode" + s2Eol );
+			$('#helpOverlay').append( style2 + "n &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle normal swimmer render mode" + s2Eol );
+			$('#helpOverlay').append( style2 + "s &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle splined swimmer render mode" + s2Eol );
+			$('#helpOverlay').append( style2 + "o &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle stats overlay" + s2Eol );
 		}
 
 		weInterface.prototype.displayPopupMsg = function( text, duration )
@@ -347,78 +348,10 @@ var genePool3D;
 			this.popupMsg.style.left = (canvasID.width - popupWidth) / 2;
 			$('#popupMsg').css({"font-family": "Arial, Helvetica, sans-serif", "font-size": 20, "color": "#e0e0e0", "text-align": "center"});
 			$('#popupMsg').html( text );
-			$('#popupMsg').fadeIn(200, function() { $(this).delay(duration).fadeOut(200); });
+			$('#popupMsg').fadeIn(100, function() { $(this).delay(duration).fadeOut(100); });
 		}
 
-
-		//----------------------------------------------------------
-		// set transform according to camera
-		//----------------------------------------------------------
-		weInterface.prototype.updateCamera = function( camera )
-		{
-			let camPosX = camera.getPosition().x;
-			let camPosY = camera.getPosition().y;
-			let camDimX = camera.getXDimension();
-			let camDimY = camera.getYDimension();
-
-			if ( (camPosX!=this.prevCamPosX) || (camPosY!=this.prevCamPosY) || (camDimX!=this.prevCamDimX) || (camDimY!=this.prevCamDimY) )
-			{
-				this.prevCamPosX = camPosX;
-				this.prevCamPosY = camPosY;
-				this.prevCamDimX = camDimX;
-				this.prevCamDimY = camDimY;
-				//console.log("[updateCamera] pos=(" + camPosX.toFixed(2) + "," + camPosY.toFixed(2) +
-				//	"), dim=(" + camDimX.toFixed(2) + "," + camDimY.toFixed(2) + ")" );
-
-				globalGenepool3Dcpp.updateOrthoCamera( camPosX, camPosY, camDimX, camDimY );
-			}
-		}
-
-
-		//	Render a single bit of food
-		weInterface.prototype.renderFoodBit = function( foodBit, viewScale )
-		{
-			let bitScale  = foodBit.getSizeViewScale();
-			let radius    = foodBit.getSize() + viewScale * bitScale * bitScale;
-			let position  = foodBit.getPosition();
-			let color     = foodBit.getColor();
-
-			if (!("meshId" in foodBit)) {
-				foodBit.meshId  = globalGenepool3Dcpp.createFoodBit( radius );
-			}
-			globalGenepool3Dcpp.renderFoodBit( foodBit.meshId, position.x, position.y, color.red, color.green, color.blue );
-		}
-		//weInterface.prototype.deleteFoodBit = function( foodBit )
-		//{
-		//	if ( "meshId" in foodBit )
-		//	{
-		//		globalGenepool3Dcpp.deleteFoodBit( foodBit.meshId );	// kill the 3D assets
-		//		delete foodBit.meshId;								// remove the ID key from the js object
-		//	}
-		//}
-		//weInterface.prototype.setAllFoodBitVisibility = function( state )
-		//{
-		//	globalGenepool3Dcpp.setAllFoodBitVisibility( state );
-		//}
-		//weInterface.prototype.setAllNormalSwimmerVisibility = function( state )
-		//{
-		//	globalGenepool3Dcpp.setAllNormalSwimmerVisibility( state );
-		//}
-		//weInterface.prototype.setAllSplinedSwimmerVisibility = function( state )
-		//{
-		//	globalGenepool3Dcpp.setAllSplinedSwimmerVisibility( state );
-		//}
-		//weInterface.prototype.deleteSwimmer = function( swimmer )
-		//{
-		//	if ( "meshId" in swimmer )
-		//	{
-		//		globalGenepool3Dcpp.deleteSwimmer( swimmer.meshId );	// kill the 3D assets
-		//		delete swimmer.meshId;								// remove the ID key from the js object
-		//	}
-		//}
-
-
-		weInterface.prototype.renderOverlayData = function ( fontsize, lines )
+		weInterface.prototype.updateOverlayPanel = function ( fontsize, lines )
 		{
 			this.textContext.clearRect(0, 0, this.textCanvas.width, this.textCanvas.height);
 			this.textContext.font = 'bold ' + fontsize.toFixed(0) + 'px Courier';
@@ -471,7 +404,7 @@ var genePool3D;
 			textLines.push( this.alfInterface.getDbgLabel(2) + ' = ' + this.alfInterface.getDbgFloat(2).toFixed(4)+ ' : ' + this.alfInterface.getDbgInt(2).toFixed(0) );
 			textLines.push( this.alfInterface.getDbgLabel(3) + ' = ' + this.alfInterface.getDbgFloat(3).toFixed(4)+ ' : ' + this.alfInterface.getDbgInt(3).toFixed(0) );
 			textLines.push( this.alfInterface.getDbgLabel(4) + ' = ' + this.alfInterface.getDbgFloat(4).toFixed(4)+ ' : ' + this.alfInterface.getDbgInt(4).toFixed(0) );
-			this.renderOverlayData( 12, textLines );
+			this.updateOverlayPanel( 12, textLines );
 
 			//var camPos = this.alfInterface.getCameraPos();
 			//this.textContext.fillText("campos : (" + camPos.x.toFixed(2) + ", " + camPos.y.toFixed(2) + ", " + camPos.z.toFixed(2) + ")", textx, texty); texty += 20;
@@ -507,7 +440,7 @@ var genePool3D;
 			textLines.push( '  triangles : untxr=' + stats.totalUntexturedTrisBuilt.toFixed(0).padStart(8) + ' txtrd=' + stats.totalTexturedTrisBuilt.toFixed(0).padStart(4));
 			textLines.push( 'memory' );
 			textLines.push( '  attr      : ' + stats.attribBuffMem.toFixed(0).padStart(10) + '  heap: ' + stats.heapEstimate.toFixed(0).padStart(4));
-			this.renderOverlayData( 12, textLines );
+			this.updateOverlayPanel( 12, textLines );
 
 			//	dump to console log
 			if (this.textDisplayDump == true) {
