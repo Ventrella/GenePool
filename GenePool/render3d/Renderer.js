@@ -91,13 +91,13 @@ configureRenderer = function ()
 	var glCanvas = document.createElement('canvas');
 	glCanvas.id = 'glCanvas';
 	glDiv.appendChild(glCanvas);
-	//genePoolCanvas.appendChild(glCanvas);
 
 	//	z-index layers - higher numbers are on top of lower numbers
 	genePoolCanvas.style.zIndex = "2";
 	glDiv.style.zIndex          = "3";
 	textOverlay.style.zIndex    = "7";
 	helpOverlay.style.zIndex    = "8";
+	popupMsg.style.zIndex       = "9";
 
 	// engineInputDiv / d3uiDiv (nested for proper input event handling)
 	var engineInputDiv   = document.createElement('div');

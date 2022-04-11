@@ -79,8 +79,7 @@ function FoodBitRenderer()
 			case 2 : state = '3D' ; _renderFoodBitFunc = _renderFoodBit3d;  break;
 		}
 
-		let msg = "<span style=\"color: #d0d0d0\">Foodbit render : </span><span style=\"color: #e0e020\">" + state + "</span>";
-		genePool3D.displayPopupMsg( msg, 500 );
+		genePool3D.displayPopupMsg( 'Foodbit render : ', state, 500 );
 	}
 
 	this.render = function( foodBit, isSelected, isMouseOver, camera )

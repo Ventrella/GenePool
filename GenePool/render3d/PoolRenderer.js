@@ -40,6 +40,8 @@ function PoolRenderer()
     let _effectClock = 0;
     let _effectBlob = new Array( NUM_EFFECT_BLOBS );
     let _effectBlobColor = new Color( 70/255, 80/255, 90/255, 1 );
+
+	this._screenClearEnable = true;
 	
 	//----------------------------------
 	// initialize - one time setup
@@ -52,7 +54,12 @@ function PoolRenderer()
     	    _effectBlob[b] = new EffectBlob();
     	}
     }
-    
+
+	this.setScreenClearEnable = function( state )
+	{
+		this._screenClearEnable = state;
+	}
+
 	//------------------------------------------------
 	// render
 	//------------------------------------------------
@@ -69,7 +76,9 @@ function PoolRenderer()
         let lineWidth = 0.005 + 0.001 * viewport.getScale(); 	
 
 		// clear the 2d canvas while still allowing the 3d glCamvas underneath to show
-		_canvas.clearRect( bounds[0], bounds[2], size[0], size[1] );
+		if ( this._screenClearEnable == true ) {
+			_canvas.clearRect( bounds[0], bounds[2], size[0], size[1] );
+		}
 
 		//------------------------------------------------------------
 		// show touch

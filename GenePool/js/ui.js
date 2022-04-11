@@ -30,12 +30,13 @@ let _currentInfoPage            = FIRST_INFO_PAGE;
 let _graph                      = new Graph(); 
 let _tweakGenesCategory         = 0;
 let _runningFast                = false;
-
+let _controlPanelWidth          = 400;
 
 //----------------------------
 function initializeUI()
 {
     initializeEcosystemUI();    
+	enableControlPanel(true);
     
     _graph.initialize();      
   
@@ -48,6 +49,16 @@ function initializeUI()
     setTimeout( "updateUI()", 1 );
  }
 
+
+function enableControlPanel( state )
+{
+	if (state == true) {
+		_controlPanelWidth = 400;
+	}
+	else {
+		_controlPanelWidth = 0;
+	}
+}
 
 
 //----------------------------
@@ -1073,7 +1084,7 @@ function notifyGeneTweakPanelMouseDown()
 //----------------------
 function resize()
 { 
-    let rightMargin = 400;
+    let rightMargin = _controlPanelWidth;
 
     // I can't get this to work...
     /*
