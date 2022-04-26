@@ -91,8 +91,16 @@ var genePool3D;
 			this.popupMsg.style.width = 480;
 			this.popupMsg.style.height = 40;
 			this.popupMsg.style.top = 20;
+			this.popupMsg.style.left = 20;
 			this.popupMsg.style.display = 'none';
 			this.popupMsg.style.background = 'rgba(90, 90, 90, 0.0)';
+
+			this.debugMsg = document.getElementById('debugMsg');
+			this.debugMsg.style.width = 480;
+			this.debugMsg.style.height = 40;
+			this.debugMsg.style.top = 20;
+			this.debugMsg.style.display = 'none';
+			this.debugMsg.style.background = 'rgba(90, 90, 90, 0.0)';
 
 			this.resizeCanvas = function () {
 				if (this.initialized) {
@@ -154,8 +162,8 @@ var genePool3D;
 
 		//	called from onRuntimeInitialized once preloaded files are ready
 		//	currently invoked from index.html
-		weInterface.prototype.start = function () {
-
+		weInterface.prototype.start = function ()
+		{
 			//	Create the interface to the engine - see WiggleBindings.cpp
 			this.alfInterface = new Module.AlfInterface();
 			if (!this.alfInterface.initializeEngine(this.glCanvas.width, this.glCanvas.height, 1.0)) {
@@ -188,8 +196,9 @@ var genePool3D;
 			this.setupUpdate();
 		};
 
-		//
-		weInterface.prototype.update = function () {
+		//	glue between the engine GenePool3D.cpp::updateBehavior and the
+		//	genePool3D.js/updateBehavior
+		weInterface.prototype.updateBehavior = function () {
 			genePool.update();
 		}
 
@@ -218,100 +227,28 @@ var genePool3D;
 
 
 		//----------------------------------------------------------
+		//	JV GenePool ui.js is currently using the following keyCodes...
+		//		37/38/39/40  : Left/Right/Up/Down
+		//		61/187       : plus
+		//		173/189      : minus
 		//----------------------------------------------------------
 		weInterface.prototype.onKeyDown = function ( keyCode, isShiftKey, isCtrlKey, isAltKey )
 		{
-			//	JV GenePool ui.js is currently using the following keyCodes...
-			//		37/38/39/40  : Left/Right/Up/Down
-			//		61/187       : plus
-			//		173/189      : minus
-
 			//console.log("onKeyDown: code = " + keyCode + ", isShift = " + isShiftKey + ", isCtrl = " + isCtrlKey + ", isAlt = " + isAltKey );
-
-			//	toggle pause
-			//if ( keyCode === 80 ) {	// 'p' key
-			//	globalGenepool3Dcpp.togglePause();
-			//}
-
-			//	toggle render
-			if ( keyCode === 82 ) {	// 'r' key
-				console.log("### toggle render");
-			}
-
-			//	cycle normal swimmer render
-			if ( keyCode === 78 ) {	// 'n' key
-				globalRenderer.getSwimbotRenderer().cycleNormalRenderMode();
-			}
-			//	cycle splined swimmer render
-			if ( keyCode === 83 ) {	// 's' key
-				globalRenderer.getSwimbotRenderer().cycleSplinedRenderMode();
-			}
-			//	cycle food render
-			if ( keyCode === 70 ) {	// 'f' key
-				globalRenderer.getFoodBitRenderer().cycleRenderMode();
-			}
-
-			//	toggle lighting
-			if ( keyCode === 76 ) {	// 'l' key
-				//globalGenepool3Dcpp.toggleLighting();
-				//console.log("### toggle lighting ");
-			}
-
-			// 'o' for debug Overlay
-			if ( keyCode === 79) {
-				this.cycleDebugDisplay();
-			}
-			// 'h' for help
-			if ( keyCode === 72) {
-				this.cycleHelpDisplay();
-			}
-
-			//	'z' for zoom override
-			if ( keyCode === 90 ) {
-				if ( this.zoomOverrideMode == 0 ) {
-					genePool.getCamera().setMinZoomScale( 100.0 );
-					this.displayPopupMsg( 'Zoom override : ', 'ENABLED', 500 );
-					this.zoomOverrideMode = 1;
-				}
-				else {
-					genePool.getCamera().restoreDefaultZoomScale();
-					this.displayPopupMsg( 'Zoom override : ', 'DISABLED', 500 );
-					this.zoomOverrideMode = 0;
-				}
-			}
-
-			//	'm' for mushroom mode override
-			if ( keyCode === 77 ) {
-				if ( this.mushroomMode == 0 ) {
-					globalRenderer.getPoolRenderer().setScreenClearEnable( false );
-					this.displayPopupMsg( 'Mushroom mode : ', 'ENABLED', 500 );
-					this.mushroomMode = 1;
-				}
-				else {
-					globalRenderer.getPoolRenderer().setScreenClearEnable( true );
-					this.displayPopupMsg( 'Mushroom mode : ', 'DISABLED', 500 );
-					this.mushroomMode = 0;
-				}
-			}
-
-			//	'c' toggle the control panel
-			if ( keyCode === 67 ) {
-				if ( this.panelDisplayMode == 0 ) {
-					var panel = document.getElementById('masterPanel');
-					panel.style.display = 'block';
-					enableControlPanel( true );
-					resize();	//	genePool resize - in ui.js
-					this.resizeCanvas();	// genePool3d resize
-					this.panelDisplayMode = 1;
-				}
-				else {
-					var panel = document.getElementById('masterPanel');
-					panel.style.display = 'none';
-					enableControlPanel( false );
-					resize();	//	genePool resize - in ui.js
-					this.resizeCanvas();	// genePool3d resize
-					this.panelDisplayMode = 0;
-				}
+			switch( keyCode )
+			{
+				case 67 : this.toggleControlPanel();									break;	// C
+				case 68 : this.dumpSelectedPartData();									break;	// D
+				case 70 : globalRenderer.getFoodBitRenderer().cycleRenderMode();		break;	// F
+				case 72 : this.cycleHelpDisplay();										break;	// H
+				case 76 : globalGenepool3Dcpp.toggleLighting();							break;	// L
+				case 77 : this.toggleMushroomMode();									break;	// M
+				case 78 : globalRenderer.getSwimbotRenderer().cycleNormalRenderMode();	break;	// N
+				case 79 : this.cycleDebugDisplay();										break;	// O
+				case 80 : this.togglePause();											break;	// P
+				case 82 : this.toggleDebugSwimbotRender();								break;	// R
+				case 83 : globalRenderer.getSwimbotRenderer().cycleSplinedRenderMode();	break;	// S
+				case 90 : this.toggleZoomOverride();									break;	// Z
 			}
 		}
 
@@ -320,6 +257,69 @@ var genePool3D;
 			//console.log("onKeyUp  : code = " + keyCode + ", isShift = " + isShiftKey + ", isCtrl = " + isCtrlKey + ", isAlt = " + isAltKey );
 		}
 
+		weInterface.prototype.togglePause = function()
+		{
+			toggleSimulationRunning();
+			//globalGenepool3Dcpp.togglePause();
+		}
+
+		weInterface.prototype.dumpSelectedPartData = function()
+		{
+			globalRenderer.getSwimbotRenderer().dumpSelectedPartData();
+		}
+		weInterface.prototype.toggleDebugSwimbotRender = function()
+		{
+			globalRenderer.getSwimbotRenderer().toggleDebugSwimbotRender();
+		}
+
+		weInterface.prototype.toggleMushroomMode = function()
+		{
+			if ( this.mushroomMode == 0 ) {
+				globalRenderer.getPoolRenderer().setScreenClearEnable( false );
+				this.displayPopupMsg( 'Mushroom mode : ', 'ENABLED', 500 );
+				this.mushroomMode = 1;
+			}
+			else {
+				globalRenderer.getPoolRenderer().setScreenClearEnable( true );
+				this.displayPopupMsg( 'Mushroom mode : ', 'DISABLED', 500 );
+				this.mushroomMode = 0;
+			}
+		}
+
+		weInterface.prototype.toggleControlPanel = function()
+		{
+			if ( this.panelDisplayMode == 0 ) {
+				enableControlPanel( true );
+				this.resizeCanvas();	// genePool3d resize
+				this.panelDisplayMode = 1;
+			}
+			else {
+				enableControlPanel( false );
+				this.resizeCanvas();	// genePool3d resize
+				this.panelDisplayMode = 0;
+			}
+		}
+
+		//	Z : zoom override
+		weInterface.prototype.toggleZoomOverride = function()
+		{
+			if ( this.zoomOverrideMode == 0 ) {
+				genePool.getCamera().setMinZoomScale( 50.0 );
+				this.displayPopupMsg( 'Zoom limits : ', 'DISABLED', 500 );
+				this.zoomOverrideMode = 1;
+			}
+			else {
+				genePool.getCamera().restoreDefaultZoomScale();
+				this.displayPopupMsg( 'Zoom limits : ', 'ENABLED', 500 );
+				this.zoomOverrideMode = 0;
+			}
+		}
+
+		weInterface.prototype.forceZoomOverride = function()
+		{
+			genePool.getCamera().setMinZoomScale( 15.0 );
+			this.zoomOverrideMode = 1;
+		}
 
 		weInterface.prototype.cycleDebugDisplay = function ()
 		{
@@ -348,7 +348,7 @@ var genePool3D;
 			} else {
 				//	center over pool
 				let w = 640; //( this.glCanvas.width / 2 );
-				let h = 340;
+				let h = 380;
 				let l = ( this.glCanvas.width - w ) / 2;
 				let t = ( this.glCanvas.height - h ) / 2;
 				overlay.style.width  = w;
@@ -382,6 +382,8 @@ var genePool3D;
 			$('#helpOverlay').append( style2 + "o &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle stats overlay" + s2Eol );
 			$('#helpOverlay').append( style2 + "c &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: toggle control panel display" + s2Eol );
 			$('#helpOverlay').append( style2 + "m &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: mushroom mode" + s2Eol );
+			$('#helpOverlay').append( style2 + "d &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: dump selected part data" + s2Eol );
+			$('#helpOverlay').append( style2 + "r &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: render debug part" + s2Eol );
 		}
 
 		weInterface.prototype.displayPopupMsg = function( label, value, duration )
@@ -393,6 +395,14 @@ var genePool3D;
 			$('#popupMsg').css({"font-family": "Arial, Helvetica, sans-serif", "font-size": 20, "color": "#e0e0e0", "text-align": "center"});
 			$('#popupMsg').html( msg );
 			$('#popupMsg').fadeIn(100, function() { $(this).delay(duration).fadeOut(100); });
+		}
+
+		weInterface.prototype.displayDebugMsg = function( label, value )
+		{
+			let msg = "<span style='color: #d0d0d0'>" + label + "</span><span style='color: #e0e020'>" + value + "</span>";
+			this.debugMsg.style.display = 'block';
+			$('#debugMsg').css({"font-family": "Arial, Helvetica, sans-serif", "font-size": 20, "color": "#e0e0e0", "text-align": "left"});
+			$('#debugMsg').html( msg );
 		}
 
 		weInterface.prototype.updateOverlayPanel = function ( fontsize, lines )

@@ -82,6 +82,12 @@ configureRenderer = function ()
 	popupMsg.style  = "position: absolute; background-color: rgba(90, 90, 90, 0.9); display: none";
 	canvasContainer.appendChild(popupMsg);
 
+	//	debug info popup
+	var debugMsg = document.createElement('div');
+	debugMsg.id  = "debugMsg";
+	debugMsg.style  = "position: absolute; background-color: rgba(90, 90, 90, 0.9); display: none";
+	canvasContainer.appendChild(debugMsg);
+
 	//	webGl output (3D)
 	var glDiv = document.createElement('div');
 	glDiv.id    = 'glDiv';
@@ -92,22 +98,29 @@ configureRenderer = function ()
 	glCanvas.id = 'glCanvas';
 	glDiv.appendChild(glCanvas);
 
-	//	z-index layers - higher numbers are on top of lower numbers
-	genePoolCanvas.style.zIndex = "2";
-	glDiv.style.zIndex          = "3";
-	textOverlay.style.zIndex    = "7";
-	helpOverlay.style.zIndex    = "8";
-	popupMsg.style.zIndex       = "9";
 
 	// engineInputDiv / d3uiDiv (nested for proper input event handling)
 	var engineInputDiv   = document.createElement('div');
 	engineInputDiv.id    = 'engineInputDiv';
 	engineInputDiv.class = 'fullsize';
-	engineInputDiv.style = 'z-index: 4';
 	canvasContainer.appendChild(engineInputDiv);
 	var d3uiDiv = document.createElement('div');
 	d3uiDiv.id = 'd3uiDiv';
 	engineInputDiv.appendChild(d3uiDiv);
+
+	//	z-index layers - higher numbers are on top of lower numbers
+	//	NOTE: Can't seem to get 3d glCanvas to draw in front of genePool's default 2d canvas
+	genePoolCanvas.style.zIndex = "2";
+	glCanvas.style.zIndex       = "3";
+	glDiv.style.zIndex          = "4";
+	engineInputDiv.style.zIndex = "4";
+	textOverlay.style.zIndex    = "7";
+	helpOverlay.style.zIndex    = "8";
+	popupMsg.style.zIndex       = "9";
+	debugMsg.style.zIndex       = "9";
+
+	//	make it easier to toggle display in Chrome elements panel
+	genePoolCanvas.style.display = 'block';
 
 	//	start setting up the engine
 	//var glCanvas = document.getElementById("glCanvas");
@@ -154,13 +167,14 @@ configureRenderer = function ()
 //-------------------------------------------------------------
 function Renderer()
 {
-	let _poolRenderer        = new PoolRenderer();
-	let _swimbotRenderer     = new SwimbotRenderer(); 
-	let _foodBitRenderer     = new FoodBitRenderer(); 
+	let _poolRenderer		= new PoolRenderer();
+	let _swimbotRenderer	= new SwimbotRenderer(); 
+	let _foodBitRenderer	= new FoodBitRenderer(); 
 
-	let _canvas              = null;
-	let _canvasWidth         = 0;
-	let _canvasHeight        = 0;
+	let _canvas				= null;
+	let _canvasWidth		= 0;
+	let _canvasHeight		= 0;
+	let _simulationRunning	= false;
 
 	//	The 3D engine generates it's own timer and will be responsible
 	//	for calling the main genePool.update() function.
@@ -178,6 +192,13 @@ function Renderer()
 	this.handleRenderSpecificKeyUp = function( keyCode, isShiftKey, isCtrlKey, isAltKey )
 	{
 		genePool3D.onKeyUp( keyCode, isShiftKey, isCtrlKey, isAltKey );
+	}
+
+	//	The renderer uses 'simulationRunning' status to manage visual debug objects
+	this.setSimulationRunning = function( s )
+	{
+		_simulationRunning = s;
+		_swimbotRenderer.setSimulationRunning( s );
 	}
 
 	//-------------------------------------------------
@@ -225,6 +246,9 @@ function Renderer()
 
 		// update 3D camera
 		genePool3D.updateCamera( camera );
+
+		//	for 3d debug purposes
+		_swimbotRenderer.beginFrame();
 	}
 
 	//-------------------------------------------------
@@ -240,6 +264,9 @@ function Renderer()
 	this.endFrame = function () {
 	}
 
+	//=======================================================================================================================
+	//	Non-specific render helpers
+	//=======================================================================================================================
 
 	//---------------------------------------------
 	//	general purpose selection indicator

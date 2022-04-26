@@ -161,14 +161,16 @@ function Part()
 	this.turnAmp		    = ZERO;
 	this.turnPhase	        = ZERO;
 	this.momentFactor		= ZERO;
-	this.baseColor			= new Color();
-	this.blendColor			= new Color();
-	this.blendPct			= ZERO;
     this.endCapSpline       = ZERO;     // how pointy the splined end-cap is for parts that terminate body sequence
 	this.branch             = false;    // set to true if this part branches off (not a continuation of a category)
     this.splined		    = false;
 	this.numDecendents		= 0;
 	this.decendent			= new Array( MAX_PARTS );
+
+	this.baseColor			= new Color();	// 3d
+	this.blendColor			= new Color();	// 3d
+	this.blendPct			= ZERO;			// 3d
+	this.meshId				= NULL_INDEX;	// 3d
 
 	for (let p=0; p<MAX_PARTS; p++)
 	{

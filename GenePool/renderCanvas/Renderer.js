@@ -41,6 +41,9 @@ function Renderer()
 	this.handleRenderSpecificKeyDown = function( keyCode, isShiftKey, isCtrlKey, isAltKey ) {}
 	this.handleRenderSpecificKeyUp = function( keyCode, isShiftKey, isCtrlKey, isAltKey ) {}
 
+	//	The renderer get use 'simulationRunning' status to manage visual debug objects
+	this.setSimulationRunning = function(s) {}
+
 	//-------------------------------------------------
 	// called once during setup
 	//-------------------------------------------------

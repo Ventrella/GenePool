@@ -685,7 +685,7 @@ if ( mode === SimulationStartMode.SPECIES )
 		//---------------------------------
 		// set _simulationRunning to true
 		//---------------------------------
-		_simulationRunning = true;
+		this.setSimulationRunning( true );
 		
 		//---------------------------------
 		// set rendering to true
@@ -2240,9 +2240,14 @@ if ( globalTweakers.numFoodTypes === 2 )
     //--------------------------------------
     function setSelectedSwimbot( index )
     {
+		if (index != _selectedSwimbot && _selectedSwimbot != NULL_INDEX) {
+			_swimbots[ _selectedSwimbot ].setSelected( false );
+		}
+
         _selectedSwimbot = index;
 
         if ( _selectedSwimbot != NULL_INDEX ) {
+			_swimbots[ _selectedSwimbot ].setSelected( true );
             globalRenderer.getSwimbotRenderer().initializeDebugTrail( _swimbots[ _selectedSwimbot ].getPosition() );
         }
         
@@ -2389,6 +2394,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	this.setSimulationRunning = function(s)
 	{	
         _simulationRunning = s;
+		globalRenderer.setSimulationRunning(s);
     }
 
 	//-------------------------------
@@ -2873,7 +2879,11 @@ if ( globalTweakers.numFoodTypes === 2 )
             if ( _selectedSwimbot != NULL_INDEX )
             {
                 _swimbotBeingDragged = true;
-				globalRenderer.getSwimbotRenderer().initializeDebugTrail( _swimbots[ _selectedSwimbot ].getPosition() );
+                globalRenderer.getSwimbotRenderer().initializeDebugTrail( _swimbots[ _selectedSwimbot ].getPosition() );
+
+               // Part Select: tag the closest body part to the selection point
+               _vectorUtility = this.convertScreenCoordinatesToPoolPosition( x, y );
+               _swimbots[ _selectedSwimbot ].selectPartClosestTo( _vectorUtility );
             }
 
             //--------------------------------------
@@ -3003,6 +3013,7 @@ if ( globalTweakers.numFoodTypes === 2 )
 	this.getSelectedSwimbotID   = function() { return _selectedSwimbot;         }
 	this.getViewMode            = function() { return _viewTracking.getMode();  }
     this.getNumDeadSwimbots     = function() { return _numDeadSwimbots;         }
+	this.getViewTracking        = function() { return _viewTracking;            }
     
 	//--------------------------------------------------
 	// check to see if the camera navigation is active

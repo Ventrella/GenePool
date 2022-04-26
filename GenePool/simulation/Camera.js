@@ -41,6 +41,8 @@ function Camera()
 	let _secondsDelta	    = ZERO;
 	let _minimumScale	    = MINIMUM_SCALE;
 	
+	this.getScale = function() { return _scale; }
+
 	//--------------------------------
 	this.update = function( seconds )
 	{		
@@ -121,6 +123,8 @@ function Camera()
 
 		_top    = _position.y + _scale * ONE_HALF;
 		_bottom	= _position.y - _scale * ONE_HALF;
+
+		//console.log("px=" + _position.x.toFixed(3) + ", py=" + _position.y.toFixed(3) + ", scale=" + _scale.toFixed(3) + ", L=" + _left.toFixed(3) + ", R=" + _right.toFixed(3) + ", T=" + _top.toFixed(3) + ", B=" + _bottom.toFixed(3));
 	}
 
 
@@ -301,5 +305,4 @@ function Camera()
 
 		return false;
 	}
-	
 }

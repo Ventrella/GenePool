@@ -71,6 +71,8 @@ var    flopperYV = 0;
 	let _energyEfficiency   = ZERO;
 	let _selectRadius       = ZERO;
 	let _species            = NULL_INDEX;
+	let _isSelected         = false;
+	let _selectedPart       = NULL_PART;
 	
 	let _lastPositionForEfficiencyMeasurement = new Vector2D();
     let _lastEnergyForEfficiencyMeasurement = ZERO;
@@ -91,6 +93,15 @@ var    flopperYV = 0;
 	this.setParent = function( parent )
 	{
 	    _parent = parent;
+	}
+
+	this.setSelected = function( state )
+	{
+		if ( _isSelected != state )
+		{
+			_isSelected = state;
+			_selectedPart = NULL_PART;	// set by selectPartClosestTo()
+		}
 	}
     
     //------------------------------------
@@ -344,7 +355,6 @@ _phenotype.parts[p].bendingAngle = ( perpAmpModulator + ampModulator ) * Math.si
             }	
 		}
 	}
-
 
 
 
@@ -1287,7 +1297,8 @@ let partAccelerationY = -strokeForceY;
 	this.getSelectRadius                = function() { return _selectRadius;                                }
 	this.getPreferredFoodType           = function() { return _phenotype.preferredFoodType;                 }
 	this.getDigestibleFoodType          = function() { return _phenotype.digestibleFoodType;                }
-	
+	this.getIsSelected                  = function() { return _isSelected;                                  }
+	this.getSelectedPart                = function() { return _selectedPart;                                }
 
 	//---------------------------------------
     this.getGoalDescription = function() 
@@ -1911,6 +1922,29 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
 		return c;
     }
 
+	//----------------------------------------------
+	// When a swimmer gets picked, we also pick the
+	// closest body part for debug support
+	//----------------------------------------------
+	this.selectPartClosestTo = function( poolPos )
+	{
+		let closestDistance = 9999999;
+		let midpos = new Vector2D();
+		_selectedPart = NULL_PART;
+		for (let p=1; p<_phenotype.numParts; p++)
+		{
+			let pos  = _phenotype.parts[p].position;
+			let ppos = this.getPartParentPosition(p);
+			midpos.x = (pos.x + ppos.x) * 0.5;
+			midpos.y = (pos.y + ppos.y) * 0.5;
+			let distanceSquared = midpos.getDistanceSquaredTo( poolPos );
+			if ( distanceSquared < closestDistance )
+			{
+				_selectedPart = p;
+				closestDistance = distanceSquared;
+			}
+		}
+	}
 
     
 	//-----------------------

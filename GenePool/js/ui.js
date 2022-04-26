@@ -54,9 +54,15 @@ function enableControlPanel( state )
 {
 	if (state == true) {
 		_controlPanelWidth = 400;
+		var panel = document.getElementById('masterPanel');
+		panel.style.display = 'block';
+		resize();
 	}
 	else {
 		_controlPanelWidth = 0;
+		var panel = document.getElementById('masterPanel');
+		panel.style.display = 'none';
+		resize();
 	}
 }
 
@@ -1064,7 +1070,7 @@ function notifyGeneTweakPanelMouseDown()
     
     if ( selectedSwimbotID === -1 )
     {
-        console.log( "NULL" );
+        //console.log( "NULL" );
         closeTweakGenesPanel();
     }
     else

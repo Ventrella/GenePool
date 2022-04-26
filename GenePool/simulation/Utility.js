@@ -39,6 +39,13 @@
 			this.opacity = opacity;
 		}
 
+		this.copy = function( other ) {
+			this.red     = other.red;
+			this.green   = other.green;
+			this.blue    = other.blue;
+			this.opacity = other.opacity;
+		}
+
 		this.blend = function( base, blend, pct ) {
 			if (pct > ONE ) pct = ONE;
 			if (pct < ZERO) pct = ZERO;
