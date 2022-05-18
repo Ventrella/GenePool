@@ -238,7 +238,7 @@ var genePool3D;
 			switch( keyCode )
 			{
 				case 67 : this.toggleControlPanel();									break;	// C
-				case 68 : this.dumpSelectedPartData();									break;	// D
+			//	case 68 : this.dumpSelectedPartData();									break;	// D
 				case 70 : globalRenderer.getFoodBitRenderer().cycleRenderMode();		break;	// F
 				case 72 : this.cycleHelpDisplay();										break;	// H
 				case 76 : globalGenepool3Dcpp.toggleLighting();							break;	// L
@@ -247,14 +247,26 @@ var genePool3D;
 				case 79 : this.cycleDebugDisplay();										break;	// O
 				case 80 : this.togglePause();											break;	// P
 				case 82 : this.toggleDebugSwimbotRender();								break;	// R
-				case 83 : globalRenderer.getSwimbotRenderer().cycleSplinedRenderMode();	break;	// S
+			//	case 83 : globalRenderer.getSwimbotRenderer().cycleSplinedRenderMode();	break;	// S
 				case 90 : this.toggleZoomOverride();									break;	// Z
+
+				case 87 : globalGenepool3Dcpp.pitchSelectedObjectBack(true);			break;	// W
+				case 65 : globalGenepool3Dcpp.yawSelectedObjectLeft(true);				break;	// A
+				case 83 : globalGenepool3Dcpp.pitchSelectedObjectForward(true);			break;	// S
+				case 68 : globalGenepool3Dcpp.yawSelectedObjectRight(true);				break;	// D
 			}
 		}
 
 		weInterface.prototype.onKeyUp = function ( keyCode, isShiftKey, isCtrlKey, isAltKey )
 		{
 			//console.log("onKeyUp  : code = " + keyCode + ", isShift = " + isShiftKey + ", isCtrl = " + isCtrlKey + ", isAlt = " + isAltKey );
+			switch( keyCode )
+			{
+				case 87 : globalGenepool3Dcpp.pitchSelectedObjectBack(false);			break;	// W
+				case 65 : globalGenepool3Dcpp.yawSelectedObjectLeft(false);				break;	// A
+				case 83 : globalGenepool3Dcpp.pitchSelectedObjectForward(false);		break;	// S
+				case 68 : globalGenepool3Dcpp.yawSelectedObjectRight(false);			break;	// D
+			}
 		}
 
 		weInterface.prototype.togglePause = function()
@@ -317,7 +329,8 @@ var genePool3D;
 
 		weInterface.prototype.forceZoomOverride = function()
 		{
-			genePool.getCamera().setMinZoomScale( 15.0 );
+			//genePool.getCamera().setMinZoomScale( 4.0 );
+			genePool.getCamera().setMinZoomScale( 0.2 );	// wireframe testing
 			this.zoomOverrideMode = 1;
 		}
 

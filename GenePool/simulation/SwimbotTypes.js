@@ -170,7 +170,7 @@ function Part()
 	this.baseColor			= new Color();	// 3d
 	this.blendColor			= new Color();	// 3d
 	this.blendPct			= ZERO;			// 3d
-	this.meshId				= NULL_INDEX;	// 3d
+	this.partId				= NULL_INDEX;	// 3d
 
 	for (let p=0; p<MAX_PARTS; p++)
 	{

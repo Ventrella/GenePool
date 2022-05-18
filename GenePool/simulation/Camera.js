@@ -40,6 +40,7 @@ function Camera()
 	let _seconds		    = ZERO;
 	let _secondsDelta	    = ZERO;
 	let _minimumScale	    = MINIMUM_SCALE;
+	let _withinViewDefault	= false;
 	
 	this.getScale = function() { return _scale; }
 
@@ -135,12 +136,14 @@ function Camera()
 		if ( _minimumScale == MINIMUM_SCALE ) {
 			console.log("[Camera::setMinZoomScale] : " + scale );
 			_minimumScale = scale;
+			_withinViewDefault	= true;	// enables rendering of debug swimmers
 		}
 	}
 	this.restoreDefaultZoomScale = function () {
 		if ( _minimumScale != MINIMUM_SCALE ) {
 			console.log("[Camera::restoreDefaultZoomScale]" );
 			_minimumScale = MINIMUM_SCALE;
+			_withinViewDefault = false; // normal behavior
 		}
 	}
 
@@ -303,6 +306,6 @@ function Camera()
 			return true;
 		}
 
-		return false;
+		return _withinViewDefault;	// false for normal behavior
 	}
 }
