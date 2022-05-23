@@ -221,7 +221,7 @@ function SwimbotRenderer()
 			genePool3D.forceZoomOverride();
 			let dbgArea = new Vector2D();
 			dbgArea.setXY( DEBUG_AREA_X, DEBUG_AREA_Y );
-			genePool.getCamera().setScale( 60 );
+			genePool.getCamera().setScale( 70 );
 			genePool.getCamera().setPosition( dbgArea );
 			genePool.getViewTracking().setMode( ViewTrackingMode.NULL, genePool.getCamera().getPosition(), genePool.getCamera().getScale(), 0 );   
 
@@ -305,7 +305,6 @@ function SwimbotRenderer()
 			color.opacity = 0.3;
 			_savedPartParameters.color = color;
 			this.splined2dDebugRender( _animPartAngle, _animParentAngle, _savedPartParameters );
-
 
 			//	draw the 3d mesh alongside
 			this.renderSplinedMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 10 );		// <----------------------------------------
@@ -573,9 +572,9 @@ function SwimbotRenderer()
 	{
 		//	create the mesh if it doesn't already exist
 		if ( partParms.partId == NULL_INDEX ) {
-			let depth = partParms.width;
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
-			partParms.partId = globalGenepool3Dcpp.createNormalSwimmer( partParms.partIndex, partParms.width, depth, partParms.length, _baseColorEng, partParms.growthScale );
+			partParms.partId = globalGenepool3Dcpp.createNormalSwimmer( partParms.partIndex, partParms.parentWidth,
+				partParms.width, partParms.length, _baseColorEng, partParms.growthScale );
 		}
 
 		//	render existing mesh
@@ -590,9 +589,9 @@ function SwimbotRenderer()
 	{
 		//	create the mesh if it doesn't already exist
 		if ( partParms.partId == NULL_INDEX ) {
-			let depth = partParms.width;
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
-			partParms.partId = globalGenepool3Dcpp.createSplinedSwimmer( partParms.partIndex, partParms.parentWidth, depth, partParms.length, _baseColorEng, partParms.growthScale );
+			partParms.partId = globalGenepool3Dcpp.createSplinedSwimmer( partParms.partIndex, partParms.parentWidth,
+				partParms.width, partParms.length, _baseColorEng, partParms.growthScale );
 		}
 
 		//	setup the mesh morph data. _splineLeft/Right are in absolute coordinates relative to 2d parent pos
@@ -603,8 +602,10 @@ function SwimbotRenderer()
 
 		//	render existing mesh
 		_posEng.set( xpos, ypos );
+		let refAngle = partParms.blendAngle - 90.0;
+		//console.log("{renderSplinedMesh} - blandAngle = " + refAngle);
 		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
-		globalGenepool3Dcpp.renderSplinedSwimmer( partParms.partId, _posEng, partParms.angle, partParms.growthScale, _blendColorEng, partParms.blendPct );
+		globalGenepool3Dcpp.renderSplinedSwimmer( partParms.partId, _posEng, refAngle, partParms.growthScale, _blendColorEng, partParms.blendPct );
 	}
 
 
@@ -665,6 +666,10 @@ function SwimbotRenderer()
             perpEndY /= length;
         }
 
+		//	need this angle for 3d renderer
+		partParms.blendAngle = (Math.atan2( -perpStartY, perpStartX ) / PI_OVER_180) - 90.0;
+		if (partParms.blendAngle <= -180) partParms.blendAngle += 360.0;
+
         //--------------------------------------
         // determine the two control vectors
         //--------------------------------------
@@ -700,6 +705,11 @@ function SwimbotRenderer()
         //---------------------------------------------------------------------------------------
         // create the start and end points and the control points for the Bezier curve...
         //---------------------------------------------------------------------------------------
+
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
+
+
 		var splineData = {
 			startLeftX      : parentPos.x  - perpStartX,
 			startLeftY      : parentPos.y  - perpStartY,
@@ -768,6 +778,7 @@ function SwimbotRenderer()
 		y = Math.cos( radian );
 		partParms.parentPerp.setXY( -x, -y );
 
+		//console.log('partAngle = ' + partAngle.toFixed(2) + ', parentAngle = ' + parentAngle.toFixed(2) );
 
 		let partNum			= partParms.partIndex;
 		let parentIndex     = partParms.parentIndex;	// _phenotype.parts[partNum].parent;
@@ -903,7 +914,7 @@ function SwimbotRenderer()
 		//	Mimic bezierCurveTo using local function drawBezier
 		//let xof = -10, yof = 0;
 		//let p0=0, p1=0, p2=0, p3=0;
-		//p0 = { x: splineData.endRightX      + xof,    y: splineData.endRightY    + yof };
+		//p0 = { x: splineData.endRightX      + xof,  y: splineData.endRightY      + yof };
 		//p1 = { x: splineData.control2RightX + xof,  y: splineData.control2RightY + yof  };
 		//p2 = { x: splineData.control1RightX + xof,  y: splineData.control1RightY + yof  };
 		//p3 = { x: splineData.startRightX    + xof,  y: splineData.startRightY    + yof  };
@@ -911,14 +922,13 @@ function SwimbotRenderer()
 		//_canvas.strokeStyle = "rgba( 255, 0, 1, 1.0 )";
 		//this.drawBezier( p0, p1, p2, p3 )
 		//xof = 10;
-		//p0 = { x: splineData.endLeftX      + xof,    y: splineData.endLeftY    + yof  };
+		//p0 = { x: splineData.endLeftX      + xof,  y: splineData.endLeftY      + yof  };
 		//p1 = { x: splineData.control2LeftX + xof,  y: splineData.control2LeftY + yof  };
 		//p2 = { x: splineData.control1LeftX + xof,  y: splineData.control1LeftY + yof  };
 		//p3 = { x: splineData.startLeftX    + xof,  y: splineData.startLeftY    + yof  };
 		//_canvas.fillStyle   = "rgba( 255, 1, 0, 1.0 )";
 		//_canvas.strokeStyle = "rgba( 255, 0, 0, 1.0 )";
 		//this.drawBezier( p0, p1, p2, p3 )
-
 
 		//	create some axis if needed
 		if ( _dbgAxisId_1 == ZERO ) {
@@ -951,9 +961,9 @@ function SwimbotRenderer()
 		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, parentPos.x, parentPos.y, zval - 50);
 
 		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
+		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
+		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
+		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
 
 
 		//let s =  width * endCapSpline;
@@ -968,12 +978,10 @@ function SwimbotRenderer()
 		//let c1y	= splineData.endLeftY  + axisNormalY * s;
 		//let c2x	= splineData.endRightX + axisNormalX * s;
 		//let c2y	= splineData.endRightY + axisNormalY * s;
-
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, sx, sy, zval );
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, c1x, c1y, zval );
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, c2x, c2y, zval );
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, ex, ey, zval );
-
 		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
 		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, splineData.endLeftX, splineData.endLeftY, zval );
@@ -981,18 +989,18 @@ function SwimbotRenderer()
 
 
 		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
+		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
+		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
+		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
 
 		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
+		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
+		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
+		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
 		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
+		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
+		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
+		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
 
 
 		globalGenepool3Dcpp.showDebugRay( _dbgRayId_1, true );
@@ -1062,6 +1070,7 @@ function SwimbotRenderer()
 		this.blendColor		= new Color();
 		this.blendPct		= 0;
 		this.partId			= NULL_INDEX;
+		this.blendAngle		= 0;
 
 		this.minAngle		=  99999;
 		this.maxAngle		= -99999;
@@ -1100,6 +1109,7 @@ function SwimbotRenderer()
 			this.blendColor.copy	= curPart.blendColor;
 			this.blendPct			= curPart.blendPct;
 			this.partId				= curPart.partId;
+			this.blendAngle			= curPart.blendAngle;
 		}
 
 		this.dump = function() {
@@ -1191,7 +1201,6 @@ function SwimbotRenderer()
 			this.parentPerp.setXY ( -0.41962, 0.90770 );
 			this.childPerp.setXY  ( 0.00000, 0.00000 );
 			this.axis.setXY       ( -6.66249, -4.01984 );
-
 			this.partIndex        = 4;
 			this.parentIndex      = 3;
 			this.childIndex       = -1;
@@ -1244,7 +1253,7 @@ function SwimbotRenderer()
 			this.position.setXY   ( 3388.85435, 3486.25813 );
 			this.parentPos.setXY  ( 3377.38688, 3467.33690 );
 			this.angle            = 31.21851;
-			this.width            = 6.84766                * 1.0;
+			this.width            = 6.84766                * 1.2;
 			this.length           = 22.12500;
 			this.endCapSpline     = 3.33008;
 			this.parentWidth      = 6.68262                * 1.0;

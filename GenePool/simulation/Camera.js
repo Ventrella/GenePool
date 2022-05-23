@@ -40,6 +40,10 @@ function Camera()
 	let _seconds		    = ZERO;
 	let _secondsDelta	    = ZERO;
 	let _minimumScale	    = MINIMUM_SCALE;
+
+	//	this value allows the results of getWithinView() to be ovridden -
+	//		false : normal (default) behavior. Culls swimmers that are not in the camera viewing area
+	//		true  : override - forces render of all swimbots, regardless of location (DEBUG)
 	let _withinViewDefault	= false;
 	
 	this.getScale = function() { return _scale; }

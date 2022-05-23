@@ -272,7 +272,7 @@ var genePool3D;
 		weInterface.prototype.togglePause = function()
 		{
 			toggleSimulationRunning();
-			//globalGenepool3Dcpp.togglePause();
+			globalGenepool3Dcpp.togglePause();
 		}
 
 		weInterface.prototype.dumpSelectedPartData = function()

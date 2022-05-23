@@ -76,7 +76,9 @@ const MIN_SWIMBOT_HUNGER_THRESHOLD          = ZERO;
 
 const MAX_SWIMBOTS = 2000;
 
-const INITIAL_NUM_SWIMBOTS =  500; // original version
+const INITIAL_NUM_SWIMBOTS =  2; //BPD
+
+//const INITIAL_NUM_SWIMBOTS =  500; // original version
 //const INITIAL_NUM_SWIMBOTS = 1000; // research version
 //luka 1000
 
@@ -110,7 +112,9 @@ const DEFAULT_SWIMBOT_HUNGER_THRESHOLD	=  50;
 // a swimbot that does not have the right digestion (gene values) for that type
 // of food will only get 35 energy points if the FOOD_TYPE_OFFSET is set to 0.7
 
-const YOUNG_AGE_DURATION    = 1000;
+//const YOUNG_AGE_DURATION    = 1000;
+const YOUNG_AGE_DURATION    = 10000;	//BPD
+
 const OLD_AGE_DURATION      = 1000;
 const MIN_MAXIMUM_AGE       = YOUNG_AGE_DURATION + OLD_AGE_DURATION;
 const MAX_MAXIMUM_AGE       = 40000;
