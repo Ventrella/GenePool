@@ -221,7 +221,7 @@ function SwimbotRenderer()
 			genePool3D.forceZoomOverride();
 			let dbgArea = new Vector2D();
 			dbgArea.setXY( DEBUG_AREA_X, DEBUG_AREA_Y );
-			genePool.getCamera().setScale( 70 );
+			genePool.getCamera().setScale( 80 );
 			genePool.getCamera().setPosition( dbgArea );
 			genePool.getViewTracking().setMode( ViewTrackingMode.NULL, genePool.getCamera().getPosition(), genePool.getCamera().getScale(), 0 );   
 
@@ -299,7 +299,7 @@ function SwimbotRenderer()
 
 			//	Render the javascript version of the swimbot - with debug visualization
 			let xspace = 40;
-			_savedPartParameters.setParentPos( DEBUG_AREA_X - (xspace/2), DEBUG_AREA_Y + 10 );
+			_savedPartParameters.setParentPos( DEBUG_AREA_X - (xspace/2), DEBUG_AREA_Y + 20 );
 			_splineFactor = DEFAULT_SPLINE_FACTOR;
 			let color = _savedPartParameters.color;
 			color.opacity = 0.3;
@@ -307,8 +307,8 @@ function SwimbotRenderer()
 			this.splined2dDebugRender( _animPartAngle, _animParentAngle, _savedPartParameters );
 
 			//	draw the 3d mesh alongside
-			this.renderSplinedMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 10 );		// <----------------------------------------
-			//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 10 );		// <----------------------------------------
+			this.renderSplinedMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );		// <----------------------------------------
+			//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 0 );		// <----------------------------------------
 		}
 	}
 
@@ -591,7 +591,7 @@ function SwimbotRenderer()
 		if ( partParms.partId == NULL_INDEX ) {
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
 			partParms.partId = globalGenepool3Dcpp.createSplinedSwimmer( partParms.partIndex, partParms.parentWidth,
-				partParms.width, partParms.length, _baseColorEng, partParms.growthScale );
+				partParms.width, partParms.length, partParms.endCapSpline, _baseColorEng, partParms.growthScale );
 		}
 
 		//	setup the mesh morph data. _splineLeft/Right are in absolute coordinates relative to 2d parent pos
@@ -705,11 +705,6 @@ function SwimbotRenderer()
         //---------------------------------------------------------------------------------------
         // create the start and end points and the control points for the Bezier curve...
         //---------------------------------------------------------------------------------------
-
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
-
-
 		var splineData = {
 			startLeftX      : parentPos.x  - perpStartX,
 			startLeftY      : parentPos.y  - perpStartY,
@@ -719,7 +714,6 @@ function SwimbotRenderer()
 			control2LeftY   : position.y   - perpEndY      + control2VectorY,
 			endLeftX        : position.x   - perpEndX,
 			endLeftY        : position.y   - perpEndY,
-
 
 			startRightX     : parentPos.x  + perpStartX,
 			startRightY     : parentPos.y  + perpStartY,
@@ -815,6 +809,17 @@ function SwimbotRenderer()
 		let fillOpacity = 0.25;
 		let strokeOpacity = 0.25;
 
+		let cap_startx  = 0;
+		let cap_starty  = 0;
+		let cap_endx    = 0;
+		let cap_endy    = 0;
+		let cap_c1x     = 0;
+		let cap_c1y     = 0;
+		let cap_c2x     = 0;
+		let cap_c2y     = 0;
+
+
+
 		//---------------------------------------
 		// the beginning of a series of parts
 		//
@@ -855,23 +860,24 @@ function SwimbotRenderer()
             let axisNormalX = axis.x / length;
             let axisNormalY = axis.y / length;
 
-            let startx  = splineData.endLeftX  + axisNormalX * f;
-            let starty  = splineData.endLeftY  + axisNormalY * f;
-            let endx    = splineData.endRightX + axisNormalX * f;
-            let endy    = splineData.endRightY + axisNormalY * f;
-            let c1x     = splineData.endLeftX  + axisNormalX * s;
-            let c1y     = splineData.endLeftY  + axisNormalY * s;
-            let c2x     = splineData.endRightX + axisNormalX * s;
-            let c2y     = splineData.endRightY + axisNormalY * s;
+            cap_startx  = splineData.endLeftX  + axisNormalX * f;
+            cap_starty  = splineData.endLeftY  + axisNormalY * f;
+            cap_endx    = splineData.endRightX + axisNormalX * f;
+            cap_endy    = splineData.endRightY + axisNormalY * f;
+            cap_c1x     = splineData.endLeftX  + axisNormalX * s;
+            cap_c1y     = splineData.endLeftY  + axisNormalY * s;
+            cap_c2x     = splineData.endRightX + axisNormalX * s;
+            cap_c2y     = splineData.endRightY + axisNormalY * s;
 
             _canvas.beginPath();
-            _canvas.moveTo( startx, starty );
-            _canvas.bezierCurveTo( c1x, c1y, c2x, c2y, endx, endy );
+            _canvas.moveTo( cap_startx, cap_starty );
+            _canvas.bezierCurveTo( cap_c1x, cap_c1y, cap_c2x, cap_c2y, cap_endx, cap_endy );
             _canvas.closePath();	    
             _canvas.fill();
 
-            _canvas.moveTo( startx, starty );
-            _canvas.bezierCurveTo( c1x, c1y, c2x, c2y, endx, endy );
+			//	outline
+            _canvas.moveTo( cap_startx, cap_starty );
+            _canvas.bezierCurveTo( cap_c1x, cap_c1y, cap_c2x, cap_c2y, cap_endx, cap_endy );
             _canvas.stroke();
         }
         
@@ -955,12 +961,24 @@ function SwimbotRenderer()
 		//let pos    = _savedPartParameters.position;
 		//let parPos = _savedPartParameters.parentPos;
 		let zval   = 500.0;
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, position.x, position.y, zval - 50 );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, parentPos.x, parentPos.y, zval - 50);
 
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
+
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, cap_startx, cap_starty, zval );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, cap_c1x, cap_c1x, zval );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, cap_c2x, cap_c2y, zval );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, cap_endx, cap_endy, zval );
+
+
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, position.x, position.y, zval - 50 );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, parentPos.x, parentPos.y, zval - 50);
+
+		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
 		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
 		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
 		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
@@ -988,16 +1006,16 @@ function SwimbotRenderer()
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, splineData.endRightX, splineData.endRightY, zval );
 
 
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
+		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
 		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
 		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
 		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
 
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
+		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
 		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
 		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
 		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
+		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
 		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
 		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
 		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
@@ -1253,10 +1271,11 @@ function SwimbotRenderer()
 			this.position.setXY   ( 3388.85435, 3486.25813 );
 			this.parentPos.setXY  ( 3377.38688, 3467.33690 );
 			this.angle            = 31.21851;
-			this.width            = 6.84766                * 1.2;
+			this.width            = 6.84766                * 1.4;
 			this.length           = 22.12500;
 			this.endCapSpline     = 3.33008;
 			this.parentWidth      = 6.68262                * 1.0;
+//this.parentWidth = this.width;
 			this.perp.setXY       ( 0.85520, -0.51830 );
 			this.parentPerp.setXY ( 0.98749, -0.15769 );
 			this.childPerp.setXY  ( 0.00000, 0.00000 );
