@@ -238,16 +238,17 @@ var genePool3D;
 			switch( keyCode )
 			{
 				case 67 : this.toggleControlPanel();									break;	// C
-			//	case 68 : this.dumpSelectedPartData();									break;	// D
 				case 70 : globalRenderer.getFoodBitRenderer().cycleRenderMode();		break;	// F
 				case 72 : this.cycleHelpDisplay();										break;	// H
 				case 76 : globalGenepool3Dcpp.toggleLighting();							break;	// L
 				case 77 : this.toggleMushroomMode();									break;	// M
 				case 78 : globalRenderer.getSwimbotRenderer().cycleNormalRenderMode();	break;	// N
 				case 79 : this.cycleDebugDisplay();										break;	// O
-				case 80 : this.togglePause();											break;	// P
-				case 82 : this.toggleDebugSwimbotRender();								break;	// R
-			//	case 83 : globalRenderer.getSwimbotRenderer().cycleSplinedRenderMode();	break;	// S
+				case 80 : this.togglePause();											break;	// Pause
+				case 81 : this.dumpSelectedPartData();									break;	// Query Selected
+				//case 82 : this.toggleDebugSwimbotRender();							break;	// R
+				case 82 : globalRenderer.getSwimbotRenderer().toggleWireframe();		break;	// R
+				case 88 : globalRenderer.getSwimbotRenderer().cycleSplinedRenderMode();	break;	// X
 				case 90 : this.toggleZoomOverride();									break;	// Z
 
 				case 87 : globalGenepool3Dcpp.pitchSelectedObjectBack(true);			break;	// W
@@ -391,7 +392,7 @@ var genePool3D;
 			$('#helpOverlay').append( style2 + "z &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: toggle zoom override" + s2Eol );
 			$('#helpOverlay').append( style2 + "f &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle foodbit render mode" + s2Eol );
 			$('#helpOverlay').append( style2 + "n &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle normal swimmer render mode" + s2Eol );
-			$('#helpOverlay').append( style2 + "s &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle splined swimmer render mode" + s2Eol );
+			$('#helpOverlay').append( style2 + "x &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle splined swimmer render mode" + s2Eol );
 			$('#helpOverlay').append( style2 + "o &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: cycle stats overlay" + s2Eol );
 			$('#helpOverlay').append( style2 + "c &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: toggle control panel display" + s2Eol );
 			$('#helpOverlay').append( style2 + "m &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: mushroom mode" + s2Eol );

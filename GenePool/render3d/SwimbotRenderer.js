@@ -16,6 +16,9 @@
 const DEBUG_AREA_X = 1000;
 const DEBUG_AREA_Y = 1000;
 
+const FORCE_ALL_3D = false;
+const DEFAULT_WIREFRAME_MODE = false;
+
 function SwimbotRenderer()
 {
 	let _canvas = null;		// set during initialization
@@ -35,6 +38,9 @@ function SwimbotRenderer()
 	//---------------------------------
 	const EGG_SIZE = 5.0;
 
+	//const EGG_SIZE = 2.0;		//GROWTEST
+	//const MAX_TEST_AGE = 400;	//GROWTEST
+
 	//	for debug trails
 	const TRAIL_LENGTH = 100;
 
@@ -52,11 +58,13 @@ function SwimbotRenderer()
 	//	The following objects are all created from classes that are exposed to .js from the engine
 	//	via Embind. Allocation is deferred until the first BeginFrame because the methods that we
 	//	need are not installed on the Module until *after* the .initialize() function call.  :-(
-	let _lp0Eng = null, _lp1Eng = null, _lp2Eng = null, _lp3Eng = null;	// Vec2
-	let _rp0Eng = null, _rp1Eng = null, _rp2Eng = null, _rp3Eng = null;	// Vec2
-	let _posEng = null, _refPosEng = null;								// Vec2
-	let _splineLeftEng = null, _splineRightEng = null;		// SplineData
+	let _begPosEng = null, _endPosEng = null;								// Vec2
 	let _baseColorEng  = null, _blendColorEng  = null;		// Color
+
+	//let _posTEST = null, _pposTEST  = null;
+	let _perpStart = null, _perpEnd = null;
+
+	let _adjustedScale = 1.0;
 
 	//--------------------------------
 	// local variables
@@ -83,10 +91,12 @@ function SwimbotRenderer()
 	let _dbgRayId_2		= ZERO;
 	let _dbgRayId_3		= ZERO;
 	let _dbgRayId_4		= ZERO;
+	let _dbgRayId_5		= ZERO;
 	let _dbgAxisId_Part	= ZERO;
 
 	let _dumpSelectedPartData = false;
 	let _debugRenderMode	= 0;
+	let _wireframeMode		= DEFAULT_WIREFRAME_MODE;
 	let _savedCamPos		= new Vector2D();
 	let _savedCamScale		= 0;
 	let _partRenderCount	= 0;
@@ -109,6 +119,7 @@ function SwimbotRenderer()
 	let _renderSplinedMode	= 0;
 	let _swimmerIsSelected	= false;
 	let _selectedPartIndex	= NULL_PART;
+	let _swimmerPartIsSelected	= false;
 	let _curSwimbotIndex	= NULL_INDEX;
 
 	//var _partParameters = null;
@@ -158,14 +169,15 @@ function SwimbotRenderer()
 			_renderNormalMode = 0;
 		}
 
-		let state = 'foo';
+		let desc = 'foo';
 		switch (_renderNormalMode) {
-			case 0 : state = 'OFF'; this.renderPartNormalFunc = this.renderPartNormalOFF; break;
-			case 1 : state = '2D' ; this.renderPartNormalFunc = this.renderPartNormal2d; break;
-			case 2 : state = '3D' ; this.renderPartNormalFunc = this.renderPartNormal3d; break;
+			case 0 : desc = 'OFF'; this.renderPartNormalFunc = this.renderPartNormalOFF; break;
+			case 1 : desc = '2D' ; this.renderPartNormalFunc = this.renderPartNormal2d; break;
+			case 2 : desc = '3D' ; this.renderPartNormalFunc = this.normalRenderSwitcher; break;
 		}
 
-		genePool3D.displayPopupMsg( 'Normal Swimmer part render : ', state, 500 );
+		genePool3D.displayPopupMsg( 'Normal Swimmer part render : ', desc, 600 );
+		console.log('SwimmerPart renderMode: normal = ' + desc + ' (splined=' + _renderSplinedMode + ')' );
 	}
 
 	this.cycleSplinedRenderMode = function()
@@ -180,14 +192,15 @@ function SwimbotRenderer()
 			_renderSplinedMode = 0;
 		}
 
-		let state = 'foo';
+		let desc = 'foo';
 		switch (_renderSplinedMode) {
-			case 0 : state = 'OFF'; this.renderPartSplinedFunc = this.renderPartSplinedOFF; break;
-			case 1 : state = '2D' ; this.renderPartSplinedFunc = this.splinedRender2D;  break;
-			case 2 : state = '3D' ; this.renderPartSplinedFunc = this.splinedRender3D;  break;
+			case 0 : desc = 'OFF'; this.renderPartSplinedFunc = this.renderPartSplinedOFF; break;
+			case 1 : desc = '2D' ; this.renderPartSplinedFunc = this.splinedRender2D;  break;
+			case 2 : desc = '3D' ; this.renderPartSplinedFunc = this.splinedRenderSwitcher;  break;
 		}
 
-		genePool3D.displayPopupMsg( 'Splined Swimmer part render : ', state, 500 );
+		genePool3D.displayPopupMsg( 'Splined Swimmer part render : ', desc, 600 );
+		console.log('SwimmerPart renderMode: splined = ' + desc + ' (normal=' + _renderNormalMode + ')' );
 	}
 
 
@@ -213,6 +226,17 @@ function SwimbotRenderer()
 		}
 	}
 
+	//
+	this.toggleWireframe = function()
+	{
+		_wireframeMode = !_wireframeMode;
+		console.log('[SwimbotRenderer::toggleWireframe] : wireFrame = ' + _wireframeMode);
+		globalGenepool3Dcpp.setWireframeMode( _wireframeMode );
+		let desc = "OFF";
+		if (_wireframeMode) desc = "ON";
+		genePool3D.displayPopupMsg( 'Wireframe mode : ', desc, 600 );
+	}
+
 	this.beginDebugRender = function()
 	{
 		if ( _debugRenderActive != true ) {
@@ -225,21 +249,23 @@ function SwimbotRenderer()
 			genePool.getCamera().setPosition( dbgArea );
 			genePool.getViewTracking().setMode( ViewTrackingMode.NULL, genePool.getCamera().getPosition(), genePool.getCamera().getScale(), 0 );   
 
-			_animPartAngleMin	= 180 - 60;
-			_animPartAngleMax	= 180 + 60;
+			_animPartAngleMin	= 180 - 90;
+			_animPartAngleMax	= 180 + 90;
 			_animPartAngleRot	= 0;
 			let secPerCycle		= 6; //sec
 			let degPerSec		= 360 / secPerCycle;
-	//degPerSec = 0;
+//degPerSec = 0;
 			_animPartAngleInc	= degPerSec / 30; // deg
 
-			_animParentAngleMin	=  60;
-			_animParentAngleMax	= 120;
+			_animParentAngleMin	= 90 - 50;
+			_animParentAngleMax	= 90 + 50;
 			_animParentAngleRot	= 0;
 			secPerCycle			= 10; //sec
-			degPerSec			= 360 / secPerCycle;
-	degPerSec = 0;
+			degPerSec			= 540 / secPerCycle;
+//degPerSec = 0;
 			_animParentAngleInc	= degPerSec / 30; // deg
+
+			//_age = 0;	//GROWTEST
 
 			_debugRenderActive = true;
 		}
@@ -276,13 +302,16 @@ function SwimbotRenderer()
 		if (_dbgRayId_2     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_2,   false );
 		if (_dbgRayId_3     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_3,   false );
 		if (_dbgRayId_4     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_4,   false );
+		if (_dbgRayId_5     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_5,   false );
 		if (_dbgAxisId_Part != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_Part, false );
 	}
 
 	//-------------------------------------------------------------------------------
 	this.renderDebugSwimbot = function()
 	{
-		_savedPartParameters.setTest_c();
+		//_savedPartParameters.setTest_c() ;
+		_savedPartParameters.setTest_D() ;
+
 		if ( _savedPartParameters.partIndex != NULL_INDEX )
 		{
 			if ( _simulationRunning )
@@ -295,7 +324,16 @@ function SwimbotRenderer()
 				refAngle = _animParentAngleMin + range;
 				_animParentAngleRot += _animParentAngleInc * PI_OVER_180;
 				_animParentAngle = refAngle + (range *  Math.sin(_animParentAngleRot));
+
+//_animPartAngle = 220.0;
+//_animParentAngle = 90.0;
+//console.log( "_animPartAngle=" + _animPartAngle + ", _animParentAngle=" + _animParentAngle );
 			}
+
+
+			//_age = _age+1;	//GROWTEST
+            //if ( _age > MAX_TEST_AGE ) { _age = MAX_TEST_AGE; }	//GROWTEST
+
 
 			//	Render the javascript version of the swimbot - with debug visualization
 			let xspace = 40;
@@ -304,11 +342,21 @@ function SwimbotRenderer()
 			let color = _savedPartParameters.color;
 			color.opacity = 0.3;
 			_savedPartParameters.color = color;
-			this.splined2dDebugRender( _animPartAngle, _animParentAngle, _savedPartParameters );
 
-			//	draw the 3d mesh alongside
-			this.renderSplinedMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );		// <----------------------------------------
-			//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 0 );		// <----------------------------------------
+			if ( _savedPartParameters.splined )
+			{
+				this.splined2dDebugRender( _animPartAngle, _animParentAngle, _savedPartParameters );
+				//	draw the 3d mesh alongside
+				this.renderSplinedMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );		// <----------------------------------------
+				//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 0 );		// <----------------------------------------
+			}
+			else
+			{
+				//console.log("[renderDebugSwimbot] : partId = " + _savedPartParameters.partId );
+				this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );
+
+				//this.renderPartNormal2d( partParms );
+			}
 		}
 	}
 
@@ -359,26 +407,19 @@ function SwimbotRenderer()
 		_partRenderCount = 0;
 
 		// force debug render for testing
-		_debugRenderMode = 1;							// <---------------------------------------------------------------------------------------
-		this.beginDebugRender();						// <---------------------------------------------------------------------------------------
+		//_debugRenderMode = 1;							// <---------------------------------------------------------------------------------------
+		//this.beginDebugRender();						// <---------------------------------------------------------------------------------------
 
 		//	Module had not been completely intialized at the time of the .initialize() call.
 		//	Assume that it is now ready and go ahead and allocate shared engine objects
-		if ( _posEng == null ) {
-			_posEng = new Module.Vec2();
-			_refPosEng = new Module.Vec2();
-			_lp0Eng = new Module.Vec2();
-			_lp1Eng = new Module.Vec2();
-			_lp2Eng = new Module.Vec2();
-			_lp3Eng = new Module.Vec2();
-			_rp0Eng = new Module.Vec2();
-			_rp1Eng = new Module.Vec2();
-			_rp2Eng = new Module.Vec2();
-			_rp3Eng = new Module.Vec2();
-			_splineLeftEng  = new Module.SplineData();
-			_splineRightEng = new Module.SplineData();
+		if ( _begPosEng == null ) {
+			_begPosEng		= new Module.Vec2();
+			_endPosEng		= new Module.Vec2();
 			_baseColorEng   = new Module.Color();
 			_blendColorEng  = new Module.Color();
+			_perpStart		= new Module.Vec2();
+			_perpEnd		= new Module.Vec2();
+			globalGenepool3Dcpp.setWireframeMode( DEFAULT_WIREFRAME_MODE );
 		}
 	}
 
@@ -389,7 +430,7 @@ function SwimbotRenderer()
 	{
     	_phenotype      = swimbot.getPhenotype();
     	_brain          = swimbot.getBrain();
-    	_age            = swimbot.getAge();
+    	//_age            = swimbot.getAge();
     	_energy         = swimbot.getEnergy();
     	_growthScale    = swimbot.getGrowthScale();
     	_focusDirection = swimbot.getFocusDirection();
@@ -397,7 +438,7 @@ function SwimbotRenderer()
 		_swimmerIsSelected = swimbot.getIsSelected();
 		_selectedPartIndex = swimbot.getSelectedPart();
 		_curSwimbotIndex   = swimbot.getIndex();
-		if (_swimmerIsSelected) swimbot.setAge( YOUNG_AGE_DURATION );	// keep us alive
+		_swimmerPartIsSelected = false;
 
 		if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_DOT )
 		{
@@ -467,12 +508,28 @@ function SwimbotRenderer()
 		//	Render a standard swimbot
 		for (let partNum=1; partNum<_phenotype.numParts; partNum++)
 		{
+			_swimmerPartIsSelected = (partNum == _selectedPartIndex);
+			let curMeshId = _phenotype.parts[partNum].partId;
+
 			if ( _phenotype.parts[partNum].length > ZERO )
 			{
 				_parentPosition = swimbot.getPartParentPosition( partNum );
 				_colorUtility   = swimbot.calculatePartColor( partNum );
-				if ( _swimmerIsSelected && (partNum == _selectedPartIndex) ) {
-					_colorUtility.set( 1.0, 0.5, 0.0, 1.0 );	// color the selected part
+				//if ( _swimmerIsSelected && _swimmerPartIsSelected ) {
+				//	_colorUtility.set( 1.0, 0.5, 0.0, 1.0 );	// color the selected part
+				//}
+
+				let partParms = new PartParameters();
+				partParms.fill( partNum, _phenotype.parts );
+
+				//	dump parms for debug
+				if ( _swimmerIsSelected && _swimmerPartIsSelected )
+				{
+					if ( _dumpSelectedPartData ) {
+						console.log('+++++ part render data : swimbot = ' + _curSwimbotIndex + ', part = ' + _selectedPartIndex );
+						partParms.dump();
+						_dumpSelectedPartData = false;
+					}
 				}
 
 				//--------------------------------------------
@@ -481,44 +538,39 @@ function SwimbotRenderer()
 				_splineFactor = DEFAULT_SPLINE_FACTOR; 	
 				if ( _phenotype.parts[ partNum ].splined )
 				{
-					let partParms = new PartParameters();
-					partParms.fill( partNum, _phenotype.parts );
-
-					if ( _swimmerIsSelected && (partNum == _selectedPartIndex) )
-					{
-						if ( _dumpSelectedPartData ) {
-							console.log('+++++ part render data : swimbot = ' + _curSwimbotIndex + ', part = ' + _selectedPartIndex );
-							partParms.dump();
-							_dumpSelectedPartData = false;
-						}
-						if ( _debugRenderMode > 0 )
-						{
-							//	retrieve the 3d mesh id that might have been created in the debug render
-							let pmesh = _phenotype.parts[partNum].partId;
-							let dmesh = _savedPartParameters.partId;
-							if (pmesh != NULL_INDEX || dmesh != NULL_INDEX) {
-								if (pmesh != dmesh) {
-									console.log( "pmesh = " + pmesh + ", dmesh = " + dmesh );
-									_phenotype.parts[partNum].partId = dmesh;
-									partParms.partId = dmesh;
-								}
-							}
-
-							_savedPartParameters.copy( partParms );
-							_savedPartParameters.isDebug = true;
-
-							//genePool3D.displayDebugMsg( 'angle : ', _savedPartParameters.angle.toFixed(1) );
-						}
-					}
-
-					this.renderPartSplinedFunc( partParms );
+					//this.renderPartSplinedFunc( partParms );
+					this.splinedRenderSwitcher( partParms );
 				}
 				else
 				{
-					let partParms = new PartParameters();
-					partParms.fill( partNum, _phenotype.parts );
-					this.renderPartNormalFunc( partParms );
-					_phenotype.parts[partNum].partId = partParms.partId;
+					//this.renderPartNormalFunc( partParms );
+					this.normalRenderSwitcher( partParms );
+				}
+
+					//if ( _debugRenderMode > 0 )
+					//{
+					//	//	retrieve the 3d mesh id that might have been created in the debug render
+					//	let pmesh = _phenotype.parts[partNum].partId;
+					//	let dmesh = _savedPartParameters.partId;
+					//	if (pmesh != NULL_INDEX || dmesh != NULL_INDEX) {
+					//		if (pmesh != dmesh) {
+					//			console.log( "pmesh = " + pmesh + ", dmesh = " + dmesh );
+					//			_phenotype.parts[partNum].partId = dmesh;
+					//			partParms.partId = dmesh;
+					//		}
+					//	}
+					//	_savedPartParameters.copy( partParms );
+					//	_savedPartParameters.isDebug = true;
+					//	//genePool3D.displayDebugMsg( 'angle : ', _savedPartParameters.angle.toFixed(1) );
+					//}
+
+				//	meshID need to be pushed back up into the phenoType
+				let newMeshId= partParms.partId;
+				if (curMeshId != NULL_INDEX || newMeshId != NULL_INDEX) {
+					if (curMeshId != newMeshId) {
+						//console.log( "curMeshId = " + curMeshId + ", newMeshId = " + newMeshId );
+						_phenotype.parts[partNum].partId = newMeshId;
+					}
 				}
 
 				//--------------------------------------------
@@ -561,11 +613,52 @@ function SwimbotRenderer()
 	//	3D rendering
 	//
 	//=======================================================================================================
+	this.splinedRenderSwitcher = function( partParms )
+	{
+		if ( FORCE_ALL_3D || ((_renderSplinedMode == 2) && _swimmerIsSelected) ) // && _swimmerPartIsSelected )
+		{
+			this.generate3dRenderData( partParms );
+			this.renderSplinedMesh( partParms, partParms.parentPos.x, partParms.parentPos.y );
+			if ( partParms.partId != NULL_INDEX ) {
+				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, true );
+			}
+		}
+		else
+		{
+			if ( partParms.partId != NULL_INDEX ) {
+				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, false );
+			}
+			if ( _renderSplinedMode != 0 ) {
+				this.splinedRender2D( partParms );
+			}
+		}
+	}
+
+	this.normalRenderSwitcher = function( partParms )
+	{
+		if ( FORCE_ALL_3D || ((_renderNormalMode == 2) && _swimmerIsSelected ) ) // && _swimmerPartIsSelected )
+		{
+			this.renderPartNormal3d( partParms, partParms.parentPos.x, partParms.parentPos.y );
+			if ( partParms.partId != NULL_INDEX ) {
+				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, true );
+			}
+		}
+		else
+		{
+			if ( partParms.partId != NULL_INDEX ) {
+				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, false );
+			}
+			if ( _renderNormalMode != 0 ) {
+				this.renderPartNormal2d( partParms );
+			}
+		}
+	}
+
+
 	this.renderPartNormal3d = function( partParms )
 	{
-		let position  = partParms.position;
 		let parentPos = partParms.parentPos;
-		this.renderNormalMesh( partParms, position.x, position.y )
+		this.renderNormalMesh( partParms, parentPos.x, parentPos.y )
 	}
 
 	this.renderNormalMesh = function( partParms, xpos, ypos )
@@ -573,14 +666,18 @@ function SwimbotRenderer()
 		//	create the mesh if it doesn't already exist
 		if ( partParms.partId == NULL_INDEX ) {
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
-			partParms.partId = globalGenepool3Dcpp.createNormalSwimmer( partParms.partIndex, partParms.parentWidth,
-				partParms.width, partParms.length, _baseColorEng, partParms.growthScale );
+			partParms.partId = globalGenepool3Dcpp.createNormalSwimbotPart( partParms.partIndex, partParms.width,
+				partParms.length, _baseColorEng, partParms.growthScale );
+
+			console.log("==== <renderNormalMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
+				", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +
+				partParms.baseColor.blue.toFixed(3) + " )" );
 		}
 
 		//	render existing mesh
-		_posEng.set( xpos, ypos );
+		_begPosEng.set( xpos, ypos );
 		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
-		globalGenepool3Dcpp.renderNormalSwimmer( partParms.partId, _posEng, partParms.angle, partParms.growthScale, _blendColorEng, partParms.blendPct );
+		globalGenepool3Dcpp.renderNormalSwimbotPart( partParms.partId, _begPosEng, partParms.angle, partParms.growthScale, _blendColorEng, partParms.blendPct );
 	}
 
 	//
@@ -589,25 +686,95 @@ function SwimbotRenderer()
 	{
 		//	create the mesh if it doesn't already exist
 		if ( partParms.partId == NULL_INDEX ) {
+			let hasEndcap = (partParms.childIndex == -1);
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
-			partParms.partId = globalGenepool3Dcpp.createSplinedSwimmer( partParms.partIndex, partParms.parentWidth,
-				partParms.width, partParms.length, partParms.endCapSpline, _baseColorEng, partParms.growthScale );
+			partParms.partId = globalGenepool3Dcpp.createSplinedSwimbotPart( partParms.partIndex, partParms.parentWidth,
+				partParms.width, partParms.length, partParms.endCapSpline, hasEndcap, _baseColorEng, partParms.growthScale );
+			console.log("[renderSplinedMesh] create - id = " + partParms.partId );
 		}
 
-		//	setup the mesh morph data. _splineLeft/Right are in absolute coordinates relative to 2d parent pos
-		//	setSplineData will remove the rotation and make them relative
-		_refPosEng.set( partParms.parentPos.x, partParms.parentPos.y );
-		let refAng = partParms.angle;
-		globalGenepool3Dcpp.setSplineData( partParms.partId, _refPosEng, refAng, _splineLeftEng, _splineRightEng );
+		//	setup the mesh morph data
+		_begPosEng.set( partParms.parentPos.x, partParms.parentPos.y );
+		_endPosEng.set( partParms.position.x, partParms.position.y );
+		globalGenepool3Dcpp.setSplineParms( partParms.partId, partParms.angle, _begPosEng, _endPosEng, _perpStart, _perpEnd, _splineFactor, _adjustedScale );
 
 		//	render existing mesh
-		_posEng.set( xpos, ypos );
+		_begPosEng.set( xpos, ypos );
 		let refAngle = partParms.blendAngle - 90.0;
-		//console.log("{renderSplinedMesh} - blandAngle = " + refAngle);
 		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
-		globalGenepool3Dcpp.renderSplinedSwimmer( partParms.partId, _posEng, refAngle, partParms.growthScale, _blendColorEng, partParms.blendPct );
+		globalGenepool3Dcpp.renderSplinedSwimbotPart( partParms.partId, _begPosEng, refAngle, partParms.growthScale, _blendColorEng, partParms.blendPct );
 	}
 
+	//=================================================================================================================
+	this.generate3dRenderData = function( partParms )
+	{
+		let partNum			= partParms.partIndex;
+		let parentIndex		= partParms.parentIndex;	// _phenotype.parts[partNum].parent;
+		let position 		= partParms.position;		// _phenotype.parts[partNum].position;
+		let parentPos 		= partParms.parentPos;		// _phenotype.parts[parentIndex].position;
+		let width			= partParms.width;			// _phenotype.parts[partNum].width;
+		let length			= partParms.length;			// _phenotype.parts[partNum].length;
+		let parentWidth		= partParms.parentWidth;	// _phenotype.parts[parentIndex].width;
+		//let perp			= partParms.perp;			// _phenotype.parts[partNum].perpendicular
+		let childIndex		= partParms.childIndex;		// _phenotype.parts[partNum].child;
+		let parentPerp		= partParms.parentPerp;		// _phenotype.parts[parentIndex].perpendicular;
+		let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
+		let branch			= partParms.branch;			//  _phenotype.parts[partNum].branch
+		//let axis			= partParms.axis;			//  _phenotype.parts[partNum].axis
+		let scale			= partParms.growthScale;	// _growthScale
+
+        //---------------------------
+        // baby growing...
+        //---------------------------
+		_adjustedScale = partParms.growthScale;
+
+		//if ( partParms.partId != NULL_INDEX ) {
+		//	_growthScale = _age / MAX_TEST_AGE;		//GROWTEST
+		//	console.log("_age = " + _age + ", growScale = " + _growthScale );
+		//}
+
+        if ( _growthScale < ONE )        
+        {
+            width       = width         * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+            parentWidth = parentWidth   * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+
+			//let growWidth  = width  * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+			//_adjustedScale = growWidth / width;
+			//parentWidth    = parentWidth * _adjustedScale;
+        }
+
+
+        let perpStartX  = partParms.perp.x;
+        let perpStartY  = partParms.perp.y;
+        let perpEndX    = partParms.perp.x;
+        let perpEndY    = partParms.perp.y;
+
+		if (( partNum > 1 ) && ( ! branch ))
+		{
+			perpStartX += parentPerp.x;
+			perpStartY += parentPerp.y;
+			let length = Math.sqrt( perpStartX * perpStartX + perpStartY * perpStartY );
+			perpStartX /= length;
+			perpStartY /= length;
+		}
+
+		if (childIndex != NULL_INDEX )
+		{
+			perpEndX += childPerp.x;
+			perpEndY += childPerp.y;
+			let length = Math.sqrt( perpEndX * perpEndX + perpEndY * perpEndY );
+			perpEndX /= length;
+			perpEndY /= length;
+		}
+
+		partParms.blendAngle = (Math.atan2( -perpStartY, perpStartX ) / PI_OVER_180) - 90.0;
+		if (partParms.blendAngle <= -180) partParms.blendAngle += 360.0;
+
+		_perpStart.set( perpStartX, perpStartY );
+		_perpEnd.set( perpEndX, perpEndY );
+	};
+
+	//=================================================================================================================
 
 	this.generateSplineData = function( partParms )
 	{
@@ -629,22 +796,31 @@ function SwimbotRenderer()
         //---------------------------
         // baby growing...
         //---------------------------
+		_adjustedScale = scale;
+
+		//if ( partParms.partId != NULL_INDEX ) {
+		//	_growthScale = _age / MAX_TEST_AGE;		//GROWTEST
+		//	console.log("_age = " + _age + ", growScale = " + _growthScale );
+		//}
+
         if ( _growthScale < ONE )        
         {
-            width       = width         * scale + EGG_SIZE * ( ONE - scale );
-            parentWidth = parentWidth   * scale + EGG_SIZE * ( ONE - scale );
+            width       = width         * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+            parentWidth = parentWidth   * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+
+			//let growWidth  = width  * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+			//_adjustedScale = growWidth / width;
+			//parentWidth    = parentWidth * _adjustedScale;
         }
 
+        //-------------------------------------------------------------------------------
+        // blend the two perpendiculars to represent the perpendicular of the joint
+        //-------------------------------------------------------------------------------
         let perpStartX  = perp.x;
         let perpStartY  = perp.y;
         let perpEndX    = perp.x;
         let perpEndY    = perp.y;
 
-        let controlVectorLength = length * _splineFactor;
-
-        //-------------------------------------------------------------------------------
-        // blend the two perpendiculars to represent the perpendicular of the joint
-        //-------------------------------------------------------------------------------
         if (( partNum > 1 ) && ( ! branch ))
         {
             perpStartX += parentPerp.x;
@@ -655,7 +831,6 @@ function SwimbotRenderer()
             perpStartY /= length;
         }
 
-        
         if (childIndex != NULL_INDEX )
         {
             perpEndX += childPerp.x;
@@ -670,9 +845,34 @@ function SwimbotRenderer()
 		partParms.blendAngle = (Math.atan2( -perpStartY, perpStartX ) / PI_OVER_180) - 90.0;
 		if (partParms.blendAngle <= -180) partParms.blendAngle += 360.0;
 
+
+		if ( false ) { //partParms.partId != NULL_INDEX ) {
+			let pang  = Math.atan2( -perp.y, perp.x ) / PI_OVER_180;
+			let ppang = Math.atan2( -parentPerp.y, parentPerp.x ) / PI_OVER_180;
+			let cpang = 0;
+			if (childPerp.x != 0 || childPerp.y != 0) { cpang = Math.atan2( -childPerp.y, childPerp.x ) / PI_OVER_180; }
+			let stang = Math.atan2( -perpStartY, perpStartX ) / PI_OVER_180;
+			let enang = Math.atan2( -perpEndY, perpEndX ) / PI_OVER_180;
+			console.log(
+			"xperp  =(" + perp.x.toFixed(3)       + "," + perp.y.toFixed(3)       + ") [" + pang.toFixed(1)  + "],  " +
+			"paPerp =(" + parentPerp.x.toFixed(3) + "," + parentPerp.y.toFixed(3) + ") [" + ppang.toFixed(1) + "],  " +
+			"chPerp =(" + childPerp.x.toFixed(3)  + "," + childPerp.y.toFixed(3)  + ") [" + cpang.toFixed(1) + "], : " +
+			"begPerp=(" + perpStartX.toFixed(3)   + "," + perpStartY.toFixed(3)   + ") [" + stang.toFixed(1) + "],  " +
+			"endPerp=(" + perpEndX.toFixed(3)     + "," + perpEndY.toFixed(3)     + ") [" + enang.toFixed(1) + "], : " +
+			"blend  = " + partParms.blendAngle.toFixed(3) );
+		}
+
+
+		let perpStartNormX = perpStartX;
+		let perpStartNormY = perpStartY;
+		let perpEndNormX   = perpEndX;
+		let perpEndNormY   = perpEndY;
+
         //--------------------------------------
         // determine the two control vectors
         //--------------------------------------
+        let controlVectorLength = length * _splineFactor;
+
         let control1DirectionX = -perpStartY;
         let control1DirectionY =  perpStartX;
 
@@ -725,25 +925,11 @@ function SwimbotRenderer()
 			endRightY       : position.y   + perpEndY,
 		}
 
-		_lp0Eng.set( parentPos.x - perpStartX,                   parentPos.y - perpStartY );
-		_lp1Eng.set( parentPos.x - perpStartX + control1VectorX, parentPos.y - perpStartY + control1VectorY );
-		_lp2Eng.set( position.x  - perpEndX   + control2VectorX, position.y  - perpEndY   + control2VectorY );
-		_lp3Eng.set( position.x  - perpEndX,                     position.y  - perpEndY );
-		_splineLeftEng.set( _lp0Eng, _lp1Eng, _lp2Eng, _lp3Eng );
-
-		_rp0Eng.set( splineData.startRightX,    splineData.startRightY );
-		_rp1Eng.set( splineData.control1RightX, splineData.control1RightY );
-		_rp2Eng.set( splineData.control2RightX, splineData.control2RightY );
-		_rp3Eng.set( splineData.endRightX,      splineData.endRightY );
-		_splineRightEng.set( _rp0Eng, _rp1Eng, _rp2Eng, _rp3Eng );
-
+		//	save some data needed for 3d render
+		_perpStart.set( perpStartNormX, perpStartNormY );
+		_perpEnd.set( perpEndNormX, perpEndNormY );
 		return splineData;
 	};
-
-	this.splinedRender3D = function( partParms )
-	{
-		this._splinedRender2D( partParms );		// for now
-	}
 
 	//-------------------------------------------------------------------------------------------------------
 	//	Special render with debug helpers - used by renderDebugSwimbot
@@ -756,7 +942,6 @@ function SwimbotRenderer()
 		let len = partParms.length * partParms.growthScale;
 		let x = len * Math.sin( radian );
 		let y = len * Math.cos( radian );
-		//if ( partParms.partIndex > 1 ) { partParms.parentPerp.setXY( 0, 0 ); }	//TBD
 
 		// re-calc from parentPos, length growth, and angle
 		partParms.position.x = partParms.parentPos.x + x;
@@ -764,7 +949,6 @@ function SwimbotRenderer()
 		partParms.axis.x = partParms.position.x - partParms.parentPos.x;
 		partParms.axis.y = partParms.position.y - partParms.parentPos.y;
 		partParms.perp.setXY( partParms.axis.y / len, -partParms.axis.x / len );
-
 
 		//parentAngle = 45;
 		radian = parentAngle * PI_OVER_180;
@@ -952,8 +1136,10 @@ function SwimbotRenderer()
 			color.setRGB( 0, 0, 0 );		_dbgAxisId_11 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
 			color.setRGB( 0, 0, 0 );		_dbgAxisId_12 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
 			color.setRGB( 1, 1, 0 );		_dbgRayId_1   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// axis
-			color.setRGB( 1, 1, 0 );		_dbgRayId_2   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// partPerp
-			color.setRGB( 0, 0, 1 );		_dbgRayId_3   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+			color.setRGB( 0, 1, 1 );		_dbgRayId_2   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// partPerp
+			color.setRGB( 1, 0, 0 );		_dbgRayId_3   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+			color.setRGB( 0, 1, 0 );		_dbgRayId_4   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+			color.setRGB( 0, 0, 1 );		_dbgRayId_5   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
 			color.delete();
 			this.hideAllDebugHelpers()
 		}
@@ -978,10 +1164,10 @@ function SwimbotRenderer()
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, position.x, position.y, zval - 50 );
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, parentPos.x, parentPos.y, zval - 50);
 
-		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
-		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
-		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
-		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
 
 
 		//let s =  width * endCapSpline;
@@ -1006,41 +1192,58 @@ function SwimbotRenderer()
 		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, splineData.endRightX, splineData.endRightY, zval );
 
 
-		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
-		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
-		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
-		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
 
-		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
-		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
-		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
-		////globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
-		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
-		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
-		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
-		////globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
 
 
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_1, true );
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_1, true );	// yellow
 		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_1, position.x, position.y, zval, parentPos.x, parentPos.y, zval + 50 );
 
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_2, true );
-		let off = width * 1.25;
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_2, true );	// cyan
 		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_2,
-			position.x + (off * perp.x), position.y + (off * perp.y), zval,
-			position.x - (off * perp.x), position.y - (off * perp.y), zval );
+			//position.x + (off * perp.x), position.y + (off * perp.y), zval,
+			//position.x - (off * perp.x), position.y - (off * perp.y), zval );
+			position.x, position.y, zval,
+			position.x + ( width * 1.0 * perp.x), position.y + ( width * 1.0 * perp.y), zval );
 
+		//console.log("perp=(" + perp.x.toFixed(3) + "," + perp.y.toFixed(3) + "), parPerp=(" + parentPerp.x.toFixed(3) + "," + parentPerp.y.toFixed(3) + ")");
 
-		//parentAngle = 0;
-		//radian = parentAngle * PI_OVER_180;
-		//x = Math.sin( radian );
-		//y = Math.cos( radian );
-		//parentPerp.setXY( x, y );
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_3, true );
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_3, true );	// red
 		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_3,
-			parentPos.x + (off * parentPerp.x), parentPos.y + (off * parentPerp.y), zval,
-			parentPos.x - (off * parentPerp.x), parentPos.y - (off * parentPerp.y), zval );
+			//parentPos.x + (off * parentPerp.x), parentPos.y + (off * parentPerp.y), zval,
+			//parentPos.x - (off * parentPerp.x), parentPos.y - (off * parentPerp.y), zval );
+			parentPos.x, parentPos.y, zval,
+			parentPos.x + ( width * 1.0 * parentPerp.x), parentPos.y + ( width * 1.0 * parentPerp.y), zval );
+
+
+
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_4, true );	// green
+		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_4,
+			parentPos.x, parentPos.y, zval,
+			parentPos.x + ( width * 1.5 * _perpStart.x), parentPos.y + ( width * 1.5 * _perpStart.y), zval );
+
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_5, true );	// blue
+		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_5,
+			position.x, position.y, zval,
+			position.x + ( width * 1.5 * _perpEnd.x), position.y + ( width * 1.5 * _perpEnd.y), zval );
+
+
+		//console.log(
+		//	"  perp= (" + perp.x.toFixed(3) + ", " + perp.y.toFixed(3) + ")" +
+		//	"  pEND= (" + _perpEndTEST.x.toFixed(3) + ", " + _perpEndTEST.y.toFixed(3) + ")" );
+
+
 	}
 
 	this.renderSwimmerDebug3d = function()
@@ -1069,6 +1272,7 @@ function SwimbotRenderer()
 		this.partIndex		= NULL_INDEX;
 		this.parentIndex	= NULL_INDEX;
 		this.childIndex		= NULL_INDEX;
+		this.splined		= false;
 		this.color			= new Color();
 		this.position		= new Vector2D();
 		this.parentPos		= new Vector2D();
@@ -1103,6 +1307,7 @@ function SwimbotRenderer()
 			this.partIndex		= partNum;
 			this.parentIndex	= parentIndex;
 			this.childIndex		= childIndex;
+			this.splined		= curPart.splined;
 			this.angle			= curPart.currentAngle;
 			this.width			= curPart.width;
 			this.length			= curPart.length;
@@ -1123,8 +1328,8 @@ function SwimbotRenderer()
 				this.childPerp.copyFrom( _phenotype.parts[childIndex].perpendicular );
 			}
 
-			this.baseColor.copy		= curPart.baseColor;
-			this.blendColor.copy	= curPart.blendColor;
+			this.baseColor.copy		( curPart.baseColor  );
+			this.blendColor.copy	( curPart.blendColor );
 			this.blendPct			= curPart.blendPct;
 			this.partId				= curPart.partId;
 			this.blendAngle			= curPart.blendAngle;
@@ -1135,6 +1340,7 @@ function SwimbotRenderer()
 			log("	this.partIndex        = " + this.partIndex + ";" );
 			log("	this.parentIndex      = " + this.parentIndex + ";" );
 			log("	this.childIndex       = " + this.childIndex + ";" );
+			log("	this.splined          = " + this.splined + ";" );
 			log("	this.position.setXY   ( " + this.position.x.toFixed(5) + ", " + this.position.y.toFixed(5) + " );" );
 			log("	this.parentPos.setXY  ( " + this.parentPos.x.toFixed(5) + ", " + this.parentPos.y.toFixed(5) + " );" );
 			log("	this.angle            = " + this.angle.toFixed(5) + ";" );
@@ -1153,13 +1359,14 @@ function SwimbotRenderer()
 			log("	this.baseColor.set    ( " + this.baseColor .red.toFixed(3) + ", " + this.baseColor .green.toFixed(3) + ", " + this.baseColor .blue.toFixed(3) + ", " + this.baseColor.opacity .toFixed(3) + " );" );
 			log("	this.blendColor.set   ( " + this.blendColor.red.toFixed(3) + ", " + this.blendColor.green.toFixed(3) + ", " + this.blendColor.blue.toFixed(3) + ", " + this.blendColor.opacity.toFixed(3) + " );" );
 			log("	this.blendPct         = " + this.blendPct.toFixed(3) + ";" );
-			log("	this.partId           = " + this.partId + ";" );
+			//log("	this.partId           = " + this.partId + ";" );
 		}
 
 		this.copy = function( that ) {
 			this.partIndex			= that.partIndex;
 			this.parentIndex		= that.parentIndex;
 			this.childIndex			= that.childIndex;
+			this.splined			= that.splined;
 			this.color				= that.color;
 			this.position.setXY		( that.position.x, that.position.y );
 			this.parentPos.setXY	( that.parentPos.x, that.parentPos.y );
@@ -1222,6 +1429,7 @@ function SwimbotRenderer()
 			this.partIndex        = 4;
 			this.parentIndex      = 3;
 			this.childIndex       = -1;
+			this.splined          = true;
 			this.width            = 5.88281;
 			this.length           = 7.78125;
 			this.branch           = false;
@@ -1230,16 +1438,13 @@ function SwimbotRenderer()
 			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
 			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
 			this.blendPct         = 0.000;
-			this.partId           = -1;
-
-			this.minAngle = 0;
-			this.maxAngle = 180;
 		}
 
 		this.setTest_b = function() {
 			this.partIndex        = 13;
 			this.parentIndex      = 12;
 			this.childIndex       = 14;
+			this.splined          = true;
 			this.position.setXY   ( 4599.44387, 4068.70548 );
 			this.parentPos.setXY  ( 4614.34275, 4076.62942 );
 			this.angle            = 241.99379;
@@ -1257,10 +1462,6 @@ function SwimbotRenderer()
 			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
 			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
 			this.blendPct         = 0.000;
-			this.partId           = 4001;
-
-			this.minAngle = 215;
-			this.maxAngle = 305;
 		}
 
 		this.setTest_c = function()
@@ -1268,6 +1469,7 @@ function SwimbotRenderer()
 			this.partIndex        = 8;
 			this.parentIndex      = 7;
 			this.childIndex       = -1;
+			this.splined          = true;
 			this.position.setXY   ( 3388.85435, 3486.25813 );
 			this.parentPos.setXY  ( 3377.38688, 3467.33690 );
 			this.angle            = 31.21851;
@@ -1275,7 +1477,6 @@ function SwimbotRenderer()
 			this.length           = 22.12500;
 			this.endCapSpline     = 3.33008;
 			this.parentWidth      = 6.68262                * 1.0;
-//this.parentWidth = this.width;
 			this.perp.setXY       ( 0.85520, -0.51830 );
 			this.parentPerp.setXY ( 0.98749, -0.15769 );
 			this.childPerp.setXY  ( 0.00000, 0.00000 );
@@ -1286,8 +1487,32 @@ function SwimbotRenderer()
 			this.baseColor.set    ( 0.500, 0.000, 1.000, 1.000 );
 			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
 			this.blendPct         = 0.000;
-			//this.partId         = NULL_INDEX;
 		};
+
+		this.setTest_D = function()
+		{
+			this.partIndex        = 1;
+			this.parentIndex      = 0;
+			this.childIndex       = 2;
+			this.splined          = 0;
+			this.position.setXY   ( 3622.46530, 2898.48665 );
+			this.parentPos.setXY  ( 3629.58885, 2873.51404 );
+			this.angle            = -15.92106;
+			this.width            = 6.89844;
+			this.length           = 25.96875;
+			this.endCapSpline     = 0.82813;
+			this.parentWidth      = 0.00000;
+			this.perp.setXY       ( 0.96164, 0.27431 );
+			this.parentPerp.setXY ( 0.00000, 0.00000 );
+			this.childPerp.setXY  ( 0.96254, 0.27115 );
+			this.axis.setXY       ( -7.12356, 24.97260 );
+			this.branch           = true;
+			this.growthScale      = 1.00000;
+			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
+			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendPct         = 0.000;
+		}
 	}
 
 
@@ -1318,7 +1543,7 @@ function SwimbotRenderer()
 		let width			= partParms.width;			// _phenotype.parts[partNum].width;
 		let length			= partParms.length;			// _phenotype.parts[partNum].length;
 		//let endCapSpline	= partParms.endCapSpline;	// _phenotype.parts[partNum].endCapSpline;
-		let parentWidth		= partParms.parentWidth;	// _phenotype.parts[parentIndex].width;
+		//let parentWidth	= partParms.parentWidth;	// _phenotype.parts[parentIndex].width;
 		let perp			= partParms.perp;			// _phenotype.parts[partNum].perpendicular
 		//let childIndex		= partParms.childIndex;		// _phenotype.parts[partNum].child;
 		//let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
@@ -1326,7 +1551,7 @@ function SwimbotRenderer()
 		//let axis			= partParms.axis;			// _phenotype.parts[partNum].axis
 		let scale			= partParms.growthScale;	// _growthScale
 
-		if ( _dumpSelectedPartData && _swimmerIsSelected && (p == _selectedPartIndex) ) {
+		if ( _dumpSelectedPartData && _swimmerPartIsSelected ) {
 			console.log('XXX Dumping render data for NORMAL-2D part : swimbot = ' + _curSwimbotIndex + ', part = ' + _selectedPartIndex );
 			_dumpSelectedPartData = false;
 		}
