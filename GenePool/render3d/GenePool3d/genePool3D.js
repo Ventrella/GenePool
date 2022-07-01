@@ -237,6 +237,7 @@ var genePool3D;
 			//console.log("onKeyDown: code = " + keyCode + ", isShift = " + isShiftKey + ", isCtrl = " + isCtrlKey + ", isAlt = " + isAltKey );
 			switch( keyCode )
 			{
+				case 66 : this.toggleDebugSwimbotRender();								break;	// B
 				case 67 : this.toggleControlPanel();									break;	// C
 				case 70 : globalRenderer.getFoodBitRenderer().cycleRenderMode();		break;	// F
 				case 72 : this.cycleHelpDisplay();										break;	// H
@@ -245,8 +246,7 @@ var genePool3D;
 				case 78 : globalRenderer.getSwimbotRenderer().cycleNormalRenderMode();	break;	// N
 				case 79 : this.cycleDebugDisplay();										break;	// O
 				case 80 : this.togglePause();											break;	// Pause
-				case 81 : this.dumpSelectedPartData();									break;	// Query Selected
-				//case 82 : this.toggleDebugSwimbotRender();							break;	// R
+				case 81 : this.dumpSelectedPartData();									break;	// Query
 				case 82 : globalRenderer.getSwimbotRenderer().toggleWireframe();		break;	// R
 				case 88 : globalRenderer.getSwimbotRenderer().cycleSplinedRenderMode();	break;	// X
 				case 90 : this.toggleZoomOverride();									break;	// Z

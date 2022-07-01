@@ -10,12 +10,9 @@
 //    This software is intended for education, game design, and research. 
 //                                                                        
 // -------------------------------------------------------------------------- 
-
 "use strict";
-
 const DEBUG_AREA_X = 1000;
 const DEBUG_AREA_Y = 1000;
-
 const FORCE_ALL_3D = false;
 const DEFAULT_WIREFRAME_MODE = false;
 
@@ -38,9 +35,6 @@ function SwimbotRenderer()
 	//---------------------------------
 	const EGG_SIZE = 5.0;
 
-	//const EGG_SIZE = 2.0;		//GROWTEST
-	//const MAX_TEST_AGE = 400;	//GROWTEST
-
 	//	for debug trails
 	const TRAIL_LENGTH = 100;
 
@@ -60,11 +54,11 @@ function SwimbotRenderer()
 	//	need are not installed on the Module until *after* the .initialize() function call.  :-(
 	let _begPosEng = null, _endPosEng = null;								// Vec2
 	let _baseColorEng  = null, _blendColorEng  = null;		// Color
-
-	//let _posTEST = null, _pposTEST  = null;
 	let _perpStart = null, _perpEnd = null;
 
-	let _adjustedScale = 1.0;
+	let _rendLen = 0;
+	let _rendBegRadius = 0;
+	let _rendEndRadius = 0;
 
 	//--------------------------------
 	// local variables
@@ -99,7 +93,8 @@ function SwimbotRenderer()
 	let _wireframeMode		= DEFAULT_WIREFRAME_MODE;
 	let _savedCamPos		= new Vector2D();
 	let _savedCamScale		= 0;
-	let _partRenderCount	= 0;
+	let _partRenderCount	= 0;	// How many parts rendered this frame?
+	let _debugRenderCnt		= 0;
 
 	let _debugRenderActive	= false;
 
@@ -145,220 +140,12 @@ function SwimbotRenderer()
 	//               2: render 3d (AlfEngine)
 	//-----------------------------------------
 	//	function pointers for 2D/3D render cycling (debug)
-	this.renderPartNormalOFF   = function( parms ) {}
-	this.renderPartSplinedOFF  = function( parms ) {}
 	this.renderSwimmerDebugOFF = function(p) {}
 	this.renderGenitalOFF      = function(p) {}
 	this.renderMouthOFF        = function(p) {}
-	this.renderPartNormalFunc;
-	this.renderPartSplinedFunc;
 	this.renderSwimmerDebugFunc;
 	this.renderGenitalFunc;
 	this.renderMouthFunc;
-
-	this.cycleNormalRenderMode = function()
-	{
-		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
-		if (_renderNormalMode == 2) {
-			//genePool3D.setAllNormalSwimmerVisibility( false );
-			globalGenepool3Dcpp.setAllNormalSwimmerVisibility( false );
-		}
-
-		_renderNormalMode++;
-		if ( _renderNormalMode > 2 ) {
-			_renderNormalMode = 0;
-		}
-
-		let desc = 'foo';
-		switch (_renderNormalMode) {
-			case 0 : desc = 'OFF'; this.renderPartNormalFunc = this.renderPartNormalOFF; break;
-			case 1 : desc = '2D' ; this.renderPartNormalFunc = this.renderPartNormal2d; break;
-			case 2 : desc = '3D' ; this.renderPartNormalFunc = this.normalRenderSwitcher; break;
-		}
-
-		genePool3D.displayPopupMsg( 'Normal Swimmer part render : ', desc, 600 );
-		console.log('SwimmerPart renderMode: normal = ' + desc + ' (splined=' + _renderSplinedMode + ')' );
-	}
-
-	this.cycleSplinedRenderMode = function()
-	{
-		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
-		if (_renderSplinedMode == 2) {
-			globalGenepool3Dcpp.setAllSplinedSwimmerVisibility( false );
-		}
-
-		_renderSplinedMode++;
-		if ( _renderSplinedMode > 2 ) {
-			_renderSplinedMode = 0;
-		}
-
-		let desc = 'foo';
-		switch (_renderSplinedMode) {
-			case 0 : desc = 'OFF'; this.renderPartSplinedFunc = this.renderPartSplinedOFF; break;
-			case 1 : desc = '2D' ; this.renderPartSplinedFunc = this.splinedRender2D;  break;
-			case 2 : desc = '3D' ; this.renderPartSplinedFunc = this.splinedRenderSwitcher;  break;
-		}
-
-		genePool3D.displayPopupMsg( 'Splined Swimmer part render : ', desc, 600 );
-		console.log('SwimmerPart renderMode: splined = ' + desc + ' (normal=' + _renderNormalMode + ')' );
-	}
-
-
-	this.dumpSelectedPartData = function()
-	{
-		_dumpSelectedPartData = true;
-		console.log('[SwimbotRenderer::dumpSelectedPartData]');
-	}
-
-	//
-	this.toggleDebugSwimbotRender = function()
-	{
-		_debugRenderMode++;
-		if ( _debugRenderMode == 3 ) _debugRenderMode = 0;
-		console.log('[SwimbotRenderer::renderDebugSwimbot] : ' + _debugRenderMode);
-		if ( _debugRenderMode == 1 )
-		{
-			this.beginDebugRender();
-		}
-		if ( _debugRenderMode == 0 )
-		{
-			this.endDebugRender();
-		}
-	}
-
-	//
-	this.toggleWireframe = function()
-	{
-		_wireframeMode = !_wireframeMode;
-		console.log('[SwimbotRenderer::toggleWireframe] : wireFrame = ' + _wireframeMode);
-		globalGenepool3Dcpp.setWireframeMode( _wireframeMode );
-		let desc = "OFF";
-		if (_wireframeMode) desc = "ON";
-		genePool3D.displayPopupMsg( 'Wireframe mode : ', desc, 600 );
-	}
-
-	this.beginDebugRender = function()
-	{
-		if ( _debugRenderActive != true ) {
-			_savedCamPos.copyFrom( genePool.getCamera().getPosition() );
-			_savedCamScale = genePool.getCamera().getScale();
-			genePool3D.forceZoomOverride();
-			let dbgArea = new Vector2D();
-			dbgArea.setXY( DEBUG_AREA_X, DEBUG_AREA_Y );
-			genePool.getCamera().setScale( 80 );
-			genePool.getCamera().setPosition( dbgArea );
-			genePool.getViewTracking().setMode( ViewTrackingMode.NULL, genePool.getCamera().getPosition(), genePool.getCamera().getScale(), 0 );   
-
-			_animPartAngleMin	= 180 - 90;
-			_animPartAngleMax	= 180 + 90;
-			_animPartAngleRot	= 0;
-			let secPerCycle		= 6; //sec
-			let degPerSec		= 360 / secPerCycle;
-//degPerSec = 0;
-			_animPartAngleInc	= degPerSec / 30; // deg
-
-			_animParentAngleMin	= 90 - 50;
-			_animParentAngleMax	= 90 + 50;
-			_animParentAngleRot	= 0;
-			secPerCycle			= 10; //sec
-			degPerSec			= 540 / secPerCycle;
-//degPerSec = 0;
-			_animParentAngleInc	= degPerSec / 30; // deg
-
-			//_age = 0;	//GROWTEST
-
-			_debugRenderActive = true;
-		}
-	}
-
-	this.endDebugRender = function()
-	{
-		if ( _debugRenderActive == true ) {
-			//_savedPartParameters.dump();
-			genePool.getCamera().setScale( _savedCamScale );
-			genePool.getCamera().setPosition( _savedCamPos );
-			this.hideAllDebugHelpers();
-			_debugRenderActive = false;
-		}
-	}
-
-
-
-	this.hideAllDebugHelpers = function()
-	{
-		if (_dbgAxisId_1    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1,  false );
-		if (_dbgAxisId_2    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2,  false );
-		if (_dbgAxisId_3    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3,  false );
-		if (_dbgAxisId_4    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4,  false );
-		if (_dbgAxisId_5    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5,  false );
-		if (_dbgAxisId_6    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6,  false );
-		if (_dbgAxisId_7    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7,  false );
-		if (_dbgAxisId_8    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8,  false );
-		if (_dbgAxisId_9    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9,  false );
-		if (_dbgAxisId_10   != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, false );
-		if (_dbgAxisId_11   != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, false );
-		if (_dbgAxisId_12   != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, false );
-		if (_dbgRayId_1     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_1,   false );
-		if (_dbgRayId_2     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_2,   false );
-		if (_dbgRayId_3     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_3,   false );
-		if (_dbgRayId_4     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_4,   false );
-		if (_dbgRayId_5     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_5,   false );
-		if (_dbgAxisId_Part != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_Part, false );
-	}
-
-	//-------------------------------------------------------------------------------
-	this.renderDebugSwimbot = function()
-	{
-		//_savedPartParameters.setTest_c() ;
-		_savedPartParameters.setTest_D() ;
-
-		if ( _savedPartParameters.partIndex != NULL_INDEX )
-		{
-			if ( _simulationRunning )
-			{
-				let range = (_animPartAngleMax - _animPartAngleMin) / 2;
-				let refAngle = _animPartAngleMin + range;
-				_animPartAngleRot += _animPartAngleInc * PI_OVER_180;
-				_animPartAngle = refAngle + (range *  Math.sin(_animPartAngleRot));
-				range = (_animParentAngleMax - _animParentAngleMin) / 2;
-				refAngle = _animParentAngleMin + range;
-				_animParentAngleRot += _animParentAngleInc * PI_OVER_180;
-				_animParentAngle = refAngle + (range *  Math.sin(_animParentAngleRot));
-
-//_animPartAngle = 220.0;
-//_animParentAngle = 90.0;
-//console.log( "_animPartAngle=" + _animPartAngle + ", _animParentAngle=" + _animParentAngle );
-			}
-
-
-			//_age = _age+1;	//GROWTEST
-            //if ( _age > MAX_TEST_AGE ) { _age = MAX_TEST_AGE; }	//GROWTEST
-
-
-			//	Render the javascript version of the swimbot - with debug visualization
-			let xspace = 40;
-			_savedPartParameters.setParentPos( DEBUG_AREA_X - (xspace/2), DEBUG_AREA_Y + 20 );
-			_splineFactor = DEFAULT_SPLINE_FACTOR;
-			let color = _savedPartParameters.color;
-			color.opacity = 0.3;
-			_savedPartParameters.color = color;
-
-			if ( _savedPartParameters.splined )
-			{
-				this.splined2dDebugRender( _animPartAngle, _animParentAngle, _savedPartParameters );
-				//	draw the 3d mesh alongside
-				this.renderSplinedMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );		// <----------------------------------------
-				//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 0 );		// <----------------------------------------
-			}
-			else
-			{
-				//console.log("[renderDebugSwimbot] : partId = " + _savedPartParameters.partId );
-				this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );
-
-				//this.renderPartNormal2d( partParms );
-			}
-		}
-	}
 
 	//-------------------------------------
 	// initialize - one time setup
@@ -379,8 +166,6 @@ function SwimbotRenderer()
 		//	renderMode - 0: dont't render, 1: render 2d (canvas), 2: render 3d (AlfEngine)
 		_renderNormalMode = 1;
 		_renderSplinedMode = 1;
-		this.renderPartNormalFunc    = this.renderPartNormal2d;
-		this.renderPartSplinedFunc   = this.splinedRender2D;
 		this.renderSwimmerDebugFunc  = this.renderSwimmerDebug2d;
 		this.renderGenitalFunc       = this.renderGenital2d;
 		this.renderMouthFunc         = this.renderMouth2d;
@@ -407,8 +192,8 @@ function SwimbotRenderer()
 		_partRenderCount = 0;
 
 		// force debug render for testing
-		//_debugRenderMode = 1;							// <---------------------------------------------------------------------------------------
-		//this.beginDebugRender();						// <---------------------------------------------------------------------------------------
+		//_debugRenderMode = 1;				// <#######################################################################################
+		//this.beginDebugRender();			// <#######################################################################################
 
 		//	Module had not been completely intialized at the time of the .initialize() call.
 		//	Assume that it is now ready and go ahead and allocate shared engine objects
@@ -420,6 +205,8 @@ function SwimbotRenderer()
 			_perpStart		= new Module.Vec2();
 			_perpEnd		= new Module.Vec2();
 			globalGenepool3Dcpp.setWireframeMode( DEFAULT_WIREFRAME_MODE );
+
+			if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();
 		}
 	}
 
@@ -538,12 +325,10 @@ function SwimbotRenderer()
 				_splineFactor = DEFAULT_SPLINE_FACTOR; 	
 				if ( _phenotype.parts[ partNum ].splined )
 				{
-					//this.renderPartSplinedFunc( partParms );
 					this.splinedRenderSwitcher( partParms );
 				}
 				else
 				{
-					//this.renderPartNormalFunc( partParms );
 					this.normalRenderSwitcher( partParms );
 				}
 
@@ -564,7 +349,7 @@ function SwimbotRenderer()
 					//	//genePool3D.displayDebugMsg( 'angle : ', _savedPartParameters.angle.toFixed(1) );
 					//}
 
-				//	meshID need to be pushed back up into the phenoType
+				//	meshID needs to be pushed back up into the phenoType
 				let newMeshId= partParms.partId;
 				if (curMeshId != NULL_INDEX || newMeshId != NULL_INDEX) {
 					if (curMeshId != newMeshId) {
@@ -607,18 +392,16 @@ function SwimbotRenderer()
 		}
 	}
 
-
-	//=======================================================================================================
-	//
-	//	3D rendering
-	//
-	//=======================================================================================================
 	this.splinedRenderSwitcher = function( partParms )
 	{
-		if ( FORCE_ALL_3D || ((_renderSplinedMode == 2) && _swimmerIsSelected) ) // && _swimmerPartIsSelected )
+		let isSel  = _swimmerIsSelected; //&& _swimmerPartIsSelected;
+		let isMesh = FORCE_ALL_3D || ((_renderSplinedMode == 2) && isSel);
+
+		if ( isMesh )
 		{
-			this.generate3dRenderData( partParms );
-			this.renderSplinedMesh( partParms, partParms.parentPos.x, partParms.parentPos.y );
+			this.splinedRenderMesh( partParms, partParms.parentPos.x, partParms.parentPos.y );
+
+			//	churn - fix
 			if ( partParms.partId != NULL_INDEX ) {
 				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, true );
 			}
@@ -636,7 +419,9 @@ function SwimbotRenderer()
 
 	this.normalRenderSwitcher = function( partParms )
 	{
-		if ( FORCE_ALL_3D || ((_renderNormalMode == 2) && _swimmerIsSelected ) ) // && _swimmerPartIsSelected )
+		let isSel  = _swimmerIsSelected; //&& _swimmerPartIsSelected;
+		let isMesh = FORCE_ALL_3D || ((_renderNormalMode == 2) && isSel);
+		if ( isMesh )
 		{
 			this.renderPartNormal3d( partParms, partParms.parentPos.x, partParms.parentPos.y );
 			if ( partParms.partId != NULL_INDEX ) {
@@ -655,6 +440,11 @@ function SwimbotRenderer()
 	}
 
 
+	//=======================================================================================================
+	//
+	//	3D rendering
+	//
+	//=======================================================================================================
 	this.renderPartNormal3d = function( partParms )
 	{
 		let parentPos = partParms.parentPos;
@@ -667,7 +457,7 @@ function SwimbotRenderer()
 		if ( partParms.partId == NULL_INDEX ) {
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
 			partParms.partId = globalGenepool3Dcpp.createNormalSwimbotPart( partParms.partIndex, partParms.width,
-				partParms.length, _baseColorEng, partParms.growthScale );
+				partParms.length, _baseColorEng );
 
 			console.log("==== <renderNormalMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
 				", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +
@@ -677,38 +467,33 @@ function SwimbotRenderer()
 		//	render existing mesh
 		_begPosEng.set( xpos, ypos );
 		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
-		globalGenepool3Dcpp.renderNormalSwimbotPart( partParms.partId, _begPosEng, partParms.angle, partParms.growthScale, _blendColorEng, partParms.blendPct );
+		globalGenepool3Dcpp.renderNormalSwimbotPart( partParms.partId, _begPosEng, partParms.angle, _growthScale, _blendColorEng, partParms.blendPct );
 	}
 
-	//
-	//
-	this.renderSplinedMesh = function( partParms, xpos, ypos )
+	this.splinedRenderMesh = function( partParms, xpos, ypos )
 	{
+		this.generate3dRenderData( partParms );
+
 		//	create the mesh if it doesn't already exist
 		if ( partParms.partId == NULL_INDEX ) {
 			let hasEndcap = (partParms.childIndex == -1);
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
 			partParms.partId = globalGenepool3Dcpp.createSplinedSwimbotPart( partParms.partIndex, partParms.parentWidth,
-				partParms.width, partParms.length, partParms.endCapSpline, hasEndcap, _baseColorEng, partParms.growthScale );
-			console.log("[renderSplinedMesh] create - id = " + partParms.partId );
+				partParms.width, partParms.length, _splineFactor, partParms.endCapSpline, hasEndcap, _baseColorEng );
+			console.log("[splinedRenderMesh] create - id = " + partParms.partId );
 		}
-
-		//	setup the mesh morph data
-		_begPosEng.set( partParms.parentPos.x, partParms.parentPos.y );
-		_endPosEng.set( partParms.position.x, partParms.position.y );
-		globalGenepool3Dcpp.setSplineParms( partParms.partId, partParms.angle, _begPosEng, _endPosEng, _perpStart, _perpEnd, _splineFactor, _adjustedScale );
 
 		//	render existing mesh
 		_begPosEng.set( xpos, ypos );
-		let refAngle = partParms.blendAngle - 90.0;
+		let blendAngle = partParms.blendAngle - 90.0;
 		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
-		globalGenepool3Dcpp.renderSplinedSwimbotPart( partParms.partId, _begPosEng, refAngle, partParms.growthScale, _blendColorEng, partParms.blendPct );
+		globalGenepool3Dcpp.renderSplinedSwimbotPart( partParms.partId, _begPosEng, partParms.angle, blendAngle,
+			_rendLen, _rendBegRadius, _rendEndRadius, _blendColorEng, partParms.blendPct );
 	}
 
-	//=================================================================================================================
 	this.generate3dRenderData = function( partParms )
 	{
-		let partNum			= partParms.partIndex;
+		//let partNum			= partParms.partIndex;
 		let parentIndex		= partParms.parentIndex;	// _phenotype.parts[partNum].parent;
 		let position 		= partParms.position;		// _phenotype.parts[partNum].position;
 		let parentPos 		= partParms.parentPos;		// _phenotype.parts[parentIndex].position;
@@ -720,36 +505,14 @@ function SwimbotRenderer()
 		let parentPerp		= partParms.parentPerp;		// _phenotype.parts[parentIndex].perpendicular;
 		let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
 		let branch			= partParms.branch;			//  _phenotype.parts[partNum].branch
-		//let axis			= partParms.axis;			//  _phenotype.parts[partNum].axis
-		let scale			= partParms.growthScale;	// _growthScale
 
-        //---------------------------
-        // baby growing...
-        //---------------------------
-		_adjustedScale = partParms.growthScale;
-
-		//if ( partParms.partId != NULL_INDEX ) {
-		//	_growthScale = _age / MAX_TEST_AGE;		//GROWTEST
-		//	console.log("_age = " + _age + ", growScale = " + _growthScale );
-		//}
-
-        if ( _growthScale < ONE )        
-        {
-            width       = width         * _growthScale + EGG_SIZE * ( ONE - _growthScale );
-            parentWidth = parentWidth   * _growthScale + EGG_SIZE * ( ONE - _growthScale );
-
-			//let growWidth  = width  * _growthScale + EGG_SIZE * ( ONE - _growthScale );
-			//_adjustedScale = growWidth / width;
-			//parentWidth    = parentWidth * _adjustedScale;
-        }
+		let perpStartX  = partParms.perp.x;
+		let perpStartY  = partParms.perp.y;
+		let perpEndX    = partParms.perp.x;
+		let perpEndY    = partParms.perp.y;
 
 
-        let perpStartX  = partParms.perp.x;
-        let perpStartY  = partParms.perp.y;
-        let perpEndX    = partParms.perp.x;
-        let perpEndY    = partParms.perp.y;
-
-		if (( partNum > 1 ) && ( ! branch ))
+		if (( partParms.partIndex > 1 ) && ( ! branch ))
 		{
 			perpStartX += parentPerp.x;
 			perpStartY += parentPerp.y;
@@ -770,11 +533,102 @@ function SwimbotRenderer()
 		partParms.blendAngle = (Math.atan2( -perpStartY, perpStartX ) / PI_OVER_180) - 90.0;
 		if (partParms.blendAngle <= -180) partParms.blendAngle += 360.0;
 
+		// scale the two perpendiculars
+		if ( _growthScale < ONE ) {
+			width       = width         * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+			parentWidth = parentWidth   * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+		}
+
+		perpEndX *= width;
+		perpEndY *= width;
+
+		_rendEndRadius = width;
+		_rendBegRadius = width;
+		_rendLen = partParms.length * _growthScale;
+
+		if ( partParms.partIndex === 1 ) {
+			perpStartX  *= width;
+			perpStartY  *= width;
+		}
+		else {
+			perpStartX  *= parentWidth;
+			perpStartY  *= parentWidth;
+			_rendBegRadius = parentWidth;
+		}
+
+		//let len = Math.sqrt( perpStartX * perpStartX + perpStartY * perpStartY );
+		//console.log('gen3d: part=' + partParms.partIndex + ', grw=' + _growthScale.toFixed(3) + ', width=' + width.toFixed(3) +
+		//	', parentWidth=' + parentWidth.toFixed(3) + ' : l=' + len.toFixed(3) );
+
 		_perpStart.set( perpStartX, perpStartY );
 		_perpEnd.set( perpEndX, perpEndY );
 	};
 
-	//=================================================================================================================
+	//---------------------------------------------------------------------------------------------
+	//	Trails!
+	//---------------------------------------------------------------------------------------------
+	this.initializeDebugTrail = function( position )
+	{
+        for (let t=0; t<TRAIL_LENGTH; t++)
+        {
+            _debugTrail[t].set( position );
+        }	
+    }
+
+	//-----------------------------------
+	this.showSwimbotTrail = function( position, clock )
+	{
+        //------------------------------------
+        // update trail
+        //------------------------------------
+        if ( clock % 5 == 0 )
+        {
+            for (let t=TRAIL_LENGTH-1; t>0; t--)
+            {
+                _debugTrail[t].set( _debugTrail[t-1] ); 
+            }	
+
+           _debugTrail[0].set( position ); 
+        }
+
+        //------------------------------------
+        // render trail
+        //------------------------------------
+        _canvas.lineWidth = 2; 
+        _canvas.strokeStyle = "rgb( 255, 255, 255 )";
+
+        for (let t=1; t<TRAIL_LENGTH; t++)
+        {
+            _canvas.beginPath();
+            _canvas.moveTo( _debugTrail[t-1].x, _debugTrail[t-1].y );
+            _canvas.lineTo( _debugTrail[t].x, _debugTrail[t].y );
+            _canvas.closePath();
+            _canvas.stroke();
+        }	
+	}
+
+
+
+	//======================================================================================================================================================
+	//======================================================================================================================================================
+	//
+	//
+	//	2D rendering (copied from Canvas renderer 4/2/22) is order to support 2D/3D render toggle 
+	//	for side by side comparison
+	//
+	//
+	//======================================================================================================================================================
+	//======================================================================================================================================================
+
+	this.renderSwimmerDebug3d = function()
+	{
+	}
+	this.renderGenital3d = function()
+	{	
+	}
+	this.renderMouth3d = function()
+	{
+	}
 
 	this.generateSplineData = function( partParms )
 	{
@@ -790,27 +644,14 @@ function SwimbotRenderer()
 		let parentPerp		= partParms.parentPerp;		// _phenotype.parts[parentIndex].perpendicular;
 		let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
 		let branch			= partParms.branch;			//  _phenotype.parts[partNum].branch
-		//let axis			= partParms.axis;			//  _phenotype.parts[partNum].axis
-		let scale			= partParms.growthScale;	// _growthScale
 
         //---------------------------
         // baby growing...
         //---------------------------
-		_adjustedScale = scale;
-
-		//if ( partParms.partId != NULL_INDEX ) {
-		//	_growthScale = _age / MAX_TEST_AGE;		//GROWTEST
-		//	console.log("_age = " + _age + ", growScale = " + _growthScale );
-		//}
-
         if ( _growthScale < ONE )        
         {
             width       = width         * _growthScale + EGG_SIZE * ( ONE - _growthScale );
             parentWidth = parentWidth   * _growthScale + EGG_SIZE * ( ONE - _growthScale );
-
-			//let growWidth  = width  * _growthScale + EGG_SIZE * ( ONE - _growthScale );
-			//_adjustedScale = growWidth / width;
-			//parentWidth    = parentWidth * _adjustedScale;
         }
 
         //-------------------------------------------------------------------------------
@@ -931,603 +772,6 @@ function SwimbotRenderer()
 		return splineData;
 	};
 
-	//-------------------------------------------------------------------------------------------------------
-	//	Special render with debug helpers - used by renderDebugSwimbot
-	//-------------------------------------------------------------------------------------------------------
-	this.splined2dDebugRender = function( partAngle, parentAngle, partParms )
-	{
-		//	hmmm.. lets see how few parms we actually need
-		partParms.angle = partAngle;
-		let radian = partAngle * PI_OVER_180;
-		let len = partParms.length * partParms.growthScale;
-		let x = len * Math.sin( radian );
-		let y = len * Math.cos( radian );
-
-		// re-calc from parentPos, length growth, and angle
-		partParms.position.x = partParms.parentPos.x + x;
-		partParms.position.y = partParms.parentPos.y + y;
-		partParms.axis.x = partParms.position.x - partParms.parentPos.x;
-		partParms.axis.y = partParms.position.y - partParms.parentPos.y;
-		partParms.perp.setXY( partParms.axis.y / len, -partParms.axis.x / len );
-
-		//parentAngle = 45;
-		radian = parentAngle * PI_OVER_180;
-		x = Math.sin( radian );
-		y = Math.cos( radian );
-		partParms.parentPerp.setXY( -x, -y );
-
-		//console.log('partAngle = ' + partAngle.toFixed(2) + ', parentAngle = ' + parentAngle.toFixed(2) );
-
-		let partNum			= partParms.partIndex;
-		let parentIndex     = partParms.parentIndex;	// _phenotype.parts[partNum].parent;
-		let position 		= partParms.position;		// _phenotype.parts[partNum].position;
-		let parentPos 		= partParms.parentPos;		// _phenotype.parts[parentIndex].position;
-		let color			= partParms.color;			// _colorUtility
-		let angle			= partParms.angle;			// _phenotype.parts[partNum].currentAngle;
-		let width			= partParms.width;			// _phenotype.parts[partNum].width;
-		let length			= partParms.length;			// _phenotype.parts[partNum].length;
-		let endCapSpline	= partParms.endCapSpline;	// _phenotype.parts[partNum].endCapSpline;
-		let parentWidth		= partParms.parentWidth;	// _phenotype.parts[parentIndex].width;
-		let perp			= partParms.perp;			// _phenotype.parts[partNum].perpendicular
-		let parentPerp		= partParms.parentPerp;
-		let childIndex		= partParms.childIndex;		// _phenotype.parts[partNum].child;
-		let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
-		let branch			= partParms.branch;			// _phenotype.parts[partNum].branch
-		let axis			= partParms.axis;			// _phenotype.parts[partNum].axis
-		let scale			= partParms.growthScale;	// _growthScale
-
-		//console.log("  parentPos  = ( " + partParms.parentPos.x.toFixed(5) + ", " + partParms.parentPos.y.toFixed(5) + " );" );
-		//console.log("  angle      = "   + partParms.angle.toFixed(5) + ";" );
-		//console.log("  length     = "   + partParms.length.toFixed(5) + ";" );
-		//console.log("  position   = ( " + partParms.position.x.toFixed(5) + ", " + partParms.position.y.toFixed(5) + " );" );
-		//console.log("  perp       = ( " + partParms.perp.x.toFixed(5) + ", " + partParms.perp.y.toFixed(5) + " );" );
-		//console.log("  axis       = ( " + partParms.axis.x.toFixed(5) + ", " + partParms.axis.y.toFixed(5) + " );" );
-		//console.log("* position   = ( " + newPos.x.toFixed(5) + ", " + newPos.y.toFixed(5) + " );" );
-		//console.log("* axis       = ( " + newAxis.x.toFixed(5) + ", " + newAxis.y.toFixed(5) + " );" );
-		//console.log("* perp       = ( " + newPerp.x.toFixed(5) + ", " + newPerp.y.toFixed(5) + " );" );
-
-		let splineData = this.generateSplineData( partParms );
-
-		_canvas.fillStyle = color.rgba();
-		_canvas.strokeStyle = OUTLINE_COLOR;
-		let fillOpacity = 0.25;
-		let strokeOpacity = 0.25;
-
-		let cap_startx  = 0;
-		let cap_starty  = 0;
-		let cap_endx    = 0;
-		let cap_endy    = 0;
-		let cap_c1x     = 0;
-		let cap_c1y     = 0;
-		let cap_c2x     = 0;
-		let cap_c2y     = 0;
-
-
-
-		//---------------------------------------
-		// the beginning of a series of parts
-		//
-		//	1
-		//
-		partNum = 1;
-
-		if ( partNum === 1 )
-		{
-			_canvas.fillStyle   = "rgba( 255, 255, 255, " + fillOpacity + " )";
-			_canvas.strokeStyle = "rgba( 255, 0, 0, 255 )";
-
-			_canvas.beginPath();
-			_canvas.arc( parentPos.x, parentPos.y, width, 0, PI2, false );
-			_canvas.fill();
-			_canvas.closePath();	
-
-			let radian = angle * PI_OVER_180;
-			_canvas.beginPath();
-			_canvas.arc( parentPos.x, parentPos.y, width, Math.PI - radian, Math.PI - radian + Math.PI,  false  );
-			_canvas.stroke();
-			_canvas.closePath();
-		}
-
-        //---------------------------------------
-        // a terminating end part
-		//
-		//	2
-		//
-        if ( childIndex === NULL_INDEX )
-        {
-			_canvas.fillStyle   = "rgba( 255, 0, 0, " + fillOpacity + " )";
-			_canvas.strokeStyle = "rgba( 255, 0, 0, " + strokeOpacity + " )";
-
-            let s =  width * endCapSpline;
-            let f = -1.0; // basically, a pixel's width...I think
-            
-            let axisNormalX = axis.x / length;
-            let axisNormalY = axis.y / length;
-
-            cap_startx  = splineData.endLeftX  + axisNormalX * f;
-            cap_starty  = splineData.endLeftY  + axisNormalY * f;
-            cap_endx    = splineData.endRightX + axisNormalX * f;
-            cap_endy    = splineData.endRightY + axisNormalY * f;
-            cap_c1x     = splineData.endLeftX  + axisNormalX * s;
-            cap_c1y     = splineData.endLeftY  + axisNormalY * s;
-            cap_c2x     = splineData.endRightX + axisNormalX * s;
-            cap_c2y     = splineData.endRightY + axisNormalY * s;
-
-            _canvas.beginPath();
-            _canvas.moveTo( cap_startx, cap_starty );
-            _canvas.bezierCurveTo( cap_c1x, cap_c1y, cap_c2x, cap_c2y, cap_endx, cap_endy );
-            _canvas.closePath();	    
-            _canvas.fill();
-
-			//	outline
-            _canvas.moveTo( cap_startx, cap_starty );
-            _canvas.bezierCurveTo( cap_c1x, cap_c1y, cap_c2x, cap_c2y, cap_endx, cap_endy );
-            _canvas.stroke();
-        }
-        
-        //---------------------------------------
-        // fill interior
-		_canvas.fillStyle   = "rgba( 100, 255, 100, " + fillOpacity + " )";
-		_canvas.strokeStyle = "rgba( 100, 255, 100, " + strokeOpacity + " )";
-
-		_canvas.beginPath();
-		_canvas.moveTo( splineData.startLeftX, splineData.startLeftY );
-		_canvas.bezierCurveTo( splineData.control1LeftX, splineData.control1LeftY, splineData.control2LeftX, splineData.control2LeftY, splineData.endLeftX, splineData.endLeftY );
-		_canvas.lineTo( splineData.endRightX, splineData.endRightY );
-		_canvas.bezierCurveTo( splineData.control2RightX, splineData.control2RightY, splineData.control1RightX, splineData.control1RightY, splineData.startRightX, splineData.startRightY );
-		_canvas.lineTo( splineData.startLeftX, splineData.startLeftY );
-		_canvas.closePath();	    
-		_canvas.fill();	
-
-		//	ball joint at parentpos
-		_canvas.fillStyle   = "rgba( 255, 0, 255, " + fillOpacity + " )";
-		_canvas.strokeStyle = "rgba( 255, 0, 255, " + strokeOpacity + " )";
-		_canvas.beginPath();
-		_canvas.arc( parentPos.x, parentPos.y, parentWidth * 0.9, 0, PI2, false );
-		_canvas.fill();
-		_canvas.closePath();	
-
-        //---------------------------------------
-        // draw outline
-		_canvas.fillStyle   = "rgba( 0, 0, 255, " + fillOpacity + " )";
-		_canvas.strokeStyle = "rgba( 0, 0, 255, " + strokeOpacity + " )";
-
-		_canvas.lineWidth = 1.0;       	
-		_canvas.beginPath();
-		_canvas.moveTo( splineData.startLeftX, splineData.startLeftY );
-		_canvas.bezierCurveTo( splineData.control1LeftX, splineData.control1LeftY, splineData.control2LeftX, splineData.control2LeftY, splineData.endLeftX, splineData.endLeftY );
-		_canvas.moveTo( splineData.endRightX, splineData.endRightY );
-		_canvas.bezierCurveTo( splineData.control2RightX, splineData.control2RightY, splineData.control1RightX, splineData.control1RightY, splineData.startRightX, splineData.startRightY );
-		_canvas.stroke();								
-		_canvas.closePath();	
-
-		//	Mimic bezierCurveTo using local function drawBezier
-		//let xof = -10, yof = 0;
-		//let p0=0, p1=0, p2=0, p3=0;
-		//p0 = { x: splineData.endRightX      + xof,  y: splineData.endRightY      + yof };
-		//p1 = { x: splineData.control2RightX + xof,  y: splineData.control2RightY + yof  };
-		//p2 = { x: splineData.control1RightX + xof,  y: splineData.control1RightY + yof  };
-		//p3 = { x: splineData.startRightX    + xof,  y: splineData.startRightY    + yof  };
-		//_canvas.fillStyle   = "rgba( 255, 0, 1, 1.0 )";
-		//_canvas.strokeStyle = "rgba( 255, 0, 1, 1.0 )";
-		//this.drawBezier( p0, p1, p2, p3 )
-		//xof = 10;
-		//p0 = { x: splineData.endLeftX      + xof,  y: splineData.endLeftY      + yof  };
-		//p1 = { x: splineData.control2LeftX + xof,  y: splineData.control2LeftY + yof  };
-		//p2 = { x: splineData.control1LeftX + xof,  y: splineData.control1LeftY + yof  };
-		//p3 = { x: splineData.startLeftX    + xof,  y: splineData.startLeftY    + yof  };
-		//_canvas.fillStyle   = "rgba( 255, 1, 0, 1.0 )";
-		//_canvas.strokeStyle = "rgba( 255, 0, 0, 1.0 )";
-		//this.drawBezier( p0, p1, p2, p3 )
-
-		//	create some axis if needed
-		if ( _dbgAxisId_1 == ZERO ) {
-			let color = new Module.Color( 1, 1, 0, 1 );
-			color.setRGB( 1, 1, 1 );		_dbgAxisId_1  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// partPos
-			color.setRGB( 0.5, 0.5, 0.5 );	_dbgAxisId_2  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// parentPos
-			color.setRGB( 1, 1, 1 );		_dbgAxisId_3  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );
-			color.setRGB( 1, 1, 1 );		_dbgAxisId_4  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );
-			color.setRGB( 0, 0, 1 );		_dbgAxisId_5  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// startLeft - bLue
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_6  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_7  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_8  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 1, 0, 0 );		_dbgAxisId_9  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// startRight - Red
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_10 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_11 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_12 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 1, 1, 0 );		_dbgRayId_1   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// axis
-			color.setRGB( 0, 1, 1 );		_dbgRayId_2   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// partPerp
-			color.setRGB( 1, 0, 0 );		_dbgRayId_3   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
-			color.setRGB( 0, 1, 0 );		_dbgRayId_4   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
-			color.setRGB( 0, 0, 1 );		_dbgRayId_5   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
-			color.delete();
-			this.hideAllDebugHelpers()
-		}
-
-		//let pos    = _savedPartParameters.position;
-		//let parPos = _savedPartParameters.parentPos;
-		let zval   = 500.0;
-
-
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, cap_startx, cap_starty, zval );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, cap_c1x, cap_c1x, zval );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, cap_c2x, cap_c2y, zval );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, cap_endx, cap_endy, zval );
-
-
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, position.x, position.y, zval - 50 );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, parentPos.x, parentPos.y, zval - 50);
-
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
-
-
-		//let s =  width * endCapSpline;
-		//let f = -1.0; // basically, a pixel's width...I think
-		//let axisNormalX = axis.x / length;
-		//let axisNormalY = axis.y / length;
-		//let sx	= splineData.endLeftX  + axisNormalX * f;
-		//let sy	= splineData.endLeftY  + axisNormalY * f;
-		//let ex	= splineData.endRightX + axisNormalX * f;
-		//let ey	= splineData.endRightY + axisNormalY * f;
-		//let c1x	= splineData.endLeftX  + axisNormalX * s;
-		//let c1y	= splineData.endLeftY  + axisNormalY * s;
-		//let c2x	= splineData.endRightX + axisNormalX * s;
-		//let c2y	= splineData.endRightY + axisNormalY * s;
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, sx, sy, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, c1x, c1y, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, c2x, c2y, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, ex, ey, zval );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, splineData.endLeftX, splineData.endLeftY, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, splineData.endRightX, splineData.endRightY, zval );
-
-
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
-
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
-
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_1, true );	// yellow
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_1, position.x, position.y, zval, parentPos.x, parentPos.y, zval + 50 );
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_2, true );	// cyan
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_2,
-			//position.x + (off * perp.x), position.y + (off * perp.y), zval,
-			//position.x - (off * perp.x), position.y - (off * perp.y), zval );
-			position.x, position.y, zval,
-			position.x + ( width * 1.0 * perp.x), position.y + ( width * 1.0 * perp.y), zval );
-
-		//console.log("perp=(" + perp.x.toFixed(3) + "," + perp.y.toFixed(3) + "), parPerp=(" + parentPerp.x.toFixed(3) + "," + parentPerp.y.toFixed(3) + ")");
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_3, true );	// red
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_3,
-			//parentPos.x + (off * parentPerp.x), parentPos.y + (off * parentPerp.y), zval,
-			//parentPos.x - (off * parentPerp.x), parentPos.y - (off * parentPerp.y), zval );
-			parentPos.x, parentPos.y, zval,
-			parentPos.x + ( width * 1.0 * parentPerp.x), parentPos.y + ( width * 1.0 * parentPerp.y), zval );
-
-
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_4, true );	// green
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_4,
-			parentPos.x, parentPos.y, zval,
-			parentPos.x + ( width * 1.5 * _perpStart.x), parentPos.y + ( width * 1.5 * _perpStart.y), zval );
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_5, true );	// blue
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_5,
-			position.x, position.y, zval,
-			position.x + ( width * 1.5 * _perpEnd.x), position.y + ( width * 1.5 * _perpEnd.y), zval );
-
-
-		//console.log(
-		//	"  perp= (" + perp.x.toFixed(3) + ", " + perp.y.toFixed(3) + ")" +
-		//	"  pEND= (" + _perpEndTEST.x.toFixed(3) + ", " + _perpEndTEST.y.toFixed(3) + ")" );
-
-
-	}
-
-	this.renderSwimmerDebug3d = function()
-	{
-	}
-	this.renderGenital3d = function()
-	{	
-	}
-	this.renderMouth3d = function()
-	{
-	}
-
-
-	//======================================================================================================================================================
-	//======================================================================================================================================================
-	//
-	//
-	//	Helper funtion to contain part rendering data
-	//
-	//
-	//======================================================================================================================================================
-	//======================================================================================================================================================
-	function PartParameters()
-	{
-		this.isDebug		= false;
-		this.partIndex		= NULL_INDEX;
-		this.parentIndex	= NULL_INDEX;
-		this.childIndex		= NULL_INDEX;
-		this.splined		= false;
-		this.color			= new Color();
-		this.position		= new Vector2D();
-		this.parentPos		= new Vector2D();
-		this.angle			= 0;
-		this.width			= 0;
-		this.length			= 0;
-		this.endCapSpline	= 0;
-		this.parentWidth	= 0;
-		this.perp			= new Vector2D();
-		this.parentPerp		= new Vector2D();
-		this.childPerp		= new Vector2D();
-		this.axis			= new Vector2D();
-		this.branch			= false;
-		this.growthScale	= 1.0;
-
-		this.baseColor		= new Color();
-		this.blendColor		= new Color();
-		this.blendPct		= 0;
-		this.partId			= NULL_INDEX;
-		this.blendAngle		= 0;
-
-		this.minAngle		=  99999;
-		this.maxAngle		= -99999;
-
-		this.fill = function( partNum, phenotypeParts )
-		{
-			let curPart			= phenotypeParts[partNum];
-			let parentIndex		= phenotypeParts[partNum].parent;
-			let parPart			= phenotypeParts[parentIndex];
-			let childIndex		= phenotypeParts[partNum].child;
-
-			this.partIndex		= partNum;
-			this.parentIndex	= parentIndex;
-			this.childIndex		= childIndex;
-			this.splined		= curPart.splined;
-			this.angle			= curPart.currentAngle;
-			this.width			= curPart.width;
-			this.length			= curPart.length;
-			this.endCapSpline	= curPart.endCapSpline;
-			this.parentWidth	= parPart.width;
-			this.branch			= curPart.branch;
-			this.growthScale	= _growthScale;
-
-			this.color.copy				( _colorUtility );
-			this.position.copyFrom		( curPart.position );
-			this.parentPos.copyFrom		( parPart.position );
-			this.perp.copyFrom			( curPart.perpendicular );
-			this.parentPerp.copyFrom	( parPart.perpendicular );
-			this.axis.copyFrom			( curPart.axis );
-			if (childIndex == NULL_INDEX) {
-				this.childPerp = new Vector2D();
-			} else {
-				this.childPerp.copyFrom( _phenotype.parts[childIndex].perpendicular );
-			}
-
-			this.baseColor.copy		( curPart.baseColor  );
-			this.blendColor.copy	( curPart.blendColor );
-			this.blendPct			= curPart.blendPct;
-			this.partId				= curPart.partId;
-			this.blendAngle			= curPart.blendAngle;
-		}
-
-		this.dump = function() {
-			let log = function(text) { console.log(text); }
-			log("	this.partIndex        = " + this.partIndex + ";" );
-			log("	this.parentIndex      = " + this.parentIndex + ";" );
-			log("	this.childIndex       = " + this.childIndex + ";" );
-			log("	this.splined          = " + this.splined + ";" );
-			log("	this.position.setXY   ( " + this.position.x.toFixed(5) + ", " + this.position.y.toFixed(5) + " );" );
-			log("	this.parentPos.setXY  ( " + this.parentPos.x.toFixed(5) + ", " + this.parentPos.y.toFixed(5) + " );" );
-			log("	this.angle            = " + this.angle.toFixed(5) + ";" );
-			log("	this.width            = " + this.width.toFixed(5) + ";" );
-			log("	this.length           = " + this.length.toFixed(5) + ";" );
-			log("	this.endCapSpline     = " + this.endCapSpline.toFixed(5) + ";" );
-			log("	this.parentWidth      = " + this.parentWidth.toFixed(5) + ";" );
-			log("	this.perp.setXY       ( " + this.perp.x.toFixed(5) + ", " + this.perp.y.toFixed(5) + " );" );
-			log("	this.parentPerp.setXY ( " + this.parentPerp.x.toFixed(5) + ", " + this.parentPerp.y.toFixed(5) + " );" );
-			log("	this.childPerp.setXY  ( " + this.childPerp.x.toFixed(5) + ", " + this.childPerp.y.toFixed(5) + " );" );
-			log("	this.axis.setXY       ( " + this.axis.x.toFixed(5) + ", " + this.axis.y.toFixed(5) + " );" );
-			log("	this.branch           = " + this.branch + ";" );
-			log("	this.growthScale      = " + this.growthScale.toFixed(5) + ";" );
-
-			log("	this.color.set        ( " + this.color     .red.toFixed(3) + ", " + this.color     .green.toFixed(3) + ", " + this.color     .blue.toFixed(3) + ", " + this.color.opacity     .toFixed(3) + " );" );
-			log("	this.baseColor.set    ( " + this.baseColor .red.toFixed(3) + ", " + this.baseColor .green.toFixed(3) + ", " + this.baseColor .blue.toFixed(3) + ", " + this.baseColor.opacity .toFixed(3) + " );" );
-			log("	this.blendColor.set   ( " + this.blendColor.red.toFixed(3) + ", " + this.blendColor.green.toFixed(3) + ", " + this.blendColor.blue.toFixed(3) + ", " + this.blendColor.opacity.toFixed(3) + " );" );
-			log("	this.blendPct         = " + this.blendPct.toFixed(3) + ";" );
-			//log("	this.partId           = " + this.partId + ";" );
-		}
-
-		this.copy = function( that ) {
-			this.partIndex			= that.partIndex;
-			this.parentIndex		= that.parentIndex;
-			this.childIndex			= that.childIndex;
-			this.splined			= that.splined;
-			this.color				= that.color;
-			this.position.setXY		( that.position.x, that.position.y );
-			this.parentPos.setXY	( that.parentPos.x, that.parentPos.y );
-			this.angle				= that.angle;
-			this.width				= that.width;
-			this.length				= that.length;
-			this.endCapSpline		= that.endCapSpline;
-			this.parentWidth		= that.parentWidth;
-			this.perp.setXY			( that.perp.x, that.perp.y );
-			this.parentPerp.setXY	( that.parentPerp.x, that.parentPerp.y );
-			this.childPerp.setXY	( that.childPerp.x, that.childPerp.y );
-			this.axis.setXY			( that.axis.x, that.axis.y );
-			this.branch				= that.branch;
-			this.growthScale		= that.growthScale;
-
-			this.baseColor.copy		( that.baseColor );
-			this.blendColor.copy	( that.blendColor );
-			this.blendPct			= that.blendPct;
-			this.partId				= that.partId;
-		}
-
-		this.setParentPos = function( x, y ) {
-			let xoff = this.position.x - this.parentPos.x;
-			let yoff = this.position.y - this.parentPos.y;
-			this.parentPos.x = x;
-			this.parentPos.y = y;
-			this.position.x  = x + xoff;
-			this.position.y  = y + yoff;
-		}
-
-		//	given a different angle, recalculate all dynamic parameters
-		this.updateAngle = function( angle )
-		{
-			this.angle = angle;
-			let radian = angle * PI_OVER_180;
-			let length = this.length * this.scale;
-			let x = length * Math.sin( radian );
-			let y = length * Math.cos( radian );
-
-			if ( this.partIndex > 1 ) {
-				this.parentPerp.setXY( 0, 0 );	//TBD
-			}
-
-			this.position.addXY( x, y );
-			this.axis.x = this.position.x - this.parentPos.x;
-			this.axis.y = this.position.y - this.parentPos.y;
-			this.perp.setXY( this.axis.y / length, -this.axis.x / length );
-		}
-
-		this.setTest_a = function() {
-			this.position.setXY   ( 4450.94125, 4040.69643 );
-			this.parentPos.setXY  ( 4457.60374, 4044.71627 );
-			this.angle            = -121.10487;
-			this.endCapSpline     = 1.08789;
-			this.parentWidth      = 4.84180;
-			this.perp.setXY       ( -0.51661, 0.85622 );
-			this.parentPerp.setXY ( -0.41962, 0.90770 );
-			this.childPerp.setXY  ( 0.00000, 0.00000 );
-			this.axis.setXY       ( -6.66249, -4.01984 );
-			this.partIndex        = 4;
-			this.parentIndex      = 3;
-			this.childIndex       = -1;
-			this.splined          = true;
-			this.width            = 5.88281;
-			this.length           = 7.78125;
-			this.branch           = false;
-			this.growthScale      = 1.00000;
-			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
-			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
-			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
-			this.blendPct         = 0.000;
-		}
-
-		this.setTest_b = function() {
-			this.partIndex        = 13;
-			this.parentIndex      = 12;
-			this.childIndex       = 14;
-			this.splined          = true;
-			this.position.setXY   ( 4599.44387, 4068.70548 );
-			this.parentPos.setXY  ( 4614.34275, 4076.62942 );
-			this.angle            = 241.99379;
-			this.width            = 5.29036;
-			this.length           = 16.87500;
-			this.endCapSpline     = 1.51172;
-			this.parentWidth      = 4.56250;
-			this.perp.setXY       ( -0.46957, 0.88290 );
-			this.parentPerp.setXY ( -0.98151, 0.19142 );
-			this.childPerp.setXY  ( 0.16949, 0.98553 );
-			this.axis.setXY       ( -14.89888, -7.92395 );
-			this.branch           = false;
-			this.growthScale      = 1.00000;
-			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
-			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
-			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
-			this.blendPct         = 0.000;
-		}
-
-		this.setTest_c = function()
-		{
-			this.partIndex        = 8;
-			this.parentIndex      = 7;
-			this.childIndex       = -1;
-			this.splined          = true;
-			this.position.setXY   ( 3388.85435, 3486.25813 );
-			this.parentPos.setXY  ( 3377.38688, 3467.33690 );
-			this.angle            = 31.21851;
-			this.width            = 6.84766                * 1.4;
-			this.length           = 22.12500;
-			this.endCapSpline     = 3.33008;
-			this.parentWidth      = 6.68262                * 1.0;
-			this.perp.setXY       ( 0.85520, -0.51830 );
-			this.parentPerp.setXY ( 0.98749, -0.15769 );
-			this.childPerp.setXY  ( 0.00000, 0.00000 );
-			this.axis.setXY       ( 11.46746, 18.92123 );
-			this.branch           = false;
-			this.growthScale      = 1.00000;
-			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
-			this.baseColor.set    ( 0.500, 0.000, 1.000, 1.000 );
-			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
-			this.blendPct         = 0.000;
-		};
-
-		this.setTest_D = function()
-		{
-			this.partIndex        = 1;
-			this.parentIndex      = 0;
-			this.childIndex       = 2;
-			this.splined          = 0;
-			this.position.setXY   ( 3622.46530, 2898.48665 );
-			this.parentPos.setXY  ( 3629.58885, 2873.51404 );
-			this.angle            = -15.92106;
-			this.width            = 6.89844;
-			this.length           = 25.96875;
-			this.endCapSpline     = 0.82813;
-			this.parentWidth      = 0.00000;
-			this.perp.setXY       ( 0.96164, 0.27431 );
-			this.parentPerp.setXY ( 0.00000, 0.00000 );
-			this.childPerp.setXY  ( 0.96254, 0.27115 );
-			this.axis.setXY       ( -7.12356, 24.97260 );
-			this.branch           = true;
-			this.growthScale      = 1.00000;
-			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
-			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
-			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
-			this.blendPct         = 0.000;
-		}
-	}
-
-
-
-
-	//======================================================================================================================================================
-	//======================================================================================================================================================
-	//
-	//
-	//	2D rendering (copied from Canvas renderer 4/2/22) is order to support 2D/3D render toggle 
-	//	for side by side comparison
-	//
-	//
-	//======================================================================================================================================================
-	//======================================================================================================================================================
 	//-----------------------------------
 	// render part normal (not splined)
 	//	Original 2D rendering code from GenePool - 4/2/22
@@ -1545,11 +789,9 @@ function SwimbotRenderer()
 		//let endCapSpline	= partParms.endCapSpline;	// _phenotype.parts[partNum].endCapSpline;
 		//let parentWidth	= partParms.parentWidth;	// _phenotype.parts[parentIndex].width;
 		let perp			= partParms.perp;			// _phenotype.parts[partNum].perpendicular
-		//let childIndex		= partParms.childIndex;		// _phenotype.parts[partNum].child;
+		//let childIndex	= partParms.childIndex;		// _phenotype.parts[partNum].child;
 		//let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
-		//let branch			= partParms.branch;			// _phenotype.parts[partNum].branch
-		//let axis			= partParms.axis;			// _phenotype.parts[partNum].axis
-		let scale			= partParms.growthScale;	// _growthScale
+		//let branch		= partParms.branch;			// _phenotype.parts[partNum].branch
 
 		if ( _dumpSelectedPartData && _swimmerPartIsSelected ) {
 			console.log('XXX Dumping render data for NORMAL-2D part : swimbot = ' + _curSwimbotIndex + ', part = ' + _selectedPartIndex );
@@ -1579,7 +821,7 @@ function SwimbotRenderer()
 
 		if ( _growthScale < ONE )        
 		{
-			width = width * scale + EGG_SIZE * ( ONE - scale );
+			width = width * _growthScale + EGG_SIZE * ( ONE - _growthScale );
 		}
 		let pp0x = perp.x * width;
 		let pp0y = perp.y * width;
@@ -1662,7 +904,6 @@ function SwimbotRenderer()
 		let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
 		let branch			= partParms.branch;			// _phenotype.parts[partNum].branch
 		let axis			= partParms.axis;			// _phenotype.parts[partNum].axis
-		let scale			= partParms.growthScale;	// _growthScale
 
 		let splineData = this.generateSplineData( partParms );
 
@@ -2023,48 +1264,6 @@ else
     }
     
 
-	//---------------------------------------------------------------------------------------------
-	//	Trails!
-	//---------------------------------------------------------------------------------------------
-	this.initializeDebugTrail = function( position )
-	{
-        for (let t=0; t<TRAIL_LENGTH; t++)
-        {
-            _debugTrail[t].set( position );
-        }	
-    }
-
-	//-----------------------------------
-	this.showSwimbotTrail = function( position, clock )
-	{
-        //------------------------------------
-        // update trail
-        //------------------------------------
-        if ( clock % 5 == 0 )
-        {
-            for (let t=TRAIL_LENGTH-1; t>0; t--)
-            {
-                _debugTrail[t].set( _debugTrail[t-1] ); 
-            }	
-
-           _debugTrail[0].set( position ); 
-        }
-
-        //------------------------------------
-        // render trail
-        //------------------------------------
-        _canvas.lineWidth = 2; 
-        _canvas.strokeStyle = "rgb( 255, 255, 255 )";
-
-        for (let t=1; t<TRAIL_LENGTH; t++)
-        {
-            _canvas.beginPath();
-            _canvas.moveTo( _debugTrail[t-1].x, _debugTrail[t-1].y );
-            _canvas.lineTo( _debugTrail[t].x, _debugTrail[t].y );
-            _canvas.closePath();
-            _canvas.stroke();
-        }	
-	}
 
 	this.bezier = function(t, p0, p1, p2, p3)
 	{
@@ -2105,5 +1304,769 @@ else
 
 		_canvas.stroke()
 		_canvas.closePath();
+	}
+
+	this.cycleNormalRenderMode = function()
+	{
+		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
+		if (_renderNormalMode == 2) {
+			//genePool3D.setAllNormalSwimmerVisibility( false );
+			globalGenepool3Dcpp.setAllNormalSwimmerVisibility( false );
+		}
+
+		_renderNormalMode++;
+		if ( _renderNormalMode > 2 ) {
+			_renderNormalMode = 0;
+		}
+
+		let modeDesc = ['OFF', '2D', '3D' ];
+		let desc = modeDesc[_renderNormalMode];
+		genePool3D.displayPopupMsg( 'Normal Swimmer part render : ', desc, 600 );
+		console.log('SwimmerPart renderMode: normal : ' + desc + ' (splined=' + _renderSplinedMode + ')' );
+	}
+
+	this.cycleSplinedRenderMode = function()
+	{
+		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
+		if (_renderSplinedMode == 2) {
+			globalGenepool3Dcpp.setAllSplinedSwimmerVisibility( false );
+		}
+
+		_renderSplinedMode++;
+		if ( _renderSplinedMode > 2 ) {
+			_renderSplinedMode = 0;
+		}
+
+		let modeDesc = ['OFF', '2D', '3D' ];
+		let desc = modeDesc[_renderSplinedMode];
+		genePool3D.displayPopupMsg( 'Splined Swimmer part render : ', desc, 600 );
+		console.log('SwimmerPart renderMode: splined : ' + desc + ' (normal=' + _renderNormalMode + ')' );
+	}
+
+
+	this.dumpSelectedPartData = function()
+	{
+		_dumpSelectedPartData = true;
+		console.log('[SwimbotRenderer::dumpSelectedPartData]');
+	}
+
+	//
+	this.toggleDebugSwimbotRender = function()
+	{
+		_debugRenderMode++;
+		if ( _debugRenderMode == 2 ) _debugRenderMode = 0;
+		console.log('[SwimbotRenderer::renderDebugSwimbot] : ' + _debugRenderMode);
+		if ( _debugRenderMode == 1 )
+		{
+			this.beginDebugRender();
+		}
+		if ( _debugRenderMode == 0 )
+		{
+			this.endDebugRender();
+		}
+	}
+
+	//
+	this.toggleWireframe = function()
+	{
+		_wireframeMode = !_wireframeMode;
+		console.log('[SwimbotRenderer::toggleWireframe] : wireFrame = ' + _wireframeMode);
+		globalGenepool3Dcpp.setWireframeMode( _wireframeMode );
+		let desc = "OFF";
+		if (_wireframeMode) desc = "ON";
+		genePool3D.displayPopupMsg( 'Wireframe mode : ', desc, 600 );
+	}
+
+	this.beginDebugRender = function()
+	{
+		if ( _debugRenderActive != true ) {
+			_savedCamPos.copyFrom( genePool.getCamera().getPosition() );
+			_savedCamScale = genePool.getCamera().getScale();
+			genePool3D.forceZoomOverride();
+			let dbgArea = new Vector2D();
+			dbgArea.setXY( DEBUG_AREA_X, DEBUG_AREA_Y );
+			genePool.getCamera().setScale( 80 );
+			genePool.getCamera().setPosition( dbgArea );
+			genePool.getViewTracking().setMode( ViewTrackingMode.NULL, genePool.getCamera().getPosition(), genePool.getCamera().getScale(), 0 );   
+
+			_animPartAngleMin	= 180 - 60;
+			_animPartAngleMax	= 180 + 60;
+			_animPartAngleRot	= 0;
+			let secPerCycle		= 4; //sec
+			let degPerSec		= 360 / secPerCycle;
+//degPerSec = 0;
+			_animPartAngleInc	= degPerSec / 30; // deg
+
+			_animParentAngleMin	= 90 - 50;
+			_animParentAngleMax	= 90 + 50;
+			_animParentAngleRot	= 0;
+			secPerCycle			= 9; //sec
+			degPerSec			= 540 / secPerCycle;
+//degPerSec = 0;
+			_animParentAngleInc	= degPerSec / 30; // deg
+
+			//_age = 0;	//GROWTEST
+
+			_debugRenderActive = true;
+			_debugRenderCnt = 0;
+		}
+	}
+
+	this.endDebugRender = function()
+	{
+		if ( _debugRenderActive == true ) {
+			//_savedPartParameters.dump();
+			genePool.getCamera().setScale( _savedCamScale );
+			genePool.getCamera().setPosition( _savedCamPos );
+			this.hideAllDebugHelpers();
+			_debugRenderActive = false;
+		}
+	}
+
+
+	this.renderDebugSwimbot = function()
+	{
+		//_savedPartParameters.setTest_c() ;
+		_savedPartParameters.setTest_c();
+
+		if ( _simulationRunning ) _debugRenderCnt++;
+
+		_growthScale = 1.0;
+		let MAX_GROW_CNT = 800;
+		if ( _debugRenderCnt <= MAX_GROW_CNT ) {
+			_growthScale = _debugRenderCnt / MAX_GROW_CNT;
+		}
+
+		if ( _savedPartParameters.partIndex != NULL_INDEX )
+		{
+			if ( _simulationRunning )
+			{
+				let range = (_animPartAngleMax - _animPartAngleMin) / 2;
+				let refAngle = _animPartAngleMin + range;
+				_animPartAngleRot += _animPartAngleInc * PI_OVER_180;
+				_animPartAngle = refAngle + (range *  Math.sin(_animPartAngleRot));
+				range = (_animParentAngleMax - _animParentAngleMin) / 2;
+				refAngle = _animParentAngleMin + range;
+				_animParentAngleRot += _animParentAngleInc * PI_OVER_180;
+				_animParentAngle = refAngle + (range *  Math.sin(_animParentAngleRot));
+
+//_animPartAngle = 180.0;
+//_animParentAngle = 90.0 + 0.0;
+//console.log( "_animPartAngle=" + _animPartAngle + ", _animParentAngle=" + _animParentAngle );
+			}
+
+
+			//_age = _age+1;	//GROWTEST
+            //if ( _age > MAX_TEST_AGE ) { _age = MAX_TEST_AGE; }	//GROWTEST
+
+
+			//	Render the javascript version of the swimbot - with debug visualization
+			let xspace = 40;
+			_savedPartParameters.setParentPos( DEBUG_AREA_X - (xspace/2), DEBUG_AREA_Y + 20 );
+			_splineFactor = DEFAULT_SPLINE_FACTOR;
+			let color = _savedPartParameters.color;
+			color.opacity = 0.3;
+			_savedPartParameters.color = color;
+
+			if ( _savedPartParameters.splined )
+			{
+				//this.splinedRender2d( _savedPartParameters );
+				this.splinedRender2dDebug( _animPartAngle, _animParentAngle, _savedPartParameters );
+
+				//	draw the 3d mesh alongside
+				this.splinedRenderMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );		// <----------------------------------------
+				//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 0 );		// <----------------------------------------
+			}
+			else
+			{
+				//console.log("[renderDebugSwimbot] : partId = " + _savedPartParameters.partId );
+				this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );
+
+				//this.renderPartNormal2d( partParms );
+			}
+		}
+	}
+
+	//-------------------------------------------------------------------------------------------------------
+	//	Special render with debug helpers - used by renderDebugSwimbot
+	//-------------------------------------------------------------------------------------------------------
+	this.splinedRender2dDebug = function( partAngle, parentAngle, partParms )
+	{
+		//	hmmm.. lets see how few parms we actually need
+		partParms.angle = partAngle;
+		let radian = partAngle * PI_OVER_180;
+		let len = partParms.length * _growthScale;
+		let x = len * Math.sin( radian );
+		let y = len * Math.cos( radian );
+
+		// re-calc from parentPos, length growth, and angle
+		partParms.position.x = partParms.parentPos.x + x;
+		partParms.position.y = partParms.parentPos.y + y;
+		partParms.axis.x = partParms.position.x - partParms.parentPos.x;
+		partParms.axis.y = partParms.position.y - partParms.parentPos.y;
+		partParms.perp.setXY( partParms.axis.y / len, -partParms.axis.x / len );
+
+		//parentAngle = 45;
+		radian = parentAngle * PI_OVER_180;
+		x = Math.sin( radian );
+		y = Math.cos( radian );
+		partParms.parentPerp.setXY( -x, -y );
+
+		//console.log('partAngle = ' + partAngle.toFixed(2) + ', parentAngle = ' + parentAngle.toFixed(2) );
+
+		let partNum			= partParms.partIndex;
+		let parentIndex     = partParms.parentIndex;	// _phenotype.parts[partNum].parent;
+		let position 		= partParms.position;		// _phenotype.parts[partNum].position;
+		let parentPos 		= partParms.parentPos;		// _phenotype.parts[parentIndex].position;
+		let color			= partParms.color;			// _colorUtility
+		let angle			= partParms.angle;			// _phenotype.parts[partNum].currentAngle;
+		let width			= partParms.width;			// _phenotype.parts[partNum].width;
+		let length			= partParms.length;			// _phenotype.parts[partNum].length;
+		let endCapSpline	= partParms.endCapSpline;	// _phenotype.parts[partNum].endCapSpline;
+		let parentWidth		= partParms.parentWidth;	// _phenotype.parts[parentIndex].width;
+		let perp			= partParms.perp;			// _phenotype.parts[partNum].perpendicular
+		let parentPerp		= partParms.parentPerp;
+		let childIndex		= partParms.childIndex;		// _phenotype.parts[partNum].child;
+		let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
+		let branch			= partParms.branch;			// _phenotype.parts[partNum].branch
+		let axis			= partParms.axis;			// _phenotype.parts[partNum].axis
+
+		//console.log("  parentPos  = ( " + partParms.parentPos.x.toFixed(5) + ", " + partParms.parentPos.y.toFixed(5) + " );" );
+		//console.log("  angle      = "   + partParms.angle.toFixed(5) + ";" );
+		//console.log("  length     = "   + partParms.length.toFixed(5) + ";" );
+		//console.log("  position   = ( " + partParms.position.x.toFixed(5) + ", " + partParms.position.y.toFixed(5) + " );" );
+		//console.log("  perp       = ( " + partParms.perp.x.toFixed(5) + ", " + partParms.perp.y.toFixed(5) + " );" );
+		//console.log("  axis       = ( " + partParms.axis.x.toFixed(5) + ", " + partParms.axis.y.toFixed(5) + " );" );
+		//console.log("* position   = ( " + newPos.x.toFixed(5) + ", " + newPos.y.toFixed(5) + " );" );
+		//console.log("* axis       = ( " + newAxis.x.toFixed(5) + ", " + newAxis.y.toFixed(5) + " );" );
+		//console.log("* perp       = ( " + newPerp.x.toFixed(5) + ", " + newPerp.y.toFixed(5) + " );" );
+
+		let splineData = this.generateSplineData( partParms );
+
+		_canvas.fillStyle = color.rgba();
+		_canvas.strokeStyle = OUTLINE_COLOR;
+		let fillOpacity = 0.25;
+		let strokeOpacity = 0.25;
+
+		let cap_startx  = 0;
+		let cap_starty  = 0;
+		let cap_endx    = 0;
+		let cap_endy    = 0;
+		let cap_c1x     = 0;
+		let cap_c1y     = 0;
+		let cap_c2x     = 0;
+		let cap_c2y     = 0;
+
+		//---------------------------------------
+		// the beginning of a series of parts
+		//
+		//	1
+		//
+		partNum = 1;
+
+		if ( partNum === 1 )
+		{
+			_canvas.fillStyle   = "rgba( 255, 255, 255, " + fillOpacity + " )";
+			_canvas.strokeStyle = "rgba( 255, 0, 0, 255 )";
+
+			//_canvas.beginPath();
+			//_canvas.arc( parentPos.x, parentPos.y, width, 0, PI2, false );
+			//_canvas.fill();
+			//_canvas.closePath();	
+
+			let radian = angle * PI_OVER_180;
+			_canvas.beginPath();
+			_canvas.arc( parentPos.x, parentPos.y, width, Math.PI - radian, Math.PI - radian + Math.PI,  false  );
+			_canvas.stroke();
+			_canvas.closePath();
+		}
+
+        //---------------------------------------
+        // a terminating end part
+		//
+		//	2
+		//
+        if ( childIndex === NULL_INDEX )
+        {
+			_canvas.fillStyle   = "rgba( 255, 0, 0, " + fillOpacity + " )";
+			_canvas.strokeStyle = "rgba( 255, 0, 0, " + strokeOpacity + " )";
+
+            let s =  width * endCapSpline;
+            let f = -1.0; // basically, a pixel's width...I think
+            
+            let axisNormalX = axis.x / length;
+            let axisNormalY = axis.y / length;
+
+            cap_startx  = splineData.endLeftX  + axisNormalX * f;
+            cap_starty  = splineData.endLeftY  + axisNormalY * f;
+            cap_endx    = splineData.endRightX + axisNormalX * f;
+            cap_endy    = splineData.endRightY + axisNormalY * f;
+            cap_c1x     = splineData.endLeftX  + axisNormalX * s;
+            cap_c1y     = splineData.endLeftY  + axisNormalY * s;
+            cap_c2x     = splineData.endRightX + axisNormalX * s;
+            cap_c2y     = splineData.endRightY + axisNormalY * s;
+
+            _canvas.beginPath();
+            _canvas.moveTo( cap_startx, cap_starty );
+            _canvas.bezierCurveTo( cap_c1x, cap_c1y, cap_c2x, cap_c2y, cap_endx, cap_endy );
+            _canvas.closePath();	    
+            _canvas.fill();
+
+			//	outline
+            _canvas.moveTo( cap_startx, cap_starty );
+            _canvas.bezierCurveTo( cap_c1x, cap_c1y, cap_c2x, cap_c2y, cap_endx, cap_endy );
+            _canvas.stroke();
+        }
+        
+        //---------------------------------------
+        // fill interior
+		_canvas.fillStyle   = "rgba( 100, 255, 100, " + fillOpacity + " )";
+		_canvas.strokeStyle = "rgba( 100, 255, 100, " + strokeOpacity + " )";
+
+		_canvas.beginPath();
+		_canvas.moveTo( splineData.startLeftX, splineData.startLeftY );
+		_canvas.bezierCurveTo( splineData.control1LeftX, splineData.control1LeftY, splineData.control2LeftX, splineData.control2LeftY, splineData.endLeftX, splineData.endLeftY );
+		_canvas.lineTo( splineData.endRightX, splineData.endRightY );
+		_canvas.bezierCurveTo( splineData.control2RightX, splineData.control2RightY, splineData.control1RightX, splineData.control1RightY, splineData.startRightX, splineData.startRightY );
+		_canvas.lineTo( splineData.startLeftX, splineData.startLeftY );
+		_canvas.closePath();	    
+		_canvas.fill();	
+
+		//	ball joint at parentpos
+		_canvas.fillStyle   = "rgba( 255, 0, 255, " + fillOpacity + " )";
+		_canvas.strokeStyle = "rgba( 255, 0, 255, " + strokeOpacity + " )";
+		_canvas.beginPath();
+		_canvas.arc( parentPos.x, parentPos.y, parentWidth * 0.9, 0, PI2, false );
+		_canvas.fill();
+		_canvas.closePath();	
+
+        //---------------------------------------
+        // draw outline
+		_canvas.fillStyle   = "rgba( 0, 0, 255, " + fillOpacity + " )";
+		_canvas.strokeStyle = "rgba( 0, 0, 255, " + strokeOpacity + " )";
+
+		_canvas.lineWidth = 1.0;       	
+		_canvas.beginPath();
+		_canvas.moveTo( splineData.startLeftX, splineData.startLeftY );
+		_canvas.bezierCurveTo( splineData.control1LeftX, splineData.control1LeftY, splineData.control2LeftX, splineData.control2LeftY, splineData.endLeftX, splineData.endLeftY );
+		_canvas.moveTo( splineData.endRightX, splineData.endRightY );
+		_canvas.bezierCurveTo( splineData.control2RightX, splineData.control2RightY, splineData.control1RightX, splineData.control1RightY, splineData.startRightX, splineData.startRightY );
+		_canvas.stroke();								
+		_canvas.closePath();	
+
+		//	Mimic bezierCurveTo using local function drawBezier
+		//let xof = -10, yof = 0;
+		//let p0=0, p1=0, p2=0, p3=0;
+		//p0 = { x: splineData.endRightX      + xof,  y: splineData.endRightY      + yof };
+		//p1 = { x: splineData.control2RightX + xof,  y: splineData.control2RightY + yof  };
+		//p2 = { x: splineData.control1RightX + xof,  y: splineData.control1RightY + yof  };
+		//p3 = { x: splineData.startRightX    + xof,  y: splineData.startRightY    + yof  };
+		//_canvas.fillStyle   = "rgba( 255, 0, 1, 1.0 )";
+		//_canvas.strokeStyle = "rgba( 255, 0, 1, 1.0 )";
+		//this.drawBezier( p0, p1, p2, p3 )
+		//xof = 10;
+		//p0 = { x: splineData.endLeftX      + xof,  y: splineData.endLeftY      + yof  };
+		//p1 = { x: splineData.control2LeftX + xof,  y: splineData.control2LeftY + yof  };
+		//p2 = { x: splineData.control1LeftX + xof,  y: splineData.control1LeftY + yof  };
+		//p3 = { x: splineData.startLeftX    + xof,  y: splineData.startLeftY    + yof  };
+		//_canvas.fillStyle   = "rgba( 255, 1, 0, 1.0 )";
+		//_canvas.strokeStyle = "rgba( 255, 0, 0, 1.0 )";
+		//this.drawBezier( p0, p1, p2, p3 )
+
+		//	create some axis if needed
+		if ( _dbgAxisId_1 == ZERO ) {
+			let color = new Module.Color( 1, 1, 0, 1 );
+			color.setRGB( 1, 1, 1 );		_dbgAxisId_1  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// partPos
+			color.setRGB( 0.5, 0.5, 0.5 );	_dbgAxisId_2  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// parentPos
+			color.setRGB( 1, 1, 1 );		_dbgAxisId_3  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );
+			color.setRGB( 1, 1, 1 );		_dbgAxisId_4  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );
+			color.setRGB( 0, 0, 1 );		_dbgAxisId_5  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// startLeft - bLue
+			color.setRGB( 0, 0, 0 );		_dbgAxisId_6  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+			color.setRGB( 0, 0, 0 );		_dbgAxisId_7  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+			color.setRGB( 0, 0, 0 );		_dbgAxisId_8  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+			color.setRGB( 1, 0, 0 );		_dbgAxisId_9  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// startRight - Red
+			color.setRGB( 0, 0, 0 );		_dbgAxisId_10 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+			color.setRGB( 0, 0, 0 );		_dbgAxisId_11 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+			color.setRGB( 0, 0, 0 );		_dbgAxisId_12 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+
+			color.setRGB( 1, 1, 0 );		_dbgRayId_1   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// axis
+			color.setRGB( 0, 1, 1 );		_dbgRayId_2   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// partPerp
+			color.setRGB( 1, 0, 0 );		_dbgRayId_3   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+			color.setRGB( 0, 1, 0 );		_dbgRayId_4   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+			color.setRGB( 0, 0, 1 );		_dbgRayId_5   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+			color.delete();
+			this.hideAllDebugHelpers()
+		}
+
+		//let pos    = _savedPartParameters.position;
+		//let parPos = _savedPartParameters.parentPos;
+		let zval   = 500.0;
+
+
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, cap_startx, cap_starty, zval );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, cap_c1x, cap_c1x, zval );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, cap_c2x, cap_c2y, zval );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, cap_endx, cap_endy, zval );
+
+
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, position.x, position.y, zval - 50 );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, parentPos.x, parentPos.y, zval - 50);
+
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
+
+
+		//let s =  width * endCapSpline;
+		//let f = -1.0; // basically, a pixel's width...I think
+		//let axisNormalX = axis.x / length;
+		//let axisNormalY = axis.y / length;
+		//let sx	= splineData.endLeftX  + axisNormalX * f;
+		//let sy	= splineData.endLeftY  + axisNormalY * f;
+		//let ex	= splineData.endRightX + axisNormalX * f;
+		//let ey	= splineData.endRightY + axisNormalY * f;
+		//let c1x	= splineData.endLeftX  + axisNormalX * s;
+		//let c1y	= splineData.endLeftY  + axisNormalY * s;
+		//let c2x	= splineData.endRightX + axisNormalX * s;
+		//let c2y	= splineData.endRightY + axisNormalY * s;
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, sx, sy, zval );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, c1x, c1y, zval );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, c2x, c2y, zval );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, ex, ey, zval );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
+		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, splineData.endLeftX, splineData.endLeftY, zval );
+		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, splineData.endRightX, splineData.endRightY, zval );
+
+
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
+
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
+		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
+		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
+
+
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_1, true );	// yellow
+		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_1, position.x, position.y, zval, parentPos.x, parentPos.y, zval + 50 );
+
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_2, true );	// cyan
+		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_2,
+			//position.x + (off * perp.x), position.y + (off * perp.y), zval,
+			//position.x - (off * perp.x), position.y - (off * perp.y), zval );
+			position.x, position.y, zval,
+			position.x + ( width * 1.0 * perp.x), position.y + ( width * 1.0 * perp.y), zval );
+
+		//console.log("perp=(" + perp.x.toFixed(3) + "," + perp.y.toFixed(3) + "), parPerp=(" + parentPerp.x.toFixed(3) + "," + parentPerp.y.toFixed(3) + ")");
+
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_3, true );	// red
+		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_3,
+			//parentPos.x + (off * parentPerp.x), parentPos.y + (off * parentPerp.y), zval,
+			//parentPos.x - (off * parentPerp.x), parentPos.y - (off * parentPerp.y), zval );
+			parentPos.x, parentPos.y, zval,
+			parentPos.x + ( width * 1.0 * parentPerp.x), parentPos.y + ( width * 1.0 * parentPerp.y), zval );
+
+
+
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_4, true );	// green
+		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_4,
+			parentPos.x, parentPos.y, zval,
+			parentPos.x + ( width * 1.5 * _perpStart.x), parentPos.y + ( width * 1.5 * _perpStart.y), zval );
+
+		globalGenepool3Dcpp.showDebugRay( _dbgRayId_5, true );	// blue
+		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_5,
+			position.x, position.y, zval,
+			position.x + ( width * 1.5 * _perpEnd.x), position.y + ( width * 1.5 * _perpEnd.y), zval );
+
+
+		//console.log(
+		//	"  perp= (" + perp.x.toFixed(3) + ", " + perp.y.toFixed(3) + ")" +
+		//	"  pEND= (" + _perpEndTEST.x.toFixed(3) + ", " + _perpEndTEST.y.toFixed(3) + ")" );
+	}
+
+	this.hideAllDebugHelpers = function()
+	{
+		if (_dbgAxisId_1    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1,  false );
+		if (_dbgAxisId_2    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2,  false );
+		if (_dbgAxisId_3    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3,  false );
+		if (_dbgAxisId_4    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4,  false );
+		if (_dbgAxisId_5    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5,  false );
+		if (_dbgAxisId_6    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6,  false );
+		if (_dbgAxisId_7    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7,  false );
+		if (_dbgAxisId_8    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8,  false );
+		if (_dbgAxisId_9    != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9,  false );
+		if (_dbgAxisId_10   != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, false );
+		if (_dbgAxisId_11   != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, false );
+		if (_dbgAxisId_12   != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, false );
+		if (_dbgRayId_1     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_1,   false );
+		if (_dbgRayId_2     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_2,   false );
+		if (_dbgRayId_3     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_3,   false );
+		if (_dbgRayId_4     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_4,   false );
+		if (_dbgRayId_5     != 0)	globalGenepool3Dcpp.showDebugRay ( _dbgRayId_5,   false );
+		if (_dbgAxisId_Part != 0)	globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_Part, false );
+	}
+
+	//======================================================================================================================================================
+	//======================================================================================================================================================
+	//
+	//
+	//	Helper funtion to contain part rendering data
+	//
+	//
+	//======================================================================================================================================================
+	//======================================================================================================================================================
+	function PartParameters()
+	{
+		this.isDebug		= false;
+		this.partIndex		= NULL_INDEX;
+		this.parentIndex	= NULL_INDEX;
+		this.childIndex		= NULL_INDEX;
+		this.splined		= false;
+		this.color			= new Color();
+		this.position		= new Vector2D();
+		this.parentPos		= new Vector2D();
+		this.angle			= 0;
+		this.width			= 0;
+		this.length			= 0;
+		this.endCapSpline	= 0;
+		this.parentWidth	= 0;
+		this.perp			= new Vector2D();
+		this.parentPerp		= new Vector2D();
+		this.childPerp		= new Vector2D();
+		this.axis			= new Vector2D();
+		this.branch			= false;
+
+		this.baseColor		= new Color();
+		this.blendColor		= new Color();
+		this.blendPct		= 0;
+		this.partId			= NULL_INDEX;
+		this.blendAngle		= 0;
+
+		this.minAngle		=  99999;
+		this.maxAngle		= -99999;
+
+		this.fill = function( partNum, phenotypeParts )
+		{
+			let curPart			= phenotypeParts[partNum];
+			let parentIndex		= phenotypeParts[partNum].parent;
+			let parPart			= phenotypeParts[parentIndex];
+			let childIndex		= phenotypeParts[partNum].child;
+
+			this.partIndex		= partNum;
+			this.parentIndex	= parentIndex;
+			this.childIndex		= childIndex;
+			this.splined		= curPart.splined;
+			this.angle			= curPart.currentAngle;
+			this.width			= curPart.width;
+			this.length			= curPart.length;
+			this.endCapSpline	= curPart.endCapSpline;
+			this.parentWidth	= parPart.width;
+			this.branch			= curPart.branch;
+
+			this.color.copy				( _colorUtility );
+			this.position.copyFrom		( curPart.position );
+			this.parentPos.copyFrom		( parPart.position );
+			this.perp.copyFrom			( curPart.perpendicular );
+			this.parentPerp.copyFrom	( parPart.perpendicular );
+			this.axis.copyFrom			( curPart.axis );
+			if (childIndex == NULL_INDEX) {
+				this.childPerp = new Vector2D();
+			} else {
+				this.childPerp.copyFrom( _phenotype.parts[childIndex].perpendicular );
+			}
+
+			this.baseColor.copy		( curPart.baseColor  );
+			this.blendColor.copy	( curPart.blendColor );
+			this.blendPct			= curPart.blendPct;
+			this.partId				= curPart.partId;
+			this.blendAngle			= curPart.blendAngle;
+		}
+
+		this.dump = function() {
+			let log = function(text) { console.log(text); }
+			log("	this.partIndex        = " + this.partIndex + ";" );
+			log("	this.parentIndex      = " + this.parentIndex + ";" );
+			log("	this.childIndex       = " + this.childIndex + ";" );
+			log("	this.splined          = " + this.splined + ";" );
+			log("	this.position.setXY   ( " + this.position.x.toFixed(5) + ", " + this.position.y.toFixed(5) + " );" );
+			log("	this.parentPos.setXY  ( " + this.parentPos.x.toFixed(5) + ", " + this.parentPos.y.toFixed(5) + " );" );
+			log("	this.angle            = " + this.angle.toFixed(5) + ";" );
+			log("	this.width            = " + this.width.toFixed(5) + ";" );
+			log("	this.length           = " + this.length.toFixed(5) + ";" );
+			log("	this.endCapSpline     = " + this.endCapSpline.toFixed(5) + ";" );
+			log("	this.parentWidth      = " + this.parentWidth.toFixed(5) + ";" );
+			log("	this.perp.setXY       ( " + this.perp.x.toFixed(5) + ", " + this.perp.y.toFixed(5) + " );" );
+			log("	this.parentPerp.setXY ( " + this.parentPerp.x.toFixed(5) + ", " + this.parentPerp.y.toFixed(5) + " );" );
+			log("	this.childPerp.setXY  ( " + this.childPerp.x.toFixed(5) + ", " + this.childPerp.y.toFixed(5) + " );" );
+			log("	this.axis.setXY       ( " + this.axis.x.toFixed(5) + ", " + this.axis.y.toFixed(5) + " );" );
+			log("	this.branch           = " + this.branch + ";" );
+
+			log("	this.color.set        ( " + this.color     .red.toFixed(3) + ", " + this.color     .green.toFixed(3) + ", " + this.color     .blue.toFixed(3) + ", " + this.color.opacity     .toFixed(3) + " );" );
+			log("	this.baseColor.set    ( " + this.baseColor .red.toFixed(3) + ", " + this.baseColor .green.toFixed(3) + ", " + this.baseColor .blue.toFixed(3) + ", " + this.baseColor.opacity .toFixed(3) + " );" );
+			log("	this.blendColor.set   ( " + this.blendColor.red.toFixed(3) + ", " + this.blendColor.green.toFixed(3) + ", " + this.blendColor.blue.toFixed(3) + ", " + this.blendColor.opacity.toFixed(3) + " );" );
+			log("	this.blendPct         = " + this.blendPct.toFixed(3) + ";" );
+			//log("	this.partId           = " + this.partId + ";" );
+		}
+
+		this.copy = function( that ) {
+			this.partIndex			= that.partIndex;
+			this.parentIndex		= that.parentIndex;
+			this.childIndex			= that.childIndex;
+			this.splined			= that.splined;
+			this.color				= that.color;
+			this.position.setXY		( that.position.x, that.position.y );
+			this.parentPos.setXY	( that.parentPos.x, that.parentPos.y );
+			this.angle				= that.angle;
+			this.width				= that.width;
+			this.length				= that.length;
+			this.endCapSpline		= that.endCapSpline;
+			this.parentWidth		= that.parentWidth;
+			this.perp.setXY			( that.perp.x, that.perp.y );
+			this.parentPerp.setXY	( that.parentPerp.x, that.parentPerp.y );
+			this.childPerp.setXY	( that.childPerp.x, that.childPerp.y );
+			this.axis.setXY			( that.axis.x, that.axis.y );
+			this.branch				= that.branch;
+
+			this.baseColor.copy		( that.baseColor );
+			this.blendColor.copy	( that.blendColor );
+			this.blendPct			= that.blendPct;
+			this.partId				= that.partId;
+		}
+
+		this.setParentPos = function( x, y ) {
+			let xoff = this.position.x - this.parentPos.x;
+			let yoff = this.position.y - this.parentPos.y;
+			this.parentPos.x = x;
+			this.parentPos.y = y;
+			this.position.x  = x + xoff;
+			this.position.y  = y + yoff;
+		}
+
+		//	given a different angle, recalculate all dynamic parameters
+		this.updateAngle = function( angle )
+		{
+			this.angle = angle;
+			let radian = angle * PI_OVER_180;
+			let length = this.length * _growthScale;
+			let x = length * Math.sin( radian );
+			let y = length * Math.cos( radian );
+
+			if ( this.partIndex > 1 ) {
+				this.parentPerp.setXY( 0, 0 );	//TBD
+			}
+
+			this.position.addXY( x, y );
+			this.axis.x = this.position.x - this.parentPos.x;
+			this.axis.y = this.position.y - this.parentPos.y;
+			this.perp.setXY( this.axis.y / length, -this.axis.x / length );
+		}
+
+		this.setTest_a = function() {
+			this.position.setXY   ( 4450.94125, 4040.69643 );
+			this.parentPos.setXY  ( 4457.60374, 4044.71627 );
+			this.angle            = -121.10487;
+			this.endCapSpline     = 1.08789;
+			this.parentWidth      = 4.84180;
+			this.perp.setXY       ( -0.51661, 0.85622 );
+			this.parentPerp.setXY ( -0.41962, 0.90770 );
+			this.childPerp.setXY  ( 0.00000, 0.00000 );
+			this.axis.setXY       ( -6.66249, -4.01984 );
+			this.partIndex        = 4;
+			this.parentIndex      = 3;
+			this.childIndex       = -1;
+			this.splined          = true;
+			this.width            = 5.88281;
+			this.length           = 7.78125;
+			this.branch           = false;
+			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
+			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendPct         = 0.000;
+		}
+
+		this.setTest_b = function() {
+			this.partIndex        = 13;
+			this.parentIndex      = 12;
+			this.childIndex       = 14;
+			this.splined          = true;
+			this.position.setXY   ( 4599.44387, 4068.70548 );
+			this.parentPos.setXY  ( 4614.34275, 4076.62942 );
+			this.angle            = 241.99379;
+			this.width            = 5.29036;
+			this.length           = 16.87500;
+			this.endCapSpline     = 1.51172;
+			this.parentWidth      = 4.56250;
+			this.perp.setXY       ( -0.46957, 0.88290 );
+			this.parentPerp.setXY ( -0.98151, 0.19142 );
+			this.childPerp.setXY  ( 0.16949, 0.98553 );
+			this.axis.setXY       ( -14.89888, -7.92395 );
+			this.branch           = false;
+			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
+			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendPct         = 0.000;
+		}
+
+		this.setTest_c = function()
+		{
+			this.partIndex        = 8;
+			this.parentIndex      = 7;
+			this.childIndex       = -1;
+			this.splined          = true;
+			this.position.setXY   ( 3388.85435, 3486.25813 );
+			this.parentPos.setXY  ( 3377.38688, 3467.33690 );
+			this.angle            = 31.21851;
+			this.width            = 6.84766                * 1.4;
+			this.length           = 22.12500;
+			this.endCapSpline     = 3.33008;
+			this.parentWidth      = 6.68262                * 1.0;
+			this.perp.setXY       ( 0.85520, -0.51830 );
+			this.parentPerp.setXY ( 0.98749, -0.15769 );
+			this.childPerp.setXY  ( 0.00000, 0.00000 );
+			this.axis.setXY       ( 11.46746, 18.92123 );
+			this.branch           = false;
+			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
+			this.baseColor.set    ( 0.500, 0.000, 1.000, 1.000 );
+			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendPct         = 0.000;
+		};
+
+		this.setTest_D = function()
+		{
+			this.partIndex        = 1;
+			this.parentIndex      = 0;
+			this.childIndex       = 2;
+			this.splined          = 0;
+			this.position.setXY   ( 3622.46530, 2898.48665 );
+			this.parentPos.setXY  ( 3629.58885, 2873.51404 );
+			this.angle            = -15.92106;
+			this.width            = 6.89844;
+			this.length           = 25.96875;
+			this.endCapSpline     = 0.82813;
+			this.parentWidth      = 0.00000;
+			this.perp.setXY       ( 0.96164, 0.27431 );
+			this.parentPerp.setXY ( 0.00000, 0.00000 );
+			this.childPerp.setXY  ( 0.96254, 0.27115 );
+			this.axis.setXY       ( -7.12356, 24.97260 );
+			this.branch           = true;
+			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
+			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
+			this.blendPct         = 0.000;
+		}
 	}
 }
