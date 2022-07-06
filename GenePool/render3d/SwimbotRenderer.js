@@ -117,7 +117,6 @@ function SwimbotRenderer()
 	let _swimmerPartIsSelected	= false;
 	let _curSwimbotIndex	= NULL_INDEX;
 
-	//var _partParameters = null;
 	let _savedPartParameters = new PartParameters();
 
 	//-------------------------------------------
@@ -206,7 +205,8 @@ function SwimbotRenderer()
 			_perpEnd		= new Module.Vec2();
 			globalGenepool3Dcpp.setWireframeMode( DEFAULT_WIREFRAME_MODE );
 
-			if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();
+//if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();
+
 		}
 	}
 
@@ -456,8 +456,7 @@ function SwimbotRenderer()
 		//	create the mesh if it doesn't already exist
 		if ( partParms.partId == NULL_INDEX ) {
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
-			partParms.partId = globalGenepool3Dcpp.createNormalSwimbotPart( partParms.partIndex, partParms.width,
-				partParms.length, _baseColorEng );
+			partParms.partId = globalGenepool3Dcpp.createNormalSwimbotPart( partParms.partIndex, partParms.width, partParms.length, _baseColorEng );
 
 			console.log("==== <renderNormalMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
 				", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +
@@ -472,7 +471,31 @@ function SwimbotRenderer()
 
 	this.splinedRenderMesh = function( partParms, xpos, ypos )
 	{
-		this.generate3dRenderData( partParms );
+		let perpStartX  = partParms.perp.x;
+		let perpStartY  = partParms.perp.y;
+		if (( partParms.partIndex > 1 ) && ( ! partParms.branch ))
+		{
+			perpStartX += partParms.parentPerp.x;
+			perpStartY += partParms.parentPerp.y;
+		}
+
+		partParms.blendAngle = (Math.atan2( -perpStartY, perpStartX ) / PI_OVER_180) - 90.0;
+		if (partParms.blendAngle <= -180) partParms.blendAngle += 360.0;
+
+		// scale the two perpendiculars
+		let width		= partParms.width;
+		let parentWidth	= partParms.parentWidth;
+		if ( _growthScale < ONE ) {
+			width       = width       * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+			parentWidth = parentWidth * _growthScale + EGG_SIZE * ( ONE - _growthScale );
+		}
+
+		_rendLen = partParms.length * _growthScale;
+		_rendEndRadius = width;
+		_rendBegRadius = width;
+		if ( partParms.partIndex != 1 ) {
+			_rendBegRadius = parentWidth;
+		}
 
 		//	create the mesh if it doesn't already exist
 		if ( partParms.partId == NULL_INDEX ) {
@@ -480,7 +503,7 @@ function SwimbotRenderer()
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
 			partParms.partId = globalGenepool3Dcpp.createSplinedSwimbotPart( partParms.partIndex, partParms.parentWidth,
 				partParms.width, partParms.length, _splineFactor, partParms.endCapSpline, hasEndcap, _baseColorEng );
-			console.log("[splinedRenderMesh] create - id = " + partParms.partId );
+			//console.log("[splinedRenderMesh] create - id = " + partParms.partId );
 		}
 
 		//	render existing mesh
@@ -491,78 +514,6 @@ function SwimbotRenderer()
 			_rendLen, _rendBegRadius, _rendEndRadius, _blendColorEng, partParms.blendPct );
 	}
 
-	this.generate3dRenderData = function( partParms )
-	{
-		//let partNum			= partParms.partIndex;
-		let parentIndex		= partParms.parentIndex;	// _phenotype.parts[partNum].parent;
-		let position 		= partParms.position;		// _phenotype.parts[partNum].position;
-		let parentPos 		= partParms.parentPos;		// _phenotype.parts[parentIndex].position;
-		let width			= partParms.width;			// _phenotype.parts[partNum].width;
-		let length			= partParms.length;			// _phenotype.parts[partNum].length;
-		let parentWidth		= partParms.parentWidth;	// _phenotype.parts[parentIndex].width;
-		//let perp			= partParms.perp;			// _phenotype.parts[partNum].perpendicular
-		let childIndex		= partParms.childIndex;		// _phenotype.parts[partNum].child;
-		let parentPerp		= partParms.parentPerp;		// _phenotype.parts[parentIndex].perpendicular;
-		let childPerp		= partParms.childPerp;		// _phenotype.parts[childIndex].perpendicular
-		let branch			= partParms.branch;			//  _phenotype.parts[partNum].branch
-
-		let perpStartX  = partParms.perp.x;
-		let perpStartY  = partParms.perp.y;
-		let perpEndX    = partParms.perp.x;
-		let perpEndY    = partParms.perp.y;
-
-
-		if (( partParms.partIndex > 1 ) && ( ! branch ))
-		{
-			perpStartX += parentPerp.x;
-			perpStartY += parentPerp.y;
-			let length = Math.sqrt( perpStartX * perpStartX + perpStartY * perpStartY );
-			perpStartX /= length;
-			perpStartY /= length;
-		}
-
-		if (childIndex != NULL_INDEX )
-		{
-			perpEndX += childPerp.x;
-			perpEndY += childPerp.y;
-			let length = Math.sqrt( perpEndX * perpEndX + perpEndY * perpEndY );
-			perpEndX /= length;
-			perpEndY /= length;
-		}
-
-		partParms.blendAngle = (Math.atan2( -perpStartY, perpStartX ) / PI_OVER_180) - 90.0;
-		if (partParms.blendAngle <= -180) partParms.blendAngle += 360.0;
-
-		// scale the two perpendiculars
-		if ( _growthScale < ONE ) {
-			width       = width         * _growthScale + EGG_SIZE * ( ONE - _growthScale );
-			parentWidth = parentWidth   * _growthScale + EGG_SIZE * ( ONE - _growthScale );
-		}
-
-		perpEndX *= width;
-		perpEndY *= width;
-
-		_rendEndRadius = width;
-		_rendBegRadius = width;
-		_rendLen = partParms.length * _growthScale;
-
-		if ( partParms.partIndex === 1 ) {
-			perpStartX  *= width;
-			perpStartY  *= width;
-		}
-		else {
-			perpStartX  *= parentWidth;
-			perpStartY  *= parentWidth;
-			_rendBegRadius = parentWidth;
-		}
-
-		//let len = Math.sqrt( perpStartX * perpStartX + perpStartY * perpStartY );
-		//console.log('gen3d: part=' + partParms.partIndex + ', grw=' + _growthScale.toFixed(3) + ', width=' + width.toFixed(3) +
-		//	', parentWidth=' + parentWidth.toFixed(3) + ' : l=' + len.toFixed(3) );
-
-		_perpStart.set( perpStartX, perpStartY );
-		_perpEnd.set( perpEndX, perpEndY );
-	};
 
 	//---------------------------------------------------------------------------------------------
 	//	Trails!
@@ -681,6 +632,11 @@ function SwimbotRenderer()
             perpEndX /= length;
             perpEndY /= length;
         }
+
+		//if ( partParms.partId != NULL_INDEX ) {
+		//	console.log('perpStartX=(' + perpStartX.toFixed(3) + ',' + perpStartY.toFixed(3) +
+		//		') : perpEndX=(' + perpEndX.toFixed(3) + ',' + perpEndY.toFixed(3) + ')' );
+		//}
 
 		//	need this angle for 3d renderer
 		partParms.blendAngle = (Math.atan2( -perpStartY, perpStartX ) / PI_OVER_180) - 90.0;
@@ -1432,10 +1388,10 @@ else
 		if ( _simulationRunning ) _debugRenderCnt++;
 
 		_growthScale = 1.0;
-		let MAX_GROW_CNT = 800;
-		if ( _debugRenderCnt <= MAX_GROW_CNT ) {
-			_growthScale = _debugRenderCnt / MAX_GROW_CNT;
-		}
+		//let MAX_GROW_CNT = 800;
+		//if ( _debugRenderCnt <= MAX_GROW_CNT ) {
+		//	_growthScale = _debugRenderCnt / MAX_GROW_CNT;
+		//}
 
 		if ( _savedPartParameters.partIndex != NULL_INDEX )
 		{
@@ -1452,6 +1408,8 @@ else
 
 //_animPartAngle = 180.0;
 //_animParentAngle = 90.0 + 0.0;
+//_animPartAngle   = 125.0;
+//_animParentAngle = 125.0;
 //console.log( "_animPartAngle=" + _animPartAngle + ", _animParentAngle=" + _animParentAngle );
 			}
 
@@ -1470,12 +1428,13 @@ else
 
 			if ( _savedPartParameters.splined )
 			{
-				//this.splinedRender2d( _savedPartParameters );
+				//this.splinedRender2D( _savedPartParameters );
 				this.splinedRender2dDebug( _animPartAngle, _animParentAngle, _savedPartParameters );
 
 				//	draw the 3d mesh alongside
 				this.splinedRenderMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );		// <----------------------------------------
 				//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 0 );		// <----------------------------------------
+				globalGenepool3Dcpp.setDebugPart( _savedPartParameters.partId );
 			}
 			else
 			{
@@ -1496,21 +1455,24 @@ else
 		partParms.angle = partAngle;
 		let radian = partAngle * PI_OVER_180;
 		let len = partParms.length * _growthScale;
-		let x = len * Math.sin( radian );
-		let y = len * Math.cos( radian );
+		let x0 = len * Math.sin( radian );
+		let y0 = len * Math.cos( radian );
 
 		// re-calc from parentPos, length growth, and angle
-		partParms.position.x = partParms.parentPos.x + x;
-		partParms.position.y = partParms.parentPos.y + y;
+		partParms.position.x = partParms.parentPos.x + x0;
+		partParms.position.y = partParms.parentPos.y + y0;
 		partParms.axis.x = partParms.position.x - partParms.parentPos.x;
 		partParms.axis.y = partParms.position.y - partParms.parentPos.y;
 		partParms.perp.setXY( partParms.axis.y / len, -partParms.axis.x / len );
 
 		//parentAngle = 45;
 		radian = parentAngle * PI_OVER_180;
-		x = Math.sin( radian );
-		y = Math.cos( radian );
-		partParms.parentPerp.setXY( -x, -y );
+		let x1 = Math.sin( radian );
+		let y1 = Math.cos( radian );
+		partParms.parentPerp.setXY( -x1, -y1 );
+
+		//console.log('x0=' + x0.toFixed(3) + ', y0=' + y0.toFixed(3) + ', perp=(' + partParms.perp.x.toFixed(3) + ',' + partParms.perp.y.toFixed(3) +
+		//	') : x1=' + x1.toFixed(3) + ', y1=' + y1.toFixed(3) + ', parerp=(' + partParms.parentPerp.x.toFixed(3) + ',' + partParms.parentPerp.y.toFixed(3) + ')' );
 
 		//console.log('partAngle = ' + partAngle.toFixed(2) + ', parentAngle = ' + parentAngle.toFixed(2) );
 
@@ -2016,7 +1978,7 @@ else
 			this.axis.setXY       ( -14.89888, -7.92395 );
 			this.branch           = false;
 			this.color.set        ( 1.000, 0.500, 0.000, 1.000 );
-			this.baseColor.set    ( 1.000, 1.000, 1.000, 1.000 );
+			this.baseColor.set    ( 1.000, 0.000, 0.500, 1.000 );
 			this.blendColor.set   ( 1.000, 1.000, 1.000, 1.000 );
 			this.blendPct         = 0.000;
 		}
