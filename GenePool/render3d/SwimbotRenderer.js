@@ -13,7 +13,7 @@
 "use strict";
 const DEBUG_AREA_X = 1000;
 const DEBUG_AREA_Y = 1000;
-const FORCE_ALL_3D = false;
+const FORCE_ALL_3D = true;
 const DEFAULT_WIREFRAME_MODE = false;
 
 function SwimbotRenderer()
@@ -203,9 +203,10 @@ function SwimbotRenderer()
 			_blendColorEng  = new Module.Color();
 			_perpStart		= new Module.Vec2();
 			_perpEnd		= new Module.Vec2();
-			globalGenepool3Dcpp.setWireframeMode( DEFAULT_WIREFRAME_MODE );
+			//globalGenepool3Dcpp.setWireframeMode( DEFAULT_WIREFRAME_MODE );
 
-//if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();
+globalGenepool3Dcpp.setWireframeMode(true);	// update morph matrices debug - TEMP
+if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out in debug mode
 
 		}
 	}
@@ -458,9 +459,9 @@ function SwimbotRenderer()
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
 			partParms.partId = globalGenepool3Dcpp.createNormalSwimbotPart( partParms.partIndex, partParms.width, partParms.length, _baseColorEng );
 
-			console.log("==== <renderNormalMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
-				", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +
-				partParms.baseColor.blue.toFixed(3) + " )" );
+			//console.log("==== <renderNormalMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
+			//	", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +
+			//	partParms.baseColor.blue.toFixed(3) + " )" );
 		}
 
 		//	render existing mesh
@@ -504,6 +505,9 @@ function SwimbotRenderer()
 			partParms.partId = globalGenepool3Dcpp.createSplinedSwimbotPart( partParms.partIndex, partParms.parentWidth,
 				partParms.width, partParms.length, _splineFactor, partParms.endCapSpline, hasEndcap, _baseColorEng );
 			//console.log("[splinedRenderMesh] create - id = " + partParms.partId );
+			console.log("==== <splinedRenderMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
+				", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +
+				partParms.baseColor.blue.toFixed(3) + " )" );
 		}
 
 		//	render existing mesh
@@ -1341,7 +1345,8 @@ else
 			genePool3D.forceZoomOverride();
 			let dbgArea = new Vector2D();
 			dbgArea.setXY( DEBUG_AREA_X, DEBUG_AREA_Y );
-			genePool.getCamera().setScale( 80 );
+			//genePool.getCamera().setScale( 80 );
+genePool.getCamera().setScale( 60 );
 			genePool.getCamera().setPosition( dbgArea );
 			genePool.getViewTracking().setMode( ViewTrackingMode.NULL, genePool.getCamera().getPosition(), genePool.getCamera().getScale(), 0 );   
 
@@ -1383,7 +1388,7 @@ else
 	this.renderDebugSwimbot = function()
 	{
 		//_savedPartParameters.setTest_c() ;
-		_savedPartParameters.setTest_c();
+		_savedPartParameters.setTest_b();
 
 		if ( _simulationRunning ) _debugRenderCnt++;
 

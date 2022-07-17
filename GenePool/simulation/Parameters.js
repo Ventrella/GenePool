@@ -76,9 +76,9 @@ const MIN_SWIMBOT_HUNGER_THRESHOLD          = ZERO;
 
 const MAX_SWIMBOTS = 2000;
 
-const INITIAL_NUM_SWIMBOTS =  2; //BPD
+//const INITIAL_NUM_SWIMBOTS = 2; //BPD
 
-//const INITIAL_NUM_SWIMBOTS =  500; // original version
+const INITIAL_NUM_SWIMBOTS =  500; // original version
 //const INITIAL_NUM_SWIMBOTS = 1000; // research version
 //luka 1000
 
