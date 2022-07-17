@@ -116,12 +116,8 @@ function GenePool()
     const DEFAULT_MILLISECONDS_PER_UPDATE = 20;
 
 //	const LEVEL_OF_DETAIL_THRESHOLD         = 1000.0;
-    const LEVEL_OF_DETAIL_THRESHOLD         = 1600.0;	//BPD
-
-//	const INITIAL_VIEW_SCALE                = POOL_WIDTH * 0.1;
-	const INITIAL_VIEW_SCALE                = POOL_WIDTH * 0.2;	//BPD
-
-
+    const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
+	const INITIAL_VIEW_SCALE                = POOL_WIDTH * 0.1;
     const RACE_VIEW_SCALE                   = POOL_WIDTH * 0.3;
     const BANG_VIEW_SCALE                   = POOL_WIDTH * 0.2;
     const PARENT_VIEW_SCALE                 = POOL_WIDTH * 0.05;
