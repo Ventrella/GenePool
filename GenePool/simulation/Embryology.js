@@ -240,6 +240,11 @@ let testNoEel = true;
             _categoryValues[c].branchCategory   = Math.floor( ZERO  + _categoryValues[c].branchCategory );
             _categoryValues[c].branchReflect    = Math.floor( ONE   + _categoryValues[c].branchReflect  );
             _categoryValues[c].splined          = Math.round( ZERO  + _categoryValues[c].splined        );
+
+			//let isSplined = 0;
+			//if ( Math.random() > 0.5 ) isSplined = 1;
+			//_categoryValues[c].splined = isSplined;		//BPDTEST
+			//_categoryValues[c].splined = 1;				//BPDTEST 0=norm, 1=splined
         }
 
         //-----------------------------------------------------------------------------------------

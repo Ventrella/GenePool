@@ -40,8 +40,13 @@ function FoodBitRenderer()
 	this.initialize = function ( canvas ) {
 		_canvas = canvas;
 
-		_renderFoodBitFunc = _renderFoodBit2d;
-		_renderModeFoodBits = 1
+		// default 2d
+		//_renderFoodBitFunc = _renderFoodBit2d;
+		//_renderModeFoodBits = 1;
+
+		// default 3d
+		_renderFoodBitFunc = _renderFoodBit3d;
+		_renderModeFoodBits = 2;
 	}
 
 	//	dispose of render assets for a given foodbit

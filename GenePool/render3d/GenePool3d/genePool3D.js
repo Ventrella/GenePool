@@ -174,6 +174,9 @@ var genePool3D;
 			//	Setup our JS side audio engine, which will talk directly to the Engine via AlfInterface
 			//WiggleAudio.initialize(this.alfInterface);
 
+			//this.toggleControlPanel();		//BPDTEST
+
+
 			this.initialized = true;
 			this.resizeCanvas();
 
@@ -457,7 +460,9 @@ var genePool3D;
 			//textLines.push( 'fov    : ' + this.alfInterface.getCameraFieldOfView().toFixed(4) );
 			textLines.push( 'screen : ( ' + this.alfInterface.getScreenWidth().toFixed(0) + ' , ' + this.alfInterface.getScreenHeight().toFixed(0) + ' )'
 				 + 'fov : ' + this.alfInterface.getCameraFieldOfView().toFixed(2) );
-			textLines.push( 'gtime  : ' + this.alfInterface.getGameTime().toFixed(2) );
+			textLines.push( 'gtime  : ' + this.alfInterface.getGameTime().toFixed(2).padStart(8) +
+				' : fps = ' + this.alfInterface.getFps().toFixed(0).padStart(4) +
+				' : rendfps = ' + this.alfInterface.getRenderFps().toFixed(0).padStart(4) );
 
 			textLines.push( ' ' );
 			var campos = this.alfInterface.getCameraPos();

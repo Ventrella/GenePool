@@ -23,6 +23,7 @@ function Camera()
     const PAN_OVERSHOOT_PUSH 	=  0.7;
     const SCALE_OVERSHOOT_PUSH	=  0.7;
     const MINIMUM_SCALE 		=  500.0;
+    //const MINIMUM_SCALE 		=  300.0;		//BPD3D
     
 	//------------------------------------------
 	// members

@@ -11,6 +11,7 @@
 //                                                                        
 // -------------------------------------------------------------------------- 
 "use strict";
+
 const DEBUG_AREA_X = 1000;
 const DEBUG_AREA_Y = 1000;
 const FORCE_ALL_3D = true;
@@ -93,17 +94,16 @@ function SwimbotRenderer()
 	let _wireframeMode		= DEFAULT_WIREFRAME_MODE;
 	let _savedCamPos		= new Vector2D();
 	let _savedCamScale		= 0;
-	let _partRenderCount	= 0;	// How many parts rendered this frame?
 	let _debugRenderCnt		= 0;
+	let _normalRenderCnt	= 0;
+	let _splinedRenderCnt	= 0;
 
 	let _debugRenderActive	= false;
-
 	let	_animPartAngleMin	= 0;
 	let	_animPartAngleMax	= 0;
 	let _animPartAngleRot	= 0;
 	let _animPartAngleInc	= 0;
 	let	_animPartAngle		= 0;
-
 	let _animParentAngleMin	= 0;
 	let _animParentAngleMax	= 0;
 	let _animParentAngleRot	= 0;
@@ -117,7 +117,7 @@ function SwimbotRenderer()
 	let _swimmerPartIsSelected	= false;
 	let _curSwimbotIndex	= NULL_INDEX;
 
-	let _savedPartParameters = new PartParameters();
+	let _savedPartParameters = new Render3dData();
 
 	//-------------------------------------------
 	// set rendering goals
@@ -175,11 +175,29 @@ function SwimbotRenderer()
 	//------------------------------------------------
 	this.releaseRenderAssets = function( swimmer )
 	{
-		for (let partNum=1; partNum<_phenotype.numParts; partNum++)
+		_phenotype = swimmer.getPhenotype();
+		for (let partNum=1; partNum < _phenotype.numParts; partNum++)
 		{
-			if ( swimmer._phenotype[partNum].partId != NULL_INDEX ) {
-				globalGenepool3Dcpp.deleteSwimmerPart( swimmer._phenotype[partNum].partId );
+			let renderData = _phenotype.parts[partNum].render3dData;
+
+			//	It's possible for a swimbot to live it's entire life offscreen
+			//	and die without ever getting rendered.
+			if ( renderData == NULL_INDEX ) {
+				//console.log("  ** no render data! **");
+				continue;
 			}
+
+			let meshId = renderData.partId;
+			if ( meshId != NULL_INDEX ) {
+				if ( renderData.splined) {
+					globalGenepool3Dcpp.deleteSplinedSwimbotPart( meshId, renderData.hasEndcap );
+				}
+				else {
+					globalGenepool3Dcpp.deleteNormalSwimbotPart( meshId );
+				}
+			}
+
+			_phenotype.parts[partNum].render3dData = NULL_INDEX;
 		}
 	}
 
@@ -188,11 +206,8 @@ function SwimbotRenderer()
 	//-----------------------
 	this.beginFrame = function ()
 	{
-		_partRenderCount = 0;
-
-		// force debug render for testing
-		//_debugRenderMode = 1;				// <#######################################################################################
-		//this.beginDebugRender();			// <#######################################################################################
+		_normalRenderCnt	= 0;
+		_splinedRenderCnt	= 0;
 
 		//	Module had not been completely intialized at the time of the .initialize() call.
 		//	Assume that it is now ready and go ahead and allocate shared engine objects
@@ -205,10 +220,33 @@ function SwimbotRenderer()
 			_perpEnd		= new Module.Vec2();
 			//globalGenepool3Dcpp.setWireframeMode( DEFAULT_WIREFRAME_MODE );
 
-globalGenepool3Dcpp.setWireframeMode(true);	// update morph matrices debug - TEMP
-if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out in debug mode
-
+//globalGenepool3Dcpp.setWireframeMode(true);	// update morph matrices debug - TEMP
+//if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out in debug mode
 		}
+	}
+
+	//-----------------------------------------------------------------------------
+	//	Useful hook for debugging the 3d code. The following places don't work for
+	//	hooking in debug swimbot render for the following reasons...
+	//
+	//		this.beginFrame	- happens BEFORE the pool gets wiped
+	//		this.endFrame	- happens AFTER globalRenderer.resetCoordSystem()
+	//		this.render		- may not get called by GenePool::render if there
+	//						  are no other (non-debug) swimbots being rendered.
+	//
+	//-----------------------------------------------------------------------------
+	this.beginSwimbotRenderPhase = function() {
+		if ( _debugRenderMode > 0 ) {
+			this.renderDebugSwimbot();
+		}
+	}
+
+	//
+	//	Called at the very end of the GenePool.js/render loop.
+	//	Note: The canvas 'resetTransform' has already been called at this point!
+	//
+	this.endFrame = function ()
+	{
 	}
 
 	//-----------------------
@@ -228,20 +266,21 @@ if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out 
 		_curSwimbotIndex   = swimbot.getIndex();
 		_swimmerPartIsSelected = false;
 
-		if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_DOT )
-		{
-			this.render_lod_dot( swimbot, SWIMBOT_DOT_RENDER_RADIUS );
-		}
-		else if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_LOW )
-		{
-			this.render_lod_low( swimbot );
-		}
-		else if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_HIGH )
-		{ 
-			this.render_lod_high( swimbot );
-		}	
+		//if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_DOT )
+		//{
+		//	this.render_lod_dot( swimbot, SWIMBOT_DOT_RENDER_RADIUS );
+		//}
+		//else if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_LOW )
+		//{
+		//	this.render_lod_low( swimbot );
+		//}
+		//else if ( levelOfDetail == SWIMBOT_LEVEL_OF_DETAIL_HIGH )
+		//{ 
+		//	this.render_lod_high( swimbot );
+		//}	
 
-		_partRenderCount++;
+		//	3d meshes don't have and may not really need a LOD
+		this.render_lod_high( swimbot );
 	}
 
 
@@ -287,38 +326,27 @@ if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out 
 	//
 	this.render_lod_high = function( swimbot )
 	{
-		//	since we won't get called by Swimbot.js to render the debug part, force it on the first render of the frame
-		if ( _debugRenderMode > 0 && _partRenderCount == 0 ) { //&& _savedPartParameters.partIndex != NULL_INDEX ) {
-			this.renderDebugSwimbot();
-			_partRenderCount++;
-		}
-
 		//	Render a standard swimbot
 		for (let partNum=1; partNum<_phenotype.numParts; partNum++)
 		{
 			_swimmerPartIsSelected = (partNum == _selectedPartIndex);
-			let curMeshId = _phenotype.parts[partNum].partId;
-
 			if ( _phenotype.parts[partNum].length > ZERO )
 			{
+				//	fetch/create our extended phenotype data
+				let renderData = _phenotype.parts[partNum].render3dData;
+				if (renderData == NULL_INDEX) {
+					renderData = new Render3dData();
+					_phenotype.parts[partNum].render3dData = renderData;
+					//console.log('created new Render3dData - index=', swimbot.getIndex(), ', partNum = ' + partNum );
+					renderData.initialize( partNum, _phenotype.parts );
+				}
+
 				_parentPosition = swimbot.getPartParentPosition( partNum );
 				_colorUtility   = swimbot.calculatePartColor( partNum );
 				//if ( _swimmerIsSelected && _swimmerPartIsSelected ) {
 				//	_colorUtility.set( 1.0, 0.5, 0.0, 1.0 );	// color the selected part
 				//}
 
-				let partParms = new PartParameters();
-				partParms.fill( partNum, _phenotype.parts );
-
-				//	dump parms for debug
-				if ( _swimmerIsSelected && _swimmerPartIsSelected )
-				{
-					if ( _dumpSelectedPartData ) {
-						console.log('+++++ part render data : swimbot = ' + _curSwimbotIndex + ', part = ' + _selectedPartIndex );
-						partParms.dump();
-						_dumpSelectedPartData = false;
-					}
-				}
 
 				//--------------------------------------------
 				// render the part
@@ -326,36 +354,24 @@ if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out 
 				_splineFactor = DEFAULT_SPLINE_FACTOR; 	
 				if ( _phenotype.parts[ partNum ].splined )
 				{
-					this.splinedRenderSwitcher( partParms );
+					renderData.updateSplined( partNum, _phenotype.parts );
+					//this.splinedRenderSwitcher( renderData );
+					this.splinedRenderMesh( renderData, renderData.parentPos.x, renderData.parentPos.y );
 				}
 				else
 				{
-					this.normalRenderSwitcher( partParms );
+					renderData.updateNormal( partNum, _phenotype.parts );
+					//this.normalRenderSwitcher( renderData );
+					this.renderNormalMesh( renderData, renderData.parentPos.x, renderData.parentPos.y );
 				}
 
-					//if ( _debugRenderMode > 0 )
-					//{
-					//	//	retrieve the 3d mesh id that might have been created in the debug render
-					//	let pmesh = _phenotype.parts[partNum].partId;
-					//	let dmesh = _savedPartParameters.partId;
-					//	if (pmesh != NULL_INDEX || dmesh != NULL_INDEX) {
-					//		if (pmesh != dmesh) {
-					//			console.log( "pmesh = " + pmesh + ", dmesh = " + dmesh );
-					//			_phenotype.parts[partNum].partId = dmesh;
-					//			partParms.partId = dmesh;
-					//		}
-					//	}
-					//	_savedPartParameters.copy( partParms );
-					//	_savedPartParameters.isDebug = true;
-					//	//genePool3D.displayDebugMsg( 'angle : ', _savedPartParameters.angle.toFixed(1) );
-					//}
-
-				//	meshID needs to be pushed back up into the phenoType
-				let newMeshId= partParms.partId;
-				if (curMeshId != NULL_INDEX || newMeshId != NULL_INDEX) {
-					if (curMeshId != newMeshId) {
-						//console.log( "curMeshId = " + curMeshId + ", newMeshId = " + newMeshId );
-						_phenotype.parts[partNum].partId = newMeshId;
+				//	dump parms for debug
+				if ( _swimmerIsSelected && _swimmerPartIsSelected )
+				{
+					if ( _dumpSelectedPartData ) {
+						console.log('+++++ part render data : swimbot = ' + _curSwimbotIndex + ', part = ' + _selectedPartIndex );
+						renderData.dump();
+						_dumpSelectedPartData = false;
 					}
 				}
 
@@ -401,16 +417,22 @@ if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out 
 		if ( isMesh )
 		{
 			this.splinedRenderMesh( partParms, partParms.parentPos.x, partParms.parentPos.y );
-
-			//	churn - fix
+			//	use a local 'isVis' flag on partParms to minimize calls to cpp code
 			if ( partParms.partId != NULL_INDEX ) {
-				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, true );
+				if ( partParms.isMeshVisible == false ) {
+					globalGenepool3Dcpp.setSplinedSwimbotPartVisible( partParms.partId, partParms.hasEndcap, true );
+					partParms.isMeshVisible = true;
+				}
 			}
 		}
 		else
 		{
+			//	use a local 'isVis' flag on partParms to minimize calls to cpp code
 			if ( partParms.partId != NULL_INDEX ) {
-				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, false );
+				if ( partParms.isMeshVisible == true ) {
+					globalGenepool3Dcpp.setSplinedSwimbotPartVisible( partParms.partId, partParms.hasEndcap, false );
+					partParms.isMeshVisible = false;
+				}
 			}
 			if ( _renderSplinedMode != 0 ) {
 				this.splinedRender2D( partParms );
@@ -426,13 +448,19 @@ if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out 
 		{
 			this.renderPartNormal3d( partParms, partParms.parentPos.x, partParms.parentPos.y );
 			if ( partParms.partId != NULL_INDEX ) {
-				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, true );
+				if ( partParms.isMeshVisible == false ) {
+					globalGenepool3Dcpp.setNormalSwimbotPartVisible( partParms.partId, true );
+					partParms.isMeshVisible = true;
+				}
 			}
 		}
 		else
 		{
 			if ( partParms.partId != NULL_INDEX ) {
-				globalGenepool3Dcpp.setSwimbotPartVisible( partParms.partId, false );
+				if ( partParms.isMeshVisible == true ) {
+					globalGenepool3Dcpp.setNormalSwimbotPartVisible( partParms.partId, false );
+					partParms.isMeshVisible = false;
+				}
 			}
 			if ( _renderNormalMode != 0 ) {
 				this.renderPartNormal2d( partParms );
@@ -460,14 +488,15 @@ if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out 
 			partParms.partId = globalGenepool3Dcpp.createNormalSwimbotPart( partParms.partIndex, partParms.width, partParms.length, _baseColorEng );
 
 			//console.log("==== <renderNormalMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
-			//	", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +
-			//	partParms.baseColor.blue.toFixed(3) + " )" );
+				//", partNum = " + partParms.partNum + ", id = " + partParms.partIndex );
+				//", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +	partParms.baseColor.blue.toFixed(3) + " )" );
 		}
 
 		//	render existing mesh
 		_begPosEng.set( xpos, ypos );
 		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
 		globalGenepool3Dcpp.renderNormalSwimbotPart( partParms.partId, _begPosEng, partParms.angle, _growthScale, _blendColorEng, partParms.blendPct );
+		_normalRenderCnt++;
 	}
 
 	this.splinedRenderMesh = function( partParms, xpos, ypos )
@@ -502,20 +531,22 @@ if ( _debugRenderMode == 0 ) this.toggleDebugSwimbotRender();	//	<=== start out 
 		if ( partParms.partId == NULL_INDEX ) {
 			let hasEndcap = (partParms.childIndex == -1);
 			_baseColorEng.setRGBA( partParms.baseColor.red, partParms.baseColor.green, partParms.baseColor.blue, 1.0 );
+			partParms.hasEndcap = hasEndcap;
 			partParms.partId = globalGenepool3Dcpp.createSplinedSwimbotPart( partParms.partIndex, partParms.parentWidth,
 				partParms.width, partParms.length, _splineFactor, partParms.endCapSpline, hasEndcap, _baseColorEng );
-			//console.log("[splinedRenderMesh] create - id = " + partParms.partId );
-			console.log("==== <splinedRenderMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
-				", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " +
-				partParms.baseColor.blue.toFixed(3) + " )" );
+
+			//console.log("==== <splinedRenderMesh> CREATE :  id = " + partParms.partId + ", width=" + partParms.width.toFixed(3) +
+				//", partNum = " + partParms.partNum + ", id = " + partParms.partIndex );
+				//", baseColor = ( " + partParms.baseColor.red.toFixed(3) + ", " + partParms.baseColor.green.toFixed(3) + ", " + partParms.baseColor.blue.toFixed(3) + " )" );
 		}
 
 		//	render existing mesh
 		_begPosEng.set( xpos, ypos );
 		let blendAngle = partParms.blendAngle - 90.0;
 		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
-		globalGenepool3Dcpp.renderSplinedSwimbotPart( partParms.partId, _begPosEng, partParms.angle, blendAngle,
+		globalGenepool3Dcpp.renderSplinedSwimbotPart( partParms.partId, partParms.hasEndcap, _begPosEng, partParms.angle, blendAngle,
 			_rendLen, _rendBegRadius, _rendEndRadius, _blendColorEng, partParms.blendPct );
+		_splinedRenderCnt++;
 	}
 
 
@@ -1268,12 +1299,6 @@ else
 
 	this.cycleNormalRenderMode = function()
 	{
-		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
-		if (_renderNormalMode == 2) {
-			//genePool3D.setAllNormalSwimmerVisibility( false );
-			globalGenepool3Dcpp.setAllNormalSwimmerVisibility( false );
-		}
-
 		_renderNormalMode++;
 		if ( _renderNormalMode > 2 ) {
 			_renderNormalMode = 0;
@@ -1287,11 +1312,6 @@ else
 
 	this.cycleSplinedRenderMode = function()
 	{
-		//	If prev mode was '3d render', then hide all (dev hack to enable cycling between 2d and 3d render)
-		if (_renderSplinedMode == 2) {
-			globalGenepool3Dcpp.setAllSplinedSwimmerVisibility( false );
-		}
-
 		_renderSplinedMode++;
 		if ( _renderSplinedMode > 2 ) {
 			_renderSplinedMode = 0;
@@ -1345,15 +1365,17 @@ else
 			genePool3D.forceZoomOverride();
 			let dbgArea = new Vector2D();
 			dbgArea.setXY( DEBUG_AREA_X, DEBUG_AREA_Y );
+
 			//genePool.getCamera().setScale( 80 );
-genePool.getCamera().setScale( 60 );
+			genePool.getCamera().setScale( 100 );
+
 			genePool.getCamera().setPosition( dbgArea );
 			genePool.getViewTracking().setMode( ViewTrackingMode.NULL, genePool.getCamera().getPosition(), genePool.getCamera().getScale(), 0 );   
 
 			_animPartAngleMin	= 180 - 60;
 			_animPartAngleMax	= 180 + 60;
 			_animPartAngleRot	= 0;
-			let secPerCycle		= 4; //sec
+			let secPerCycle		= 4; //4; //sec
 			let degPerSec		= 360 / secPerCycle;
 //degPerSec = 0;
 			_animPartAngleInc	= degPerSec / 30; // deg
@@ -1361,7 +1383,7 @@ genePool.getCamera().setScale( 60 );
 			_animParentAngleMin	= 90 - 50;
 			_animParentAngleMax	= 90 + 50;
 			_animParentAngleRot	= 0;
-			secPerCycle			= 9; //sec
+			secPerCycle			= 9; //9; //sec
 			degPerSec			= 540 / secPerCycle;
 //degPerSec = 0;
 			_animParentAngleInc	= degPerSec / 30; // deg
@@ -1387,8 +1409,11 @@ genePool.getCamera().setScale( 60 );
 
 	this.renderDebugSwimbot = function()
 	{
-		//_savedPartParameters.setTest_c() ;
-		_savedPartParameters.setTest_b();
+		//_savedPartParameters.setTest_a();		// fungi
+		//_savedPartParameters.setTest_b() ;	// nocap
+		_savedPartParameters.setTest_c() ;	// eggplant
+		//_savedPartParameters.setTest_D() ;		// normal
+
 
 		if ( _simulationRunning ) _debugRenderCnt++;
 
@@ -1437,9 +1462,11 @@ genePool.getCamera().setScale( 60 );
 				this.splinedRender2dDebug( _animPartAngle, _animParentAngle, _savedPartParameters );
 
 				//	draw the 3d mesh alongside
+	//globalGenepool3Dcpp.renderSwimbotPartTemplates( DEBUG_AREA_X, DEBUG_AREA_Y );	
+
 				this.splinedRenderMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 20 );		// <----------------------------------------
-				//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 0 );		// <----------------------------------------
-				globalGenepool3Dcpp.setDebugPart( _savedPartParameters.partId );
+	//this.renderNormalMesh( _savedPartParameters, DEBUG_AREA_X + (xspace/2), DEBUG_AREA_Y + 0 );		// <----------------------------------------
+				globalGenepool3Dcpp.setDebugPart( _savedPartParameters.partId, _savedPartParameters.hasEndcap );
 			}
 			else
 			{
@@ -1641,128 +1668,125 @@ genePool.getCamera().setScale( 60 );
 		//this.drawBezier( p0, p1, p2, p3 )
 
 		//	create some axis if needed
-		if ( _dbgAxisId_1 == ZERO ) {
-			let color = new Module.Color( 1, 1, 0, 1 );
-			color.setRGB( 1, 1, 1 );		_dbgAxisId_1  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// partPos
-			color.setRGB( 0.5, 0.5, 0.5 );	_dbgAxisId_2  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// parentPos
-			color.setRGB( 1, 1, 1 );		_dbgAxisId_3  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );
-			color.setRGB( 1, 1, 1 );		_dbgAxisId_4  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );
-			color.setRGB( 0, 0, 1 );		_dbgAxisId_5  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// startLeft - bLue
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_6  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_7  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_8  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 1, 0, 0 );		_dbgAxisId_9  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// startRight - Red
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_10 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_11 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
-			color.setRGB( 0, 0, 0 );		_dbgAxisId_12 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+		let showDebugHelpers = false;
+		if ( showDebugHelpers ) {
 
-			color.setRGB( 1, 1, 0 );		_dbgRayId_1   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// axis
-			color.setRGB( 0, 1, 1 );		_dbgRayId_2   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// partPerp
-			color.setRGB( 1, 0, 0 );		_dbgRayId_3   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
-			color.setRGB( 0, 1, 0 );		_dbgRayId_4   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
-			color.setRGB( 0, 0, 1 );		_dbgRayId_5   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
-			color.delete();
-			this.hideAllDebugHelpers()
+			if ( _dbgAxisId_1 == ZERO ) {
+				let color = new Module.Color( 1, 1, 0, 1 );
+				color.setRGB( 1, 1, 1 );		_dbgAxisId_1  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// partPos
+				color.setRGB( 0.5, 0.5, 0.5 );	_dbgAxisId_2  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// parentPos
+				color.setRGB( 1, 1, 1 );		_dbgAxisId_3  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );
+				color.setRGB( 1, 1, 1 );		_dbgAxisId_4  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );
+				color.setRGB( 0, 0, 1 );		_dbgAxisId_5  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// startLeft - bLue
+				color.setRGB( 0, 0, 0 );		_dbgAxisId_6  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+				color.setRGB( 0, 0, 0 );		_dbgAxisId_7  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+				color.setRGB( 0, 0, 0 );		_dbgAxisId_8  = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+				color.setRGB( 1, 0, 0 );		_dbgAxisId_9  = globalGenepool3Dcpp.allocateDebugAxis( color, 4 );	// startRight - Red
+				color.setRGB( 0, 0, 0 );		_dbgAxisId_10 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+				color.setRGB( 0, 0, 0 );		_dbgAxisId_11 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+				color.setRGB( 0, 0, 0 );		_dbgAxisId_12 = globalGenepool3Dcpp.allocateDebugAxis( color, 3 );
+
+				color.setRGB( 1, 1, 0 );		_dbgRayId_1   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// axis
+				color.setRGB( 0, 1, 1 );		_dbgRayId_2   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// partPerp
+				color.setRGB( 1, 0, 0 );		_dbgRayId_3   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+				color.setRGB( 0, 1, 0 );		_dbgRayId_4   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+				color.setRGB( 0, 0, 1 );		_dbgRayId_5   = globalGenepool3Dcpp.allocateDebugRay( color, 60 );	// parentPerp
+				color.delete();
+				this.hideAllDebugHelpers()
+			}
+
+			//let pos    = _savedPartParameters.position;
+			//let parPos = _savedPartParameters.parentPos;
+			let zval   = 500.0;
+
+
+			//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, cap_startx, cap_starty, zval );
+			//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, cap_c1x, cap_c1x, zval );
+			//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, cap_c2x, cap_c2y, zval );
+			//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, cap_endx, cap_endy, zval );
+
+
+			//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
+			//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, position.x, position.y, zval - 50 );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, parentPos.x, parentPos.y, zval - 50);
+
+			globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
+			globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
+			globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
+			globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
+
+
+			//let s =  width * endCapSpline;
+			//let f = -1.0; // basically, a pixel's width...I think
+			//let axisNormalX = axis.x / length;
+			//let axisNormalY = axis.y / length;
+			//let sx	= splineData.endLeftX  + axisNormalX * f;
+			//let sy	= splineData.endLeftY  + axisNormalY * f;
+			//let ex	= splineData.endRightX + axisNormalX * f;
+			//let ey	= splineData.endRightY + axisNormalY * f;
+			//let c1x	= splineData.endLeftX  + axisNormalX * s;
+			//let c1y	= splineData.endLeftY  + axisNormalY * s;
+			//let c2x	= splineData.endRightX + axisNormalX * s;
+			//let c2y	= splineData.endRightY + axisNormalY * s;
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, sx, sy, zval );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, c1x, c1y, zval );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, c2x, c2y, zval );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, ex, ey, zval );
+			//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
+			//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, splineData.endLeftX, splineData.endLeftY, zval );
+			//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, splineData.endRightX, splineData.endRightY, zval );
+
+
+			globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
+			globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
+			globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
+			globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
+
+			globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
+			globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
+			globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
+			globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
+			globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
+			globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
+			globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
+			globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
+
+
+			globalGenepool3Dcpp.showDebugRay( _dbgRayId_1, true );	// yellow
+			globalGenepool3Dcpp.positionDebugRay( _dbgRayId_1, position.x, position.y, zval, parentPos.x, parentPos.y, zval + 50 );
+
+			globalGenepool3Dcpp.showDebugRay( _dbgRayId_2, true );	// cyan
+			globalGenepool3Dcpp.positionDebugRay( _dbgRayId_2,
+				//position.x + (off * perp.x), position.y + (off * perp.y), zval,
+				//position.x - (off * perp.x), position.y - (off * perp.y), zval );
+				position.x, position.y, zval,
+				position.x + ( width * 1.0 * perp.x), position.y + ( width * 1.0 * perp.y), zval );
+
+			//console.log("perp=(" + perp.x.toFixed(3) + "," + perp.y.toFixed(3) + "), parPerp=(" + parentPerp.x.toFixed(3) + "," + parentPerp.y.toFixed(3) + ")");
+
+			globalGenepool3Dcpp.showDebugRay( _dbgRayId_3, true );	// red
+			globalGenepool3Dcpp.positionDebugRay( _dbgRayId_3,
+				//parentPos.x + (off * parentPerp.x), parentPos.y + (off * parentPerp.y), zval,
+				//parentPos.x - (off * parentPerp.x), parentPos.y - (off * parentPerp.y), zval );
+				parentPos.x, parentPos.y, zval,
+				parentPos.x + ( width * 1.0 * parentPerp.x), parentPos.y + ( width * 1.0 * parentPerp.y), zval );
+
+			globalGenepool3Dcpp.showDebugRay( _dbgRayId_4, true );	// green
+			globalGenepool3Dcpp.positionDebugRay( _dbgRayId_4,
+				parentPos.x, parentPos.y, zval,
+				parentPos.x + ( width * 1.5 * _perpStart.x), parentPos.y + ( width * 1.5 * _perpStart.y), zval );
+
+			globalGenepool3Dcpp.showDebugRay( _dbgRayId_5, true );	// blue
+			globalGenepool3Dcpp.positionDebugRay( _dbgRayId_5,
+				position.x, position.y, zval,
+				position.x + ( width * 1.5 * _perpEnd.x), position.y + ( width * 1.5 * _perpEnd.y), zval );
 		}
-
-		//let pos    = _savedPartParameters.position;
-		//let parPos = _savedPartParameters.parentPos;
-		let zval   = 500.0;
-
-
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, cap_startx, cap_starty, zval );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, cap_c1x, cap_c1x, zval );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, cap_c2x, cap_c2y, zval );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, cap_endx, cap_endy, zval );
-
-
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_1, true );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_2, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_1, position.x, position.y, zval - 50 );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_2, parentPos.x, parentPos.y, zval - 50);
-
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_5, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_6, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_7, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_8, true );
-
-
-		//let s =  width * endCapSpline;
-		//let f = -1.0; // basically, a pixel's width...I think
-		//let axisNormalX = axis.x / length;
-		//let axisNormalY = axis.y / length;
-		//let sx	= splineData.endLeftX  + axisNormalX * f;
-		//let sy	= splineData.endLeftY  + axisNormalY * f;
-		//let ex	= splineData.endRightX + axisNormalX * f;
-		//let ey	= splineData.endRightY + axisNormalY * f;
-		//let c1x	= splineData.endLeftX  + axisNormalX * s;
-		//let c1y	= splineData.endLeftY  + axisNormalY * s;
-		//let c2x	= splineData.endRightX + axisNormalX * s;
-		//let c2y	= splineData.endRightY + axisNormalY * s;
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, sx, sy, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, c1x, c1y, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, c2x, c2y, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, ex, ey, zval );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_3, true );
-		//globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_4, true );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_3, splineData.endLeftX, splineData.endLeftY, zval );
-		//globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_4, splineData.endRightX, splineData.endRightY, zval );
-
-
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_5, splineData.startLeftX, splineData.startLeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_6, splineData.control1LeftX, splineData.control1LeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_7, splineData.control2LeftX, splineData.control2LeftY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_8, splineData.endLeftX, splineData.endLeftY, zval );
-
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_9, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_10, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_11, true );
-		globalGenepool3Dcpp.showDebugAxis( _dbgAxisId_12, true );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_9 , splineData.startRightX, splineData.startRightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_10, splineData.control1RightX, splineData.control1RightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_11, splineData.control2RightX, splineData.control2RightY, zval );
-		globalGenepool3Dcpp.positionDebugAxis( _dbgAxisId_12, splineData.endRightX, splineData.endRightY, zval );
-
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_1, true );	// yellow
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_1, position.x, position.y, zval, parentPos.x, parentPos.y, zval + 50 );
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_2, true );	// cyan
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_2,
-			//position.x + (off * perp.x), position.y + (off * perp.y), zval,
-			//position.x - (off * perp.x), position.y - (off * perp.y), zval );
-			position.x, position.y, zval,
-			position.x + ( width * 1.0 * perp.x), position.y + ( width * 1.0 * perp.y), zval );
-
-		//console.log("perp=(" + perp.x.toFixed(3) + "," + perp.y.toFixed(3) + "), parPerp=(" + parentPerp.x.toFixed(3) + "," + parentPerp.y.toFixed(3) + ")");
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_3, true );	// red
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_3,
-			//parentPos.x + (off * parentPerp.x), parentPos.y + (off * parentPerp.y), zval,
-			//parentPos.x - (off * parentPerp.x), parentPos.y - (off * parentPerp.y), zval );
-			parentPos.x, parentPos.y, zval,
-			parentPos.x + ( width * 1.0 * parentPerp.x), parentPos.y + ( width * 1.0 * parentPerp.y), zval );
-
-
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_4, true );	// green
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_4,
-			parentPos.x, parentPos.y, zval,
-			parentPos.x + ( width * 1.5 * _perpStart.x), parentPos.y + ( width * 1.5 * _perpStart.y), zval );
-
-		globalGenepool3Dcpp.showDebugRay( _dbgRayId_5, true );	// blue
-		globalGenepool3Dcpp.positionDebugRay( _dbgRayId_5,
-			position.x, position.y, zval,
-			position.x + ( width * 1.5 * _perpEnd.x), position.y + ( width * 1.5 * _perpEnd.y), zval );
-
-
-		//console.log(
-		//	"  perp= (" + perp.x.toFixed(3) + ", " + perp.y.toFixed(3) + ")" +
-		//	"  pEND= (" + _perpEndTEST.x.toFixed(3) + ", " + _perpEndTEST.y.toFixed(3) + ")" );
 	}
 
 	this.hideAllDebugHelpers = function()
@@ -1796,7 +1820,7 @@ genePool.getCamera().setScale( 60 );
 	//
 	//======================================================================================================================================================
 	//======================================================================================================================================================
-	function PartParameters()
+	function Render3dData()
 	{
 		this.isDebug		= false;
 		this.partIndex		= NULL_INDEX;
@@ -1821,12 +1845,15 @@ genePool.getCamera().setScale( 60 );
 		this.blendColor		= new Color();
 		this.blendPct		= 0;
 		this.partId			= NULL_INDEX;
+		this.hasEndcap		= false;
 		this.blendAngle		= 0;
+		this.isMeshVisible	= false;
 
 		this.minAngle		=  99999;
 		this.maxAngle		= -99999;
 
-		this.fill = function( partNum, phenotypeParts )
+		//	TBD : this should only fetch the static data from phenotypeParts
+		this.initialize = function( partNum, phenotypeParts )
 		{
 			let curPart			= phenotypeParts[partNum];
 			let parentIndex		= phenotypeParts[partNum].parent;
@@ -1859,7 +1886,79 @@ genePool.getCamera().setScale( 60 );
 			this.baseColor.copy		( curPart.baseColor  );
 			this.blendColor.copy	( curPart.blendColor );
 			this.blendPct			= curPart.blendPct;
-			this.partId				= curPart.partId;
+			this.blendAngle			= curPart.blendAngle;
+		}
+
+		//	TBD : this should only fetch the dynamic data from phenotypeParts
+		this.updateNormal = function( partNum, phenotypeParts )
+		{
+			let curPart			= phenotypeParts[partNum];
+			let parentIndex		= phenotypeParts[partNum].parent;
+			let parPart			= phenotypeParts[parentIndex];
+			let childIndex		= phenotypeParts[partNum].child;
+
+			this.partIndex		= partNum;
+			this.parentIndex	= parentIndex;
+			this.childIndex		= childIndex;
+			this.splined		= curPart.splined;
+			this.angle			= curPart.currentAngle;
+			this.width			= curPart.width;
+			this.length			= curPart.length;
+			//this.endCapSpline	= curPart.endCapSpline;
+			//this.parentWidth	= parPart.width;
+			//this.branch			= curPart.branch;
+
+			this.color.copy				( _colorUtility );
+			this.position.copyFrom		( curPart.position );
+			this.parentPos.copyFrom		( parPart.position );
+			//this.perp.copyFrom			( curPart.perpendicular );
+			//this.parentPerp.copyFrom	( parPart.perpendicular );
+			//this.axis.copyFrom			( curPart.axis );
+			//if (childIndex == NULL_INDEX) {
+			//	this.childPerp = new Vector2D();
+			//} else {
+			//	this.childPerp.copyFrom( _phenotype.parts[childIndex].perpendicular );
+			//}
+
+			this.baseColor.copy		( curPart.baseColor  );
+			this.blendColor.copy	( curPart.blendColor );
+			this.blendPct			= curPart.blendPct;
+			this.blendAngle			= curPart.blendAngle;
+		}
+
+		this.updateSplined = function( partNum, phenotypeParts )
+		{
+			let curPart			= phenotypeParts[partNum];
+			let parentIndex		= phenotypeParts[partNum].parent;
+			let parPart			= phenotypeParts[parentIndex];
+			let childIndex		= phenotypeParts[partNum].child;
+
+			this.partIndex		= partNum;
+			this.parentIndex	= parentIndex;
+			this.childIndex		= childIndex;
+			this.splined		= curPart.splined;
+			this.angle			= curPart.currentAngle;
+			this.width			= curPart.width;
+			this.length			= curPart.length;
+			this.endCapSpline	= curPart.endCapSpline;
+			this.parentWidth	= parPart.width;
+			this.branch			= curPart.branch;
+
+			this.color.copy				( _colorUtility );
+			this.position.copyFrom		( curPart.position );
+			this.parentPos.copyFrom		( parPart.position );
+			this.perp.copyFrom			( curPart.perpendicular );
+			this.parentPerp.copyFrom	( parPart.perpendicular );
+			this.axis.copyFrom			( curPart.axis );
+			if (childIndex == NULL_INDEX) {
+				this.childPerp = new Vector2D();
+			} else {
+				this.childPerp.copyFrom( _phenotype.parts[childIndex].perpendicular );
+			}
+
+			this.baseColor.copy		( curPart.baseColor  );
+			this.blendColor.copy	( curPart.blendColor );
+			this.blendPct			= curPart.blendPct;
 			this.blendAngle			= curPart.blendAngle;
 		}
 
@@ -1886,7 +1985,7 @@ genePool.getCamera().setScale( 60 );
 			log("	this.baseColor.set    ( " + this.baseColor .red.toFixed(3) + ", " + this.baseColor .green.toFixed(3) + ", " + this.baseColor .blue.toFixed(3) + ", " + this.baseColor.opacity .toFixed(3) + " );" );
 			log("	this.blendColor.set   ( " + this.blendColor.red.toFixed(3) + ", " + this.blendColor.green.toFixed(3) + ", " + this.blendColor.blue.toFixed(3) + ", " + this.blendColor.opacity.toFixed(3) + " );" );
 			log("	this.blendPct         = " + this.blendPct.toFixed(3) + ";" );
-			//log("	this.partId           = " + this.partId + ";" );
+			log("	this.partId           = " + this.partId + ";" );
 		}
 
 		this.copy = function( that ) {

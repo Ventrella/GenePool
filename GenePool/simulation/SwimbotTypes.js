@@ -149,6 +149,7 @@ function Part()
 	this.perpendicular		= new Vector2D();   //dynamic
 	this.bendingAngle		= ZERO;             //dynamic
 	this.currentAngle		= ZERO;             //dynamic
+
 	this.parent 			= NULL_PART;
 	this.child              = NULL_PART; // only valid if it is the continuation of a single-category section
 	this.mass				= ZERO;
@@ -164,18 +165,18 @@ function Part()
     this.endCapSpline       = ZERO;     // how pointy the splined end-cap is for parts that terminate body sequence
 	this.branch             = false;    // set to true if this part branches off (not a continuation of a category)
     this.splined		    = false;
+	this.baseColor			= new Color();
+
 	this.numDecendents		= 0;
 	this.decendent			= new Array( MAX_PARTS );
-
-	this.baseColor			= new Color();	// 3d
-	this.blendColor			= new Color();	// 3d
-	this.blendPct			= ZERO;			// 3d
-	this.partId				= NULL_INDEX;	// 3d
-
 	for (let p=0; p<MAX_PARTS; p++)
 	{
 		this.decendent[p] = 0; 
 	}
+
+	this.blendColor			= new Color();	//
+	this.blendPct			= ZERO;			//
+	this.render3dData		= NULL_INDEX;	// new
 }
 
 //--------------------

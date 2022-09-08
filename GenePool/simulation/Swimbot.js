@@ -185,7 +185,7 @@ var    flopperYV = 0;
             //----------------------------------
             if ( _age > globalTweakers.maximumLifeSpan ) 
             {
-                this.die();
+                genePool.killSwimbot(_index);
             }
             else 
             {     
@@ -915,7 +915,7 @@ _position.copyFrom( position );
         if ( _energy <= ZERO )
         {
             _energy = ZERO;
-            this.die();
+			genePool.killSwimbot(_index);
         }		
 
 		//---------------------------
@@ -1962,6 +1962,8 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
 	        // this is used for updating the FamilyTree
             _parent.notifySwimbotDeathTime( _index );
         }
+
+		this.clear();
     }
     
     

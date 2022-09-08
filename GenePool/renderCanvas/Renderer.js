@@ -11,6 +11,7 @@
 //                                                                        
 // -------------------------------------------------------------------------- 
 
+
 //-------------------------------------------------
 // perform renderer specific system configuration
 //-------------------------------------------------
@@ -34,6 +35,10 @@ function Renderer()
 		return false;
 	}
 
+	this.is3dRender = function () {
+		return false;
+	}
+
 	//
 	//	Renderers can support their own set of debug modes tied to key events.
 	//	Currently, 2D canvas renderer has none.
@@ -41,8 +46,10 @@ function Renderer()
 	this.handleRenderSpecificKeyDown = function( keyCode, isShiftKey, isCtrlKey, isAltKey ) {}
 	this.handleRenderSpecificKeyUp = function( keyCode, isShiftKey, isCtrlKey, isAltKey ) {}
 
-	//	The renderer get use 'simulationRunning' status to manage visual debug objects
+	//	The 3d renderer uses 'simulationRunning' status to manage visual debug objects
 	this.setSimulationRunning = function(s) {}
+	//	This is a useful hook for debugging the 3d code
+	this.beginSwimbotRenderPhase = function() {}
 
 	//-------------------------------------------------
 	// called once during setup

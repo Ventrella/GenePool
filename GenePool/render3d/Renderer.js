@@ -11,6 +11,7 @@
 //                                                                        
 // -------------------------------------------------------------------------- 
 
+
 //-------------------------------------------------
 // perform renderer specific system configuration
 //-------------------------------------------------
@@ -182,6 +183,10 @@ function Renderer()
 		return true;
 	}
 
+	this.is3dRender = function () {
+		return true;
+	}
+
 	//
 	//	Renderers can support their own set of debug modes tied to key events.
 	//
@@ -252,6 +257,13 @@ function Renderer()
 	}
 
 	//-------------------------------------------------
+	//	Useful hook for debugging the 3d code
+	//-------------------------------------------------
+	this.beginSwimbotRenderPhase = function() {
+		_swimbotRenderer.beginSwimbotRenderPhase();
+	}
+
+	//-------------------------------------------------
 	// switch back to absolute coordinates
 	//-------------------------------------------------
 	this.resetCoordSystem = function () {
@@ -262,6 +274,8 @@ function Renderer()
 	// call this last at the end of each frame
 	//-------------------------------------------------
 	this.endFrame = function () {
+		//	for 3d debug purposes
+		_swimbotRenderer.endFrame();
 	}
 
 	//=======================================================================================================================

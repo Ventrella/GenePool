@@ -115,9 +115,10 @@ function GenePool()
 	//---------------------------------------------
     const DEFAULT_MILLISECONDS_PER_UPDATE = 20;
 
-//	const LEVEL_OF_DETAIL_THRESHOLD         = 1000.0;
-    const LEVEL_OF_DETAIL_THRESHOLD         = 1200.0;
+	const LEVEL_OF_DETAIL_THRESHOLD         = 1000.0;
 	const INITIAL_VIEW_SCALE                = POOL_WIDTH * 0.1;
+	//const INITIAL_VIEW_SCALE                = POOL_WIDTH * 0.2;		//BPD3D
+
     const RACE_VIEW_SCALE                   = POOL_WIDTH * 0.3;
     const BANG_VIEW_SCALE                   = POOL_WIDTH * 0.2;
     const PARENT_VIEW_SCALE                 = POOL_WIDTH * 0.05;
@@ -259,6 +260,7 @@ function GenePool()
 		// start with a random simulation
 		//------------------------------------
         this.startSimulation( SimulationStartMode.RANDOM );
+		//this.startSimulation( SimulationStartMode.BIG_BANG );		//BPDTEST
         
         _millisecondsPerUpdate = DEFAULT_MILLISECONDS_PER_UPDATE;
         
@@ -314,7 +316,9 @@ function GenePool()
         _numSwimbots = 0;
         for (let s=0; s<MAX_SWIMBOTS; s++)
         {
-            _swimbots[s].clear();
+			globalRenderer.getSwimbotRenderer().releaseRenderAssets( _swimbots[s] );
+            _swimbots[s].die();
+            //_swimbots[s].clear();
         }                    
 
         _numFoodBits = 0            
@@ -879,39 +883,37 @@ if ( mode === SimulationStartMode.SPECIES )
 	this.setFoodToBangConfiguration = function()
 	{	
         _numFoodBits = 500;
+
+        //_numFoodBits = 300;		//BPDTEST
+        //_numSwimbots = 600;		//BPDTEST
+
         let radius   = ONE;
         let fraction = ZERO;
         let thirdNum = _numFoodBits / 3.0;
         
         let foodBitPosition = new Vector2D();
-    
-        for (let f=0; f<_numFoodBits; f++)
-        {            
-            if ( f > _numFoodBits * 0.66666 )
-            {
-                fraction = ( f - ( _numFoodBits * 0.66666 ) ) / thirdNum;            
-                radius = 600;
-            }
-            else if ( f > _numFoodBits * 0.333333 )
-            {
-                fraction = ( f - ( _numFoodBits * 0.333333 ) ) / thirdNum;            
-                radius = 900;
-            }
-            else
-            {
-                fraction = f / thirdNum;
-                radius = 300;
-            }
 
+		let rings    = 3;		//JV
+		let closest  = 300;		//JV
+		let furthest = 900;		//JV
+
+		//let rings    = 6;			//BPDPROF
+		//let closest  = 180;		//BPDPROF
+		//let furthest = 300;		//BPDPROF
+
+		let bitsPerRing = _numFoodBits / rings;
+        for (let f=0; f<_numFoodBits; f++)
+        {
+			let ring = Math.floor( f / bitsPerRing );
+			fraction = (f % bitsPerRing) / bitsPerRing;
+			radius   = closest + ((furthest - closest) / rings) * ring;
             let radian = fraction * Math.PI * 2.0;
-            
             
             // spiral
             /*
             radius *= 1.016;          
             let radian = f * 0.2;
             */
-            
             
             let x = _poolCenter.x + radius * Math.sin( radian );
             let y = _poolCenter.y + radius * Math.cos( radian );
@@ -2484,6 +2486,8 @@ if ( globalTweakers.numFoodTypes === 2 )
 		//----------------------------------
 		// render swimbots
 		//----------------------------------
+		globalRenderer.beginSwimbotRenderPhase();	// useful for 3d debugging
+
         for (let s=0; s<MAX_SWIMBOTS; s++)
         {
 			if ( _swimbots[s].getAlive() )

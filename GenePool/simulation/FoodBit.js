@@ -69,6 +69,8 @@ function FoodBit()
     //--------------------------------------------------------
 	this.initialize = function(f)
 	{
+		this.kill();	// release 3d assets if previously allocated
+
         _index      = f;
         _energy     = DEFAULT_FOOD_BIT_ENERGY;  
         _opacity    = ZERO;
