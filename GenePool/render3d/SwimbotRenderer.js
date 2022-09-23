@@ -53,8 +53,7 @@ function SwimbotRenderer()
 	//	The following objects are all created from classes that are exposed to .js from the engine
 	//	via Embind. Allocation is deferred until the first BeginFrame because the methods that we
 	//	need are not installed on the Module until *after* the .initialize() function call.  :-(
-	let _begPosEng = null, _endPosEng = null;								// Vec2
-	let _baseColorEng  = null, _blendColorEng  = null;		// Color
+	let _baseColorEng  = null;
 	let _perpStart = null, _perpEnd = null;
 
 	let _rendLen = 0;
@@ -211,11 +210,8 @@ function SwimbotRenderer()
 
 		//	Module had not been completely intialized at the time of the .initialize() call.
 		//	Assume that it is now ready and go ahead and allocate shared engine objects
-		if ( _begPosEng == null ) {
-			_begPosEng		= new Module.Vec2();
-			_endPosEng		= new Module.Vec2();
+		if ( _baseColorEng == null ) {
 			_baseColorEng   = new Module.Color();
-			_blendColorEng  = new Module.Color();
 			_perpStart		= new Module.Vec2();
 			_perpEnd		= new Module.Vec2();
 			//globalGenepool3Dcpp.setWireframeMode( DEFAULT_WIREFRAME_MODE );
@@ -493,9 +489,8 @@ function SwimbotRenderer()
 		}
 
 		//	render existing mesh
-		_begPosEng.set( xpos, ypos );
-		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
-		globalGenepool3Dcpp.renderNormalSwimbotPart( partParms.partId, _begPosEng, partParms.angle, _growthScale, _blendColorEng, partParms.blendPct );
+		globalGenepool3Dcpp.renderNormalSwimbotPart( partParms.partId, xpos, ypos, partParms.angle, _growthScale,
+			partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, partParms.blendPct );
 		_normalRenderCnt++;
 	}
 
@@ -541,11 +536,9 @@ function SwimbotRenderer()
 		}
 
 		//	render existing mesh
-		_begPosEng.set( xpos, ypos );
 		let blendAngle = partParms.blendAngle - 90.0;
-		_blendColorEng.setRGBA( partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, 1.0 );
-		globalGenepool3Dcpp.renderSplinedSwimbotPart( partParms.partId, partParms.hasEndcap, _begPosEng, partParms.angle, blendAngle,
-			_rendLen, _rendBegRadius, _rendEndRadius, _blendColorEng, partParms.blendPct );
+		globalGenepool3Dcpp.renderSplinedSwimbotPart( partParms.partId, partParms.hasEndcap, xpos, ypos, partParms.angle, blendAngle, _rendLen,
+			_rendBegRadius, _rendEndRadius, partParms.blendColor.red, partParms.blendColor.green, partParms.blendColor.blue, partParms.blendPct );
 		_splinedRenderCnt++;
 	}
 
@@ -1920,10 +1913,12 @@ else
 			//	this.childPerp.copyFrom( _phenotype.parts[childIndex].perpendicular );
 			//}
 
-			this.baseColor.copy		( curPart.baseColor  );
-			this.blendColor.copy	( curPart.blendColor );
-			this.blendPct			= curPart.blendPct;
 			this.blendAngle			= curPart.blendAngle;
+			this.baseColor.copy		( curPart.baseColor  );
+			this.blendPct			= curPart.blendPct;
+			if ( this.blendPct != 0 ) {
+				this.blendColor.copy	( curPart.blendColor );
+			}
 		}
 
 		this.updateSplined = function( partNum, phenotypeParts )
@@ -1956,10 +1951,12 @@ else
 				this.childPerp.copyFrom( _phenotype.parts[childIndex].perpendicular );
 			}
 
-			this.baseColor.copy		( curPart.baseColor  );
-			this.blendColor.copy	( curPart.blendColor );
-			this.blendPct			= curPart.blendPct;
 			this.blendAngle			= curPart.blendAngle;
+			this.baseColor.copy		( curPart.baseColor  );
+			this.blendPct			= curPart.blendPct;
+			if ( this.blendPct != 0 ) {
+				this.blendColor.copy	( curPart.blendColor );
+			}
 		}
 
 		this.dump = function() {
