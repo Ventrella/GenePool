@@ -1225,6 +1225,10 @@ document.onkeydown = function(e)
     if ( e.keyCode === 187 ) { cameraNavAction = CameraNavigationAction.IN;      } // plus key
     if ( e.keyCode === 189 ) { cameraNavAction = CameraNavigationAction.OUT;     } // minus key
     
+    // Numpad plus and minus, because plus and minus is not the same on other languages key layouts
+    if ( e.keyCode === 107 ) { cameraNavAction = CameraNavigationAction.IN;      } // plus key
+    if ( e.keyCode === 109 ) { cameraNavAction = CameraNavigationAction.OUT;     } // minus key
+    
     if ( cameraNavAction != -1 )
     {
         if ( ! genePool.getCameraNavigationActive( cameraNavAction ) ) 

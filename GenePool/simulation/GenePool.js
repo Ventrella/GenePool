@@ -2285,6 +2285,34 @@ if ( globalTweakers.numFoodTypes === 2 )
             console.log( "cannot make random swimbot" );
         }
     }
+    
+  //-------------------------------------
+	this.makeNewSwimbotFromJson = function(inputjson)
+	{
+    let index = this.findLowestDeadSwimbotInArray();
+
+    if ( index != NULL_INDEX )
+    {
+      let initialAge      = YOUNG_AGE_DURATION;
+      let initialAngle    = getRandomAngleInDegrees(); //-180.0 + gpRandom() * 360.0;
+      let initialEnergy   = DEFAULT_SWIMBOT_HUNGER_THRESHOLD;
+
+      _myGenotype.loadFromJson(inputjson);
+
+      _swimbots[ index ].create( index, initialAge, _camera.getPosition(), initialAngle, initialEnergy, _myGenotype, _embryology );
+
+      //--------------------------------------------------
+      // add the new swimbot to the family tree
+      //--------------------------------------------------
+      _familyTree.addNode( index, NULL_INDEX, NULL_INDEX, _clock, this.getSwimbotGenes( index ) );
+
+      setSelectedSwimbot( index )
+    }
+    else
+    {
+        console.log( "cannot make new swimbot" );
+    }
+  }
 
 	//---------------------------------------
 	this.zapSwimbot = function( ID, amount )

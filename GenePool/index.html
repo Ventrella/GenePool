@@ -629,7 +629,14 @@
                         <br>
                         <br>
                         <!--or load a swimbot (from saved gene data)... -->
-                        Sorry, but currently you cannot load swimbot genes. The code for that is being rewritten. 
+                        Enter JSON-string to load swimbot.
+                        <br>
+                          <input id='loadJSONGenes'      type='text' onkeyup='addToFilenameInputString       ( event )'></input>
+                        <br>
+                        <button
+                              id      = "loadSwimbotButton"
+                              class   = "basicButton"
+                              onClick = "requestToLoadSwimbotFromJson(); " >load genes...</button>
                         <br>
                         <br>
                         <br>

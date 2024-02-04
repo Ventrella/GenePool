@@ -78,6 +78,31 @@ function Genotype()
 		}
 	}
 		
+	
+	//--------------------------------
+	// load genes from json
+	//--------------------------------
+	this.loadFromJson = function(input)
+	{
+	
+		for (let g=0; g<NUM_GENES; g++)
+		{
+			_genes[g] = Math.floor( gpRandom() * BYTE_SIZE );
+			assert( _genes[g] < BYTE_SIZE, "Genotype: loadFromJson: _genes[g] < BYTE_SIZE" );
+			assertInteger( _genes[g], "Genotype:loadFromJson; assertInteger( _genes[g]" );
+		}
+		if ("genes" in input) {
+			for (let g=0; g<NUM_GENES; g++)
+			{
+				_genes[g] = input["genes"][g];
+				assert( _genes[g] < BYTE_SIZE, "Genotype: loadFromJson: _genes[g] < BYTE_SIZE" );
+				assertInteger( _genes[g], "Genotype:loadFromJson; assertInteger( _genes[g]" );
+			}
+		}
+		else {
+			console.log("did not find genes");
+		}
+	}
 	//------------------------------------------
 	// set all genes to one value
 	//------------------------------------------
