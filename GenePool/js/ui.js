@@ -549,7 +549,7 @@ function toggleFastRendering()
     if ( _runningFast )
     {
         _runningFast = false;
-        genePool.setMillisecondsToDefault();
+        genePool.setMillisecondsPerUpdateToDefault();
         document.getElementById( "fastButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;                
     }
     else
