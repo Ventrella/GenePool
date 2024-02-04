@@ -739,6 +739,15 @@ console.log( "selectedFile = ", selectedFile );
 }
 */
 
+//--------------------------------------
+function requestToLoadSwimbotFromJson()
+{
+  // Load back a swimbot from json string
+
+  let inputjson = JSON.parse(document.getElementById('loadJSONGenes').value);
+  console.log( "inputjson = ", inputjson );
+  genePool.makeNewSwimbotFromJson(inputjson);
+}
 
 function readLocalFile( event )
 {

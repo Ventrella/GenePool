@@ -890,9 +890,9 @@ body
 }
 #loadSwimbotButton
 {
-    position: absolute; 
+    /*position: absolute;
     left: 0;
-    top:  135;
+    top:  135;*/
     width:  150;
 }
 
